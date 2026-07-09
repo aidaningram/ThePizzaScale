@@ -698,72 +698,73 @@ textarea::placeholder {
 }
 
 .pizza-fill {
-  display: grid;
-  grid-template-columns: repeat(8, 20px);
-  gap: 5px;
-  align-items: center;
-  width: max-content;
-  max-width: 100%;
+  --pizza-fill-percent: 0%;
+  width: 66px;
+  height: 66px;
+  position: relative;
+  overflow: hidden;
+  border: 5px solid var(--crust-orange);
+  border-radius: 50%;
+  background: rgba(52, 23, 53, 0.08);
+  box-shadow:
+    inset 0 0 0 2px rgba(52, 23, 53, 0.18),
+    0 6px 0 rgba(52, 23, 53, 0.12);
 }
 
 .pizza-score.compact .pizza-fill {
-  grid-template-columns: repeat(8, 14px);
-  gap: 3px;
+  width: 46px;
+  height: 46px;
+  border-width: 4px;
 }
 
-.rating-pizza {
-  width: 20px;
-  height: 20px;
-  position: relative;
-  overflow: hidden;
-  border: 3px solid rgba(52, 23, 53, 0.22);
-  border-radius: 50%;
-  background: rgba(52, 23, 53, 0.08);
-}
-
-.pizza-score.compact .rating-pizza {
-  width: 14px;
-  height: 14px;
-  border-width: 2px;
-}
-
-.rating-pizza::before {
-  content: "";
+.single-pizza-base,
+.single-pizza-fill,
+.single-pizza-lines {
   position: absolute;
-  inset: 2px;
+  inset: 0;
   border-radius: 50%;
+}
+
+.single-pizza-base {
   background:
-    radial-gradient(circle at 58% 38%, rgba(239, 70, 62, 0.72) 0 9%, transparent 10%),
-    radial-gradient(circle at 42% 64%, rgba(239, 70, 62, 0.72) 0 8%, transparent 9%),
-    radial-gradient(circle at 72% 68%, rgba(239, 70, 62, 0.72) 0 7%, transparent 8%),
+    radial-gradient(circle at 61% 31%, rgba(118, 95, 120, 0.24) 0 7%, transparent 8%),
+    radial-gradient(circle at 35% 43%, rgba(118, 95, 120, 0.22) 0 8%, transparent 9%),
+    radial-gradient(circle at 69% 68%, rgba(118, 95, 120, 0.23) 0 7%, transparent 8%),
+    radial-gradient(circle at 36% 75%, rgba(118, 95, 120, 0.2) 0 5%, transparent 6%),
     rgba(52, 23, 53, 0.08);
 }
 
-.rating-pizza::after {
-  content: "";
-  position: absolute;
-  inset: 2px;
-  border-radius: 50%;
-  border: 1px solid rgba(52, 23, 53, 0.12);
-}
-
-.rating-pizza-fill {
-  position: absolute;
-  inset: 0 auto 0 0;
-  overflow: hidden;
+.single-pizza-fill {
+  right: auto;
+  width: var(--pizza-fill-percent);
   background:
-    radial-gradient(circle at 58% 38%, var(--sauce-red) 0 9%, transparent 10%),
-    radial-gradient(circle at 42% 64%, var(--sauce-red) 0 8%, transparent 9%),
-    radial-gradient(circle at 72% 68%, var(--sauce-red) 0 7%, transparent 8%),
+    radial-gradient(circle at 61% 31%, var(--sauce-red) 0 7%, transparent 8%),
+    radial-gradient(circle at 35% 43%, var(--sauce-red) 0 8%, transparent 9%),
+    radial-gradient(circle at 69% 68%, var(--sauce-red) 0 7%, transparent 8%),
+    radial-gradient(circle at 36% 75%, var(--sauce-red) 0 5%, transparent 6%),
     var(--cheese-gold);
 }
 
-.rating-pizza-fill::after {
+.single-pizza-lines {
+  background:
+    repeating-conic-gradient(
+      from -90deg,
+      rgba(52, 23, 53, 0.28) 0deg 1deg,
+      transparent 1deg 45deg
+    );
+  mix-blend-mode: multiply;
+  opacity: 0.48;
+}
+
+.single-pizza-lines::after {
   content: "";
   position: absolute;
-  inset: 0;
-  border: 3px solid var(--crust-orange);
+  inset: 50% auto auto 50%;
+  width: 9px;
+  height: 9px;
   border-radius: 50%;
+  background: rgba(52, 23, 53, 0.24);
+  transform: translate(-50%, -50%);
 }
 
 .family-match {

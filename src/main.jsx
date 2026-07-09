@@ -940,17 +940,17 @@ function PizzaScore({ score, compact = false }) {
 }
 
 function PizzaFill({ value }) {
-  return (
-    <div className="pizza-fill" aria-label={`${value.toFixed(1)} out of 8 pizzas`}>
-      {Array.from({ length: 8 }, (_, index) => {
-        const fillPercent = Math.max(0, Math.min(100, (value - index) * 100));
+  const fillPercent = Math.max(0, Math.min(100, (value / 8) * 100));
 
-        return (
-          <span className="rating-pizza" key={index}>
-            <span className="rating-pizza-fill" style={{ width: `${fillPercent}%` }} />
-          </span>
-        );
-      })}
+  return (
+    <div
+      className="pizza-fill"
+      aria-label={`${value.toFixed(1)} out of 8 pizza slices`}
+      style={{ "--pizza-fill-percent": `${fillPercent}%` }}
+    >
+      <span className="single-pizza-base" aria-hidden="true" />
+      <span className="single-pizza-fill" aria-hidden="true" />
+      <span className="single-pizza-lines" aria-hidden="true" />
     </div>
   );
 }
