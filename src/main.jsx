@@ -417,7 +417,7 @@ function HomePage({
         <aside className="movie-column">
           <div className="section-heading">
             <Film size={20} />
-            <h2>{query.trim().length >= 2 ? "Movie Search Results" : "Popular Family Matches"}</h2>
+            <h2>{query.trim().length >= 2 ? "Movie Search Results" : "Movies to Try"}</h2>
           </div>
           {searchMessage && <p className={`search-status ${searchStatus}`}>{searchMessage}</p>}
           <div className="movie-list">
