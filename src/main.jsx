@@ -25,7 +25,7 @@ import {
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "./firebase";
 import { getOmdbMovie, searchOmdbMovies } from "./movieProvider";
-import pizzaLogo from "./assets/PizzaLogo.png";
+import pizzaWordmark from "./assets/PizzaScaleWordmark.png";
 import "./styles.css";
 
 const posterThemes = ["marmalade", "neon", "stage", "woodland"];
@@ -406,7 +406,7 @@ function SiteHeader({
           aria-label="The Pizza Scale home"
           onClick={onHome}
         >
-          <img src={pizzaLogo} alt="" aria-hidden="true" />
+          <img src={pizzaWordmark} alt="" aria-hidden="true" />
         </button>
       </div>
       <div>
