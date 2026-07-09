@@ -410,7 +410,6 @@ function SiteHeader({
         </button>
       </div>
       <div>
-        <p className="eyebrow">The Pizza Scale</p>
         <label className="search-label header-search" htmlFor="movie-search">
           <Search size={18} />
           <input
@@ -472,12 +471,10 @@ function HomePage({
     <>
       <section className="hero-band">
         <div className="home-hero-copy">
-          <p className="eyebrow">The Pizza Scale</p>
           <h1>Find the movie your whole family can agree on.</h1>
           <div className="metric-strip" aria-label="Pizza Scale summary">
             <Metric label="Movies Rated" value="0" />
             <Metric label="Family Reviews" value="0" />
-            <Metric label="Scale" value="8 slices" />
           </div>
         </div>
       </section>

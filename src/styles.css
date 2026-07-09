@@ -535,7 +535,7 @@ p {
 }
 
 .home-hero-copy .metric-strip {
-  width: min(100%, 520px);
+  width: min(100%, 360px);
 }
 
 .search-label {
@@ -573,7 +573,7 @@ textarea::placeholder {
 
 .metric-strip {
   display: grid;
-  grid-template-columns: repeat(3, minmax(96px, 1fr));
+  grid-template-columns: repeat(2, minmax(96px, 1fr));
   gap: 10px;
 }
 
