@@ -698,7 +698,7 @@ textarea::placeholder {
 }
 
 .pizza-fill {
-  --pizza-fill-percent: 0%;
+  --pizza-fill-angle: 0deg;
   width: 66px;
   height: 66px;
   position: relative;
@@ -735,14 +735,14 @@ textarea::placeholder {
 }
 
 .single-pizza-fill {
-  right: auto;
-  width: var(--pizza-fill-percent);
   background:
     radial-gradient(circle at 61% 31%, var(--sauce-red) 0 7%, transparent 8%),
     radial-gradient(circle at 35% 43%, var(--sauce-red) 0 8%, transparent 9%),
     radial-gradient(circle at 69% 68%, var(--sauce-red) 0 7%, transparent 8%),
     radial-gradient(circle at 36% 75%, var(--sauce-red) 0 5%, transparent 6%),
     var(--cheese-gold);
+  mask-image: conic-gradient(from -90deg, #000 0 var(--pizza-fill-angle), transparent var(--pizza-fill-angle) 360deg);
+  -webkit-mask-image: conic-gradient(from -90deg, #000 0 var(--pizza-fill-angle), transparent var(--pizza-fill-angle) 360deg);
 }
 
 .single-pizza-lines {

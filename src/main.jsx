@@ -940,13 +940,13 @@ function PizzaScore({ score, compact = false }) {
 }
 
 function PizzaFill({ value }) {
-  const fillPercent = Math.max(0, Math.min(100, (value / 8) * 100));
+  const fillAngle = Math.max(0, Math.min(360, (value / 8) * 360));
 
   return (
     <div
       className="pizza-fill"
       aria-label={`${value.toFixed(1)} out of 8 pizza slices`}
-      style={{ "--pizza-fill-percent": `${fillPercent}%` }}
+      style={{ "--pizza-fill-angle": `${fillAngle}deg` }}
     >
       <span className="single-pizza-base" aria-hidden="true" />
       <span className="single-pizza-fill" aria-hidden="true" />
