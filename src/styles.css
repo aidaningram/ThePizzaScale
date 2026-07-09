@@ -206,12 +206,13 @@ p {
 }
 
 .menu-button {
-  width: 52px;
-  height: 52px;
-  background: var(--white);
+  width: 44px;
+  height: 44px;
+  background: transparent;
   color: var(--plum-ink);
-  border: 2px solid var(--line);
-  box-shadow: 0 8px 18px rgba(83, 45, 18, 0.08);
+  border: 0;
+  box-shadow: none;
+  padding: 0;
 }
 
 .avatar-button {
@@ -305,6 +306,37 @@ p {
 .profile-setup-row p {
   margin: 4px 0 0;
   line-height: 1.35;
+}
+
+.choose-photo-button {
+  width: fit-content;
+  min-height: 38px;
+  margin-top: 10px;
+  border-radius: 12px;
+  background: var(--white);
+  color: var(--plum-ink);
+  border: 2px solid var(--line);
+  padding: 0 12px;
+  font-family: "Baloo 2", "Nunito", system-ui, sans-serif;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.choose-photo-button input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.inline-error {
+  display: block;
+  margin-top: 6px;
+  color: var(--sauce-red);
+  font-weight: 900;
 }
 
 .account-page,
@@ -1172,7 +1204,11 @@ textarea {
     height: 50px;
   }
 
-  .menu-button,
+  .menu-button {
+    width: 40px;
+    height: 40px;
+  }
+
   .avatar-button {
     width: 46px;
     height: 46px;

@@ -5,8 +5,8 @@ import {
   Eye,
   EyeOff,
   Film,
-  Grid3X3,
   Lock,
+  Menu,
   Plus,
   Search,
   ShieldCheck,
@@ -378,7 +378,7 @@ function SiteHeader({
           aria-label="Open site menu"
           onClick={() => setMenuOpen(!menuOpen)}
         >
-          <Grid3X3 size={21} />
+          <Menu size={24} />
         </button>
         {menuOpen && (
           <div className="account-menu site-menu">
@@ -642,10 +642,36 @@ function HomePage({
 function SignInPage({ authMessage, onEmailAuth, onGoogleSignIn, onBack }) {
   const [mode, setMode] = useState("login");
   const [displayName, setDisplayName] = useState("");
-  const [photoURL, setPhotoURL] = useState("");
+  const [profileImage, setProfileImage] = useState("");
+  const [profileImageName, setProfileImageName] = useState("");
+  const [profileImageError, setProfileImageError] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const isCreateMode = mode === "create";
+
+  function handleProfileImageChange(event) {
+    const file = event.target.files?.[0];
+
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setProfileImageError("Please choose an image file.");
+      return;
+    }
+
+    if (file.size > 500_000) {
+      setProfileImageError("Please choose an image smaller than 500 KB for now.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setProfileImage(String(reader.result));
+      setProfileImageName(file.name);
+      setProfileImageError("");
+    };
+    reader.readAsDataURL(file);
+  }
 
   return (
     <section className="account-page sign-in-page">
@@ -675,10 +701,15 @@ function SignInPage({ authMessage, onEmailAuth, onGoogleSignIn, onBack }) {
         {authMessage && <p className="form-error">{authMessage}</p>}
         {isCreateMode && (
           <div className="profile-setup-row">
-            <ProfileAvatar name={displayName || email} photoURL={photoURL} />
+            <ProfileAvatar name={displayName || email} photoURL={profileImage} />
             <div>
               <strong>Profile picture</strong>
-              <p>Use a photo link now, or keep the default initial avatar.</p>
+              <p>{profileImageName || "Choose a photo, or keep the default initial avatar."}</p>
+              <label className="choose-photo-button">
+                Choose photo
+                <input type="file" accept="image/*" onChange={handleProfileImageChange} />
+              </label>
+              {profileImageError && <small className="inline-error">{profileImageError}</small>}
             </div>
           </div>
         )}
@@ -689,16 +720,6 @@ function SignInPage({ authMessage, onEmailAuth, onGoogleSignIn, onBack }) {
               value={displayName}
               onChange={(event) => setDisplayName(event.target.value)}
               placeholder="Aidan"
-            />
-          </label>
-        )}
-        {isCreateMode && (
-          <label className="field-label">
-            Profile photo link optional
-            <input
-              value={photoURL}
-              onChange={(event) => setPhotoURL(event.target.value)}
-              placeholder="https://example.com/photo.jpg"
             />
           </label>
         )}
@@ -723,7 +744,7 @@ function SignInPage({ authMessage, onEmailAuth, onGoogleSignIn, onBack }) {
               email,
               password,
               displayName,
-              photoURL,
+              photoURL: profileImage,
             })
           }
         >
