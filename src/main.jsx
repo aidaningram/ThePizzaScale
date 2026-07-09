@@ -391,7 +391,6 @@ function HomePage({
   onSignIn,
 }) {
   const overallScore = (Number(review.parentScore) + Number(review.kidScore)) / 2;
-  const overallPercent = Math.round((overallScore / 8) * 100);
 
   return (
     <>
@@ -490,10 +489,12 @@ function HomePage({
               />
 
               <div className="calculated-score">
-                <PizzaScore score={overallScore} compact />
+                <div className="calculated-score-pizza">
+                  <PizzaFill value={overallScore} />
+                </div>
                 <div className="calculated-score-copy">
                   <span>Calculated overall</span>
-                  <small>{overallPercent}% Pizza Score contribution</small>
+                  <strong>{overallScore.toFixed(1)} / 8 slices</strong>
                 </div>
               </div>
 

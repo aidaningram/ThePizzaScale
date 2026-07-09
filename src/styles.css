@@ -835,21 +835,23 @@ textarea::placeholder {
 }
 
 .calculated-score {
-  min-height: 96px;
-  display: flex;
+  min-height: 108px;
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr);
   align-items: center;
-  gap: 16px;
-  padding: 14px 16px;
+  gap: 18px;
+  padding: 16px 18px;
 }
 
-.calculated-score .pizza-score.compact {
-  min-width: 78px;
-  min-height: 0;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  box-shadow: none;
-  justify-items: center;
+.calculated-score-pizza {
+  display: grid;
+  place-items: center;
+}
+
+.calculated-score-pizza .pizza-fill {
+  width: 76px;
+  height: 76px;
+  border-width: 6px;
 }
 
 .calculated-score-copy {
@@ -861,14 +863,17 @@ textarea::placeholder {
 .calculated-score-copy span {
   color: var(--plum-ink);
   font-family: "Baloo 2", "Nunito", system-ui, sans-serif;
-  font-size: 1.35rem;
+  font-size: 1.65rem;
   font-weight: 800;
   line-height: 1;
 }
 
-.calculated-score-copy small {
-  font-size: 1rem;
+.calculated-score-copy strong {
+  color: var(--plum-soft);
+  font-family: "Baloo 2", "Nunito", system-ui, sans-serif;
+  font-size: 1.28rem;
   font-weight: 900;
+  line-height: 1;
 }
 
 .text-area-label {
@@ -1059,6 +1064,16 @@ textarea {
   .button-row,
   .family-member-row {
     grid-template-columns: 1fr;
+  }
+
+  .calculated-score {
+    grid-template-columns: 78px minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .calculated-score-pizza .pizza-fill {
+    width: 62px;
+    height: 62px;
   }
 
   .account-card,
