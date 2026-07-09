@@ -835,7 +835,40 @@ textarea::placeholder {
 }
 
 .calculated-score {
-  min-height: 88px;
+  min-height: 96px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 16px;
+}
+
+.calculated-score .pizza-score.compact {
+  min-width: 78px;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  box-shadow: none;
+  justify-items: center;
+}
+
+.calculated-score-copy {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
+.calculated-score-copy span {
+  color: var(--plum-ink);
+  font-family: "Baloo 2", "Nunito", system-ui, sans-serif;
+  font-size: 1.35rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.calculated-score-copy small {
+  font-size: 1rem;
+  font-weight: 900;
 }
 
 .text-area-label {

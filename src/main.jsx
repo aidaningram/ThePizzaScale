@@ -490,9 +490,11 @@ function HomePage({
               />
 
               <div className="calculated-score">
-                <span>Calculated overall</span>
                 <PizzaScore score={overallScore} compact />
-                <small>{overallPercent}% Pizza Score contribution</small>
+                <div className="calculated-score-copy">
+                  <span>Calculated overall</span>
+                  <small>{overallPercent}% Pizza Score contribution</small>
+                </div>
               </div>
 
               <label className="text-area-label">
