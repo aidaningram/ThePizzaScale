@@ -5,8 +5,8 @@ import {
   Eye,
   EyeOff,
   Film,
+  Grid3X3,
   Lock,
-  Menu,
   Plus,
   Search,
   ShieldCheck,
@@ -20,6 +20,7 @@ import {
   signInWithEmailAndPassword,
   signInWithPopup,
   signOut,
+  updateProfile,
 } from "firebase/auth";
 import { addDoc, collection, serverTimestamp } from "firebase/firestore";
 import { auth, db } from "./firebase";
@@ -232,12 +233,30 @@ function App() {
     }
   }
 
-  async function handleEmailAuth({ mode, email, password }) {
+  async function handleEmailAuth({ mode, email, password, displayName, photoURL }) {
     setAuthMessage("");
 
     try {
       if (mode === "create") {
-        await createUserWithEmailAndPassword(auth, email, password);
+        const cleanDisplayName = displayName.trim();
+        const cleanPhotoURL = photoURL.trim();
+
+        if (!cleanDisplayName) {
+          setAuthMessage("Please add your name so your profile can be created.");
+          return;
+        }
+
+        const result = await createUserWithEmailAndPassword(auth, email, password);
+        await updateProfile(result.user, {
+          displayName: cleanDisplayName,
+          ...(cleanPhotoURL ? { photoURL: cleanPhotoURL } : {}),
+        });
+        setUser({
+          uid: result.user.uid,
+          displayName: cleanDisplayName,
+          email: result.user.email,
+          photoURL: cleanPhotoURL,
+        });
         setPage("family-prompt");
       } else {
         await signInWithEmailAndPassword(auth, email, password);
@@ -340,9 +359,44 @@ function App() {
 function SiteHeader({ user, menuOpen, setMenuOpen, onHome, onSignIn, onSettings }) {
   return (
     <header className="site-header">
-      <button className="brand-mark" type="button" aria-label="The Pizza Scale home" onClick={onHome}>
-        <img src={pizzaLogo} alt="" aria-hidden="true" />
-      </button>
+      <div className="header-left">
+        <button
+          className="menu-button"
+          type="button"
+          aria-label="Open site menu"
+          onClick={() => setMenuOpen(!menuOpen)}
+        >
+          <Grid3X3 size={21} />
+        </button>
+        {menuOpen && (
+          <div className="account-menu site-menu">
+            <button type="button" onClick={onHome}>
+              Home
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setMenuOpen(false);
+                if (user) {
+                  onSettings();
+                } else {
+                  onSignIn();
+                }
+              }}
+            >
+              {user ? "Settings" : "Sign in"}
+            </button>
+          </div>
+        )}
+        <button
+          className="brand-mark"
+          type="button"
+          aria-label="The Pizza Scale home"
+          onClick={onHome}
+        >
+          <img src={pizzaLogo} alt="" aria-hidden="true" />
+        </button>
+      </div>
       <div>
         <p className="eyebrow">The Pizza Scale</p>
         <h1>Find the movie your whole family can agree on.</h1>
@@ -354,27 +408,30 @@ function SiteHeader({ user, menuOpen, setMenuOpen, onHome, onSignIn, onSettings 
             Sign in
           </button>
         ) : (
-          <>
-            <button
-              className="menu-button"
-              type="button"
-              aria-label="Open account menu"
-              onClick={() => setMenuOpen(!menuOpen)}
-            >
-              <Menu size={22} />
-            </button>
-            {menuOpen && (
-              <div className="account-menu">
-                <button type="button" onClick={onSettings}>
-                  Settings
-                </button>
-              </div>
-            )}
-          </>
+          <button
+            className="avatar-button"
+            type="button"
+            aria-label="Open account settings"
+            onClick={onSettings}
+          >
+            <ProfileAvatar user={user} />
+          </button>
         )}
       </div>
     </header>
   );
+}
+
+function ProfileAvatar({ user, name, photoURL }) {
+  const source = photoURL || user?.photoURL || "";
+  const label = name || user?.displayName || user?.email || "P";
+  const initial = label.trim().charAt(0).toUpperCase() || "P";
+
+  if (source) {
+    return <img className="profile-avatar" src={source} alt="" />;
+  }
+
+  return <span className="profile-avatar initial-avatar">{initial}</span>;
 }
 
 function HomePage({
@@ -572,8 +629,11 @@ function HomePage({
 
 function SignInPage({ authMessage, onEmailAuth, onGoogleSignIn, onBack }) {
   const [mode, setMode] = useState("login");
+  const [displayName, setDisplayName] = useState("");
+  const [photoURL, setPhotoURL] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const isCreateMode = mode === "create";
 
   return (
     <section className="account-page">
@@ -597,6 +657,35 @@ function SignInPage({ authMessage, onEmailAuth, onGoogleSignIn, onBack }) {
           </button>
         </div>
         {authMessage && <p className="form-error">{authMessage}</p>}
+        {isCreateMode && (
+          <div className="profile-setup-row">
+            <ProfileAvatar name={displayName || email} photoURL={photoURL} />
+            <div>
+              <strong>Profile picture</strong>
+              <p>Use a photo link now, or keep the default initial avatar.</p>
+            </div>
+          </div>
+        )}
+        {isCreateMode && (
+          <label className="field-label">
+            Your name
+            <input
+              value={displayName}
+              onChange={(event) => setDisplayName(event.target.value)}
+              placeholder="Aidan"
+            />
+          </label>
+        )}
+        {isCreateMode && (
+          <label className="field-label">
+            Profile photo link optional
+            <input
+              value={photoURL}
+              onChange={(event) => setPhotoURL(event.target.value)}
+              placeholder="https://example.com/photo.jpg"
+            />
+          </label>
+        )}
         <label className="field-label">
           Email
           <input value={email} onChange={(event) => setEmail(event.target.value)} type="email" />
@@ -612,9 +701,17 @@ function SignInPage({ authMessage, onEmailAuth, onGoogleSignIn, onBack }) {
         <button
           className="primary-button"
           type="button"
-          onClick={() => onEmailAuth({ mode: mode === "create" ? "create" : "login", email, password })}
+          onClick={() =>
+            onEmailAuth({
+              mode: isCreateMode ? "create" : "login",
+              email,
+              password,
+              displayName,
+              photoURL,
+            })
+          }
         >
-          {mode === "login" ? "Log in" : "Create account"}
+          {isCreateMode ? "Create account" : "Log in"}
         </button>
         <button className="secondary-button" type="button" onClick={onGoogleSignIn}>
           Continue with Google
