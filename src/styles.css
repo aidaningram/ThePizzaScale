@@ -51,9 +51,9 @@ button {
 }
 
 .site-header {
-  min-height: 148px;
+  min-height: 88px;
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-columns: auto minmax(260px, 680px) auto;
   align-items: center;
   gap: 18px;
 }
@@ -161,7 +161,7 @@ p {
 .auth-banner {
   width: fit-content;
   max-width: 100%;
-  margin: -12px 0 18px 90px;
+  margin: 0 0 18px;
   border: 2px solid var(--line);
   border-radius: 16px;
   background: var(--white);
@@ -315,6 +315,33 @@ p {
   padding: 20px 0 48px;
 }
 
+.sign-in-page {
+  min-height: calc(100vh - 64px);
+  grid-template-rows: auto 1fr;
+  place-items: start center;
+}
+
+.auth-back-button {
+  justify-self: start;
+  min-height: 46px;
+  border-radius: 14px;
+  background: var(--white);
+  color: var(--plum-ink);
+  border: 2px solid var(--line);
+  padding: 0 14px;
+  font-family: "Baloo 2", "Nunito", system-ui, sans-serif;
+  font-weight: 800;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 8px 18px rgba(83, 45, 18, 0.08);
+}
+
+.sign-in-card {
+  align-self: start;
+  margin-top: 28px;
+}
+
 .account-card,
 .family-card {
   width: min(100%, 760px);
@@ -451,10 +478,10 @@ p {
 }
 
 .hero-band {
-  margin: 4px 0 22px;
+  margin: 16px 0 22px;
 }
 
-.search-panel,
+.home-hero-copy,
 .movie-column,
 .detail-panel,
 .review-form,
@@ -465,12 +492,18 @@ p {
   box-shadow: var(--shadow);
 }
 
-.search-panel {
-  padding: 16px;
+.home-hero-copy {
+  padding: 22px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 16px;
-  align-items: center;
+  gap: 18px;
+}
+
+.home-hero-copy h1 {
+  max-width: 920px;
+}
+
+.home-hero-copy .metric-strip {
+  width: min(100%, 520px);
 }
 
 .search-label {
@@ -483,6 +516,12 @@ p {
   background: var(--cream-soft);
   color: var(--plum-soft);
   padding: 0 16px;
+}
+
+.header-search {
+  width: 100%;
+  min-width: 0;
+  box-shadow: 0 8px 18px rgba(83, 45, 18, 0.08);
 }
 
 .search-label input {
@@ -1089,7 +1128,6 @@ textarea {
     margin-left: 0;
   }
 
-  .search-panel,
   .content-grid,
   .review-grid,
   .family-grid {
@@ -1116,6 +1154,7 @@ textarea {
   }
 
   .site-header {
+    grid-template-columns: auto 1fr auto;
     min-height: 0;
     align-items: center;
   }
@@ -1143,6 +1182,19 @@ textarea {
   .sign-in-button {
     min-height: 44px;
     padding: 0 12px;
+  }
+
+  .header-search {
+    grid-column: 1 / -1;
+    grid-row: 2;
+  }
+
+  .site-header > div:nth-child(2) {
+    display: contents;
+  }
+
+  .home-hero-copy {
+    padding: 18px;
   }
 
   .metric-strip,

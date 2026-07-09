@@ -287,24 +287,27 @@ function App() {
 
   return (
     <main className="app-shell">
-      <SiteHeader
-        user={user}
-        menuOpen={menuOpen}
-        setMenuOpen={setMenuOpen}
-        onHome={goHome}
-        onSignIn={() => setPage("signin")}
-        onSettings={() => {
-          setMenuOpen(false);
-          setPage("settings");
-        }}
-      />
+      {page !== "signin" && (
+        <SiteHeader
+          user={user}
+          menuOpen={menuOpen}
+          setMenuOpen={setMenuOpen}
+          query={query}
+          setQuery={setQuery}
+          onHome={goHome}
+          onSignIn={() => setPage("signin")}
+          onSettings={() => {
+            setMenuOpen(false);
+            setPage("settings");
+          }}
+        />
+      )}
 
-      {authMessage && <div className="auth-banner error">{authMessage}</div>}
+      {authMessage && page !== "signin" && <div className="auth-banner error">{authMessage}</div>}
 
       {page === "home" && (
         <HomePage
           query={query}
-          setQuery={setQuery}
           movieResults={movieResults}
           selectedMovie={selectedMovie}
           setSelectedMovie={setSelectedMovie}
@@ -356,7 +359,16 @@ function App() {
   );
 }
 
-function SiteHeader({ user, menuOpen, setMenuOpen, onHome, onSignIn, onSettings }) {
+function SiteHeader({
+  user,
+  menuOpen,
+  setMenuOpen,
+  query,
+  setQuery,
+  onHome,
+  onSignIn,
+  onSettings,
+}) {
   return (
     <header className="site-header">
       <div className="header-left">
@@ -399,7 +411,15 @@ function SiteHeader({ user, menuOpen, setMenuOpen, onHome, onSignIn, onSettings 
       </div>
       <div>
         <p className="eyebrow">The Pizza Scale</p>
-        <h1>Find the movie your whole family can agree on.</h1>
+        <label className="search-label header-search" htmlFor="movie-search">
+          <Search size={18} />
+          <input
+            id="movie-search"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Search family-tested movies"
+          />
+        </label>
       </div>
       <div className="account-actions">
         {!user ? (
@@ -436,7 +456,6 @@ function ProfileAvatar({ user, name, photoURL }) {
 
 function HomePage({
   query,
-  setQuery,
   movieResults,
   selectedMovie,
   setSelectedMovie,
@@ -452,16 +471,9 @@ function HomePage({
   return (
     <>
       <section className="hero-band">
-        <div className="search-panel">
-          <label className="search-label" htmlFor="movie-search">
-            <Search size={18} />
-            <input
-              id="movie-search"
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder="Search family-tested movies"
-            />
-          </label>
+        <div className="home-hero-copy">
+          <p className="eyebrow">The Pizza Scale</p>
+          <h1>Find the movie your whole family can agree on.</h1>
           <div className="metric-strip" aria-label="Pizza Scale summary">
             <Metric label="Movies Rated" value="0" />
             <Metric label="Family Reviews" value="0" />
@@ -636,8 +648,12 @@ function SignInPage({ authMessage, onEmailAuth, onGoogleSignIn, onBack }) {
   const isCreateMode = mode === "create";
 
   return (
-    <section className="account-page">
-      <div className="account-card">
+    <section className="account-page sign-in-page">
+      <button className="auth-back-button" type="button" onClick={onBack}>
+        <ChevronLeft size={20} />
+        Back
+      </button>
+      <div className="account-card sign-in-card">
         <p className="eyebrow">Account</p>
         <h2>{mode === "login" ? "Sign in" : "Create account"}</h2>
         <div className="segmented-control">
@@ -715,9 +731,6 @@ function SignInPage({ authMessage, onEmailAuth, onGoogleSignIn, onBack }) {
         </button>
         <button className="secondary-button" type="button" onClick={onGoogleSignIn}>
           Continue with Google
-        </button>
-        <button className="text-button" type="button" onClick={onBack}>
-          Back to movies
         </button>
       </div>
     </section>
