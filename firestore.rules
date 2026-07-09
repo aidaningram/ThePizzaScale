@@ -1,0 +1,41 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isFamilyLead(familyId) {
+      return isSignedIn()
+        && get(/databases/$(database)/documents/families/$(familyId)).data.leadAdultUserId == request.auth.uid;
+    }
+
+    match /movies/{movieId} {
+      allow read: if true;
+      allow create, update: if isSignedIn();
+      allow delete: if false;
+    }
+
+    match /families/{familyId} {
+      allow read: if isSignedIn() && resource.data.memberUserIds.hasAny([request.auth.uid]);
+      allow create: if isSignedIn() && request.resource.data.leadAdultUserId == request.auth.uid;
+      allow update, delete: if isFamilyLead(familyId);
+    }
+
+    match /familyMembers/{memberId} {
+      allow read, write: if isFamilyLead(request.resource.data.familyId);
+    }
+
+    match /reviews/{reviewId} {
+      allow read: if resource.data.visibility == "public";
+      allow create: if isFamilyLead(request.resource.data.familyId);
+      allow update, delete: if isFamilyLead(resource.data.familyId);
+    }
+
+    match /aggregates/{document=**} {
+      allow read: if true;
+      allow write: if false;
+    }
+  }
+}
