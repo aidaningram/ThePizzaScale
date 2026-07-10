@@ -6,11 +6,6 @@ service cloud.firestore {
       return request.auth != null;
     }
 
-    function isFamilyLead(familyId) {
-      return isSignedIn()
-        && get(/databases/$(database)/documents/families/$(familyId)).data.leadAdultUserId == request.auth.uid;
-    }
-
     function isFamilyMember(familyId) {
       return isSignedIn()
         && get(/databases/$(database)/documents/families/$(familyId)).data.memberUserIds.hasAny([request.auth.uid]);
