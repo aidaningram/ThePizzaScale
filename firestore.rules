@@ -27,8 +27,7 @@ service cloud.firestore {
 
     match /movies/{movieId} {
       allow read: if true;
-      allow create, update: if isSignedIn();
-      allow delete: if false;
+      allow write: if false;
     }
 
     match /families/{familyId} {

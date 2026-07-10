@@ -483,79 +483,42 @@ function App() {
     const movieId = selectedMovie.id;
     const reviewId = `${familyProfile.id}_${movieId}`;
     const reviewRef = doc(db, "reviews", reviewId);
-    const movieRef = doc(db, "movies", movieId);
 
     setReviewSaveStatus("saving");
     setReviewMessage("Saving rating...");
 
     try {
-      const [existingReviewSnapshot, movieSnapshot] = await Promise.all([
-        getDoc(reviewRef),
-        getDoc(movieRef),
-      ]);
+      const existingReviewSnapshot = await getDoc(reviewRef);
       const existingReview = existingReviewSnapshot.exists()
         ? existingReviewSnapshot.data()
         : null;
-      const existingMovie = movieSnapshot.exists() ? movieSnapshot.data() : {};
-      const previousCount = Number(existingMovie.reviewCount || 0);
-      const previousAverage = Number(existingMovie.avgPizzaScore || 0);
-      const previousTotal = previousAverage * previousCount;
-      const nextCount = existingReview ? previousCount : previousCount + 1;
-      const nextTotal = previousTotal - Number(existingReview?.pizzaScore || 0) + pizzaScore;
-      const nextAverage = nextCount > 0 ? Number((nextTotal / nextCount).toFixed(2)) : pizzaScore;
-      const nextStats = {
-        avgPizzaScore: nextAverage,
-        familyMatch: Math.round((nextAverage / 8) * 100),
-        reviewCount: nextCount,
-      };
 
-      await Promise.all([
-        setDoc(
-          reviewRef,
-          {
-            familyId: familyProfile.id,
-            familyName: familyProfile.displayName,
-            leadAdultUserId: familyProfile.leadAdultUserId,
-            userId: user.uid,
-            movieId,
-            imdbId: selectedMovie.imdbId || movieId,
-            movieTitle: selectedMovie.title,
-            parentScore,
-            kidScore,
-            pizzaScore,
-            visibility: review.visibility,
-            writtenReview: review.writtenReview.trim(),
-            showAgeShape: review.showAgeShape,
-            createdAt: existingReview?.createdAt || serverTimestamp(),
-            updatedAt: serverTimestamp(),
-          },
-          { merge: true },
-        ),
-        setDoc(
-          movieRef,
-          {
-            imdbId: selectedMovie.imdbId || movieId,
-            title: selectedMovie.title,
-            year: selectedMovie.year,
-            rated: selectedMovie.rated,
-            runtime: selectedMovie.runtime,
-            genre: selectedMovie.genre,
-            posterUrl: selectedMovie.posterUrl || "",
-            plot: selectedMovie.plot,
-            ...nextStats,
-            updatedAt: serverTimestamp(),
-          },
-          { merge: true },
-        ),
-      ]);
-
-      const updatedMovie = mergeMovieStats(selectedMovie, nextStats);
-      setSelectedMovie(updatedMovie);
-      setFeaturedCatalog((movies) =>
-        movies.map((movie) => (movie.id === movieId ? mergeMovieStats(movie, nextStats) : movie)),
-      );
-      setMovieResults((movies) =>
-        movies.map((movie) => (movie.id === movieId ? mergeMovieStats(movie, nextStats) : movie)),
+      await setDoc(
+        reviewRef,
+        {
+          familyId: familyProfile.id,
+          familyName: familyProfile.displayName,
+          leadAdultUserId: familyProfile.leadAdultUserId,
+          userId: user.uid,
+          movieId,
+          imdbId: selectedMovie.imdbId || movieId,
+          movieTitle: selectedMovie.title,
+          movieYear: selectedMovie.year,
+          movieRated: selectedMovie.rated,
+          movieRuntime: selectedMovie.runtime,
+          movieGenre: selectedMovie.genre,
+          moviePosterUrl: selectedMovie.posterUrl || "",
+          moviePlot: selectedMovie.plot,
+          parentScore,
+          kidScore,
+          pizzaScore,
+          visibility: review.visibility,
+          writtenReview: review.writtenReview.trim(),
+          showAgeShape: review.showAgeShape,
+          createdAt: existingReview?.createdAt || serverTimestamp(),
+          updatedAt: serverTimestamp(),
+        },
+        { merge: true },
       );
 
       if (review.visibility === "public") {
@@ -573,7 +536,7 @@ function App() {
       }
 
       setReviewSaveStatus("ready");
-      setReviewMessage("Rating saved.");
+      setReviewMessage("Rating saved. Pizza Score totals will update shortly.");
     } catch {
       setReviewSaveStatus("error");
       setReviewMessage("The rating could not be saved yet. Check Firebase rules and try again.");

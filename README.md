@@ -19,3 +19,16 @@ npm run dev
 The public site comes first: browse movies, see Pizza Scores, read public family reviews, and understand how well a movie works for families.
 
 Account features are layered in next: family creation, lead adult review controls, privacy settings, and personalized Family Match scoring.
+
+## Backend Aggregation
+
+Pizza Score aggregation is handled by a Firebase Cloud Function in `functions/`. The website writes family review documents, and the backend updates `movies/{movieId}` totals so users cannot directly edit public aggregate scores from the browser.
+
+Deploying Functions requires the Firebase project to be on the Blaze plan. Early usage should stay inside Firebase/Google Cloud no-cost allowances, but set a budget alert before deploying.
+
+```bash
+cd functions
+npm install
+cd ..
+firebase deploy --only firestore:rules,storage,functions
+```

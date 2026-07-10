@@ -8,6 +8,8 @@ const requiredFiles = [
   "firestore.rules",
   "storage.rules",
   "firebase.json",
+  "functions/index.js",
+  "functions/package.json",
 ];
 
 const requiredMainSnippets = [
@@ -48,6 +50,16 @@ const storageRules = await readFile("storage.rules", "utf8");
 
 if (!storageRules.includes("profilePhotos")) {
   throw new Error("Storage rules are missing profile photo access.");
+}
+
+const functionsSource = await readFile("functions/index.js", "utf8");
+
+if (
+  !functionsSource.includes("aggregateMovieRating") ||
+  !functionsSource.includes("onDocumentWritten") ||
+  !functionsSource.includes("totalPizzaScore")
+) {
+  throw new Error("Functions aggregation trigger is missing expected review logic.");
 }
 
 console.log("Smoke check passed.");
