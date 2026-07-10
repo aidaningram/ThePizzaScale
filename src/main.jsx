@@ -115,6 +115,7 @@ function App() {
   const [searchMessage, setSearchMessage] = useState("");
   const [user, setUser] = useState(null);
   const [authMessage, setAuthMessage] = useState("");
+  const [authMode, setAuthMode] = useState("login");
   const [familyProfile, setFamilyProfile] = useState(null);
   const [review, setReview] = useState({
     parentScore: 7,
@@ -276,16 +277,25 @@ function App() {
 
   async function handleSignOut() {
     setMenuOpen(false);
+    setAuthMessage("");
     await signOut(auth);
     setPage("home");
   }
 
   function goHome() {
     setMenuOpen(false);
+    setAuthMessage("");
     setQuery("");
     setMovieResults(featuredCatalog);
     setSelectedMovie(featuredCatalog[0]);
     setPage("home");
+  }
+
+  function openSignIn(mode = "login") {
+    setMenuOpen(false);
+    setAuthMessage("");
+    setAuthMode(mode);
+    setPage("signin");
   }
 
   function handleHeaderSearchChange(nextQuery) {
@@ -293,6 +303,7 @@ function App() {
 
     if (nextQuery.trim()) {
       setMenuOpen(false);
+      setAuthMessage("");
       setPage("search");
     }
   }
@@ -308,17 +319,22 @@ function App() {
           setQuery={handleHeaderSearchChange}
           showHeaderSearch={page !== "search"}
           onHome={goHome}
-          onSignIn={() => setPage("signin")}
+          onSignIn={() => openSignIn("login")}
+          onSignUp={() => openSignIn("create")}
+          onSignOut={handleSignOut}
           onSearch={() => {
             setMenuOpen(false);
+            setAuthMessage("");
             setPage("search");
           }}
           onRecommendations={() => {
             setMenuOpen(false);
+            setAuthMessage("");
             setPage("recommendations");
           }}
           onSettings={() => {
             setMenuOpen(false);
+            setAuthMessage("");
             setPage("settings");
           }}
         />
@@ -334,7 +350,7 @@ function App() {
           review={review}
           setReview={setReview}
           user={user}
-          onSignIn={() => setPage("signin")}
+          onSignIn={() => openSignIn("login")}
         />
       )}
 
@@ -352,6 +368,7 @@ function App() {
 
       {page === "signin" && (
         <SignInPage
+          initialMode={authMode}
           authMessage={authMessage}
           onEmailAuth={handleEmailAuth}
           onGoogleSignIn={() => handleGoogleSignIn({ promptForFamily: true })}
@@ -378,7 +395,7 @@ function App() {
       )}
 
       {page === "recommendations" && (
-        <RecommendationsPage user={user} onSignIn={() => setPage("signin")} />
+        <RecommendationsPage user={user} onSignIn={() => openSignIn("login")} />
       )}
 
       {page === "settings" && (
@@ -402,6 +419,8 @@ function SiteHeader({
   showHeaderSearch = true,
   onHome,
   onSignIn,
+  onSignUp,
+  onSignOut,
   onSearch,
   onRecommendations,
   onSettings,
@@ -422,40 +441,53 @@ function SiteHeader({
         </button>
         {menuOpen && (
           <div className="account-menu site-menu">
-            <button type="button" onClick={onHome}>
-              Home
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setMenuOpen(false);
-                onSearch();
-              }}
-            >
-              Search
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setMenuOpen(false);
-                onRecommendations();
-              }}
-            >
-              Tailored recommendations
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setMenuOpen(false);
-                if (user) {
-                  onSettings();
-                } else {
-                  onSignIn();
-                }
-              }}
-            >
-              {user ? "Settings" : "Sign in"}
-            </button>
+            <div className="menu-links">
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false);
+                  onSearch();
+                }}
+              >
+                Search
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false);
+                  onRecommendations();
+                }}
+              >
+                Recommendations
+              </button>
+              {user && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    onSettings();
+                  }}
+                >
+                  Settings
+                </button>
+              )}
+            </div>
+            <div className="menu-auth-actions">
+              {!user ? (
+                <>
+                  <button className="menu-auth-button dark" type="button" onClick={onSignIn}>
+                    Sign in
+                  </button>
+                  <button className="menu-auth-button light" type="button" onClick={onSignUp}>
+                    Sign up
+                  </button>
+                </>
+              ) : (
+                <button className="menu-auth-button light" type="button" onClick={onSignOut}>
+                  Sign out
+                </button>
+              )}
+            </div>
           </div>
         )}
         <button
@@ -822,8 +854,8 @@ function HomePage({
   );
 }
 
-function SignInPage({ authMessage, onEmailAuth, onGoogleSignIn, onBack }) {
-  const [mode, setMode] = useState("login");
+function SignInPage({ initialMode, authMessage, onEmailAuth, onGoogleSignIn, onBack }) {
+  const [mode, setMode] = useState(initialMode);
   const [displayName, setDisplayName] = useState("");
   const [profileImage, setProfileImage] = useState("");
   const [profileImageName, setProfileImageName] = useState("");
@@ -831,6 +863,10 @@ function SignInPage({ authMessage, onEmailAuth, onGoogleSignIn, onBack }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const isCreateMode = mode === "create";
+
+  useEffect(() => {
+    setMode(initialMode);
+  }, [initialMode]);
 
   function handleProfileImageChange(event) {
     const file = event.target.files?.[0];

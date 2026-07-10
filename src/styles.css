@@ -289,11 +289,11 @@ p {
   right: 0;
   top: calc(100% + 10px);
   z-index: 4;
-  width: 236px;
+  width: 286px;
   border: 2px solid var(--line);
   border-radius: 16px;
   background: var(--white);
-  padding: 8px;
+  padding: 10px;
   box-shadow: var(--shadow);
 }
 
@@ -302,7 +302,12 @@ p {
   left: 0;
 }
 
-.account-menu button {
+.menu-links {
+  display: grid;
+  gap: 4px;
+}
+
+.menu-links button {
   width: 100%;
   min-height: 42px;
   border-radius: 10px;
@@ -313,8 +318,38 @@ p {
   font-weight: 900;
 }
 
-.account-menu button:hover {
+.menu-links button:hover {
   background: var(--dough-card);
+}
+
+.menu-auth-actions {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 2px solid var(--line);
+  display: grid;
+  gap: 8px;
+}
+
+.menu-auth-button {
+  width: 100%;
+  min-height: 48px;
+  border-radius: 999px;
+  font-family: "Baloo 2", "Nunito", system-ui, sans-serif;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0;
+}
+
+.menu-auth-button.dark {
+  background: var(--plum-ink);
+  color: var(--cheese-gold);
+  box-shadow: 0 6px 0 rgba(52, 23, 53, 0.22);
+}
+
+.menu-auth-button.light {
+  background: var(--dough-card);
+  color: var(--plum-ink);
+  border: 2px solid var(--line);
 }
 
 .profile-setup-row {
