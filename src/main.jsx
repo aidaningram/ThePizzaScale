@@ -236,9 +236,18 @@ function App() {
     setAuthMessage("");
 
     try {
+      if (!email.trim()) {
+        setAuthMessage("Please enter an email address.");
+        return;
+      }
+
+      if (!password) {
+        setAuthMessage("Please enter a password.");
+        return;
+      }
+
       if (mode === "create") {
         const cleanDisplayName = displayName.trim();
-        const cleanPhotoURL = photoURL.trim();
 
         if (!cleanDisplayName) {
           setAuthMessage("Please add your name so your profile can be created.");
@@ -248,13 +257,12 @@ function App() {
         const result = await createUserWithEmailAndPassword(auth, email, password);
         await updateProfile(result.user, {
           displayName: cleanDisplayName,
-          ...(cleanPhotoURL ? { photoURL: cleanPhotoURL } : {}),
         });
         setUser({
           uid: result.user.uid,
           displayName: cleanDisplayName,
           email: result.user.email,
-          photoURL: cleanPhotoURL,
+          photoURL,
         });
         setPage("family-prompt");
       } else {
@@ -262,14 +270,7 @@ function App() {
         setPage("home");
       }
     } catch (error) {
-      const providerDisabled =
-        error.code === "auth/operation-not-allowed" ||
-        error.message.toLowerCase().includes("password");
-      setAuthMessage(
-        providerDisabled
-          ? "Email/password sign-in needs to be enabled in Firebase Authentication."
-          : "Sign-in could not be completed. Check your email and password.",
-      );
+      setAuthMessage(getEmailAuthErrorMessage(error, mode));
     }
   }
 
@@ -471,6 +472,31 @@ function ProfileAvatar({ user, name, photoURL }) {
   }
 
   return <span className="profile-avatar initial-avatar">{initial}</span>;
+}
+
+function getEmailAuthErrorMessage(error, mode) {
+  switch (error.code) {
+    case "auth/operation-not-allowed":
+      return "Email/password sign-in needs to be enabled in Firebase Authentication.";
+    case "auth/email-already-in-use":
+      return "That email already has an account. Try logging in instead.";
+    case "auth/invalid-email":
+      return "Please enter a valid email address.";
+    case "auth/weak-password":
+      return "Please use a stronger password with at least 6 characters.";
+    case "auth/missing-password":
+      return "Please enter a password.";
+    case "auth/user-not-found":
+    case "auth/wrong-password":
+    case "auth/invalid-credential":
+      return "That email and password do not match an account.";
+    case "auth/network-request-failed":
+      return "The network request failed. Check your connection and try again.";
+    default:
+      return mode === "create"
+        ? "Account could not be created. Please check your details and try again."
+        : "Sign-in could not be completed. Check your email and password.";
+  }
 }
 
 function RecommendationsPage({ user, onSignIn }) {
@@ -754,7 +780,10 @@ function SignInPage({ authMessage, onEmailAuth, onGoogleSignIn, onBack }) {
             <ProfileAvatar name={displayName || email} photoURL={profileImage} />
             <div>
               <strong>Profile picture</strong>
-              <p>{profileImageName || "Choose a photo, or keep the default initial avatar."}</p>
+              <p>
+                {profileImageName ||
+                  "Choose a preview photo, or keep the default initial avatar."}
+              </p>
               <label className="choose-photo-button">
                 Choose photo
                 <input type="file" accept="image/*" onChange={handleProfileImageChange} />
