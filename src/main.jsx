@@ -1081,6 +1081,7 @@ function FamilySetupPage({ user, onSaved, onBack }) {
       const cleanedMembers = [
         {
           firstNameOrNickname: leadName.trim(),
+          userId: user.uid,
           role: "adult",
           age: "",
           gender: "",
@@ -1109,7 +1110,12 @@ function FamilySetupPage({ user, onSaved, onBack }) {
         ),
       );
 
-      onSaved({ id: familyDoc.id, displayName: familyPayload.displayName, members: cleanedMembers });
+      onSaved({
+        id: familyDoc.id,
+        displayName: familyPayload.displayName,
+        leadAdultUserId: user.uid,
+        members: cleanedMembers,
+      });
     } catch {
       setSaveMessage("The family could not be saved yet. Please check Firebase permissions.");
     }
@@ -1226,28 +1232,129 @@ function FamilySetupPage({ user, onSaved, onBack }) {
 }
 
 function SettingsPage({ user, familyProfile, onSignOut, onBack }) {
+  const [activeSection, setActiveSection] = useState("account");
+  const currentMember = familyProfile?.members?.find(
+    (member) =>
+      member.userId === user?.uid ||
+      (member.isLeadAdult && familyProfile.leadAdultUserId === user?.uid),
+  );
+  const currentPermission = currentMember?.permission || (familyProfile ? "member" : "");
+  const canManageFamily =
+    Boolean(familyProfile) &&
+    (familyProfile.leadAdultUserId === user?.uid ||
+      ["lead", "colead", "co-lead", "manage"].includes(currentPermission));
+  const familyFieldsDisabled = Boolean(familyProfile) && !canManageFamily;
+
   return (
-    <section className="account-page">
-      <div className="account-card">
-        <p className="eyebrow">Settings</p>
-        <h2>Account settings</h2>
-        <p>{user ? `Signed in as ${user.displayName || user.email}` : "You are not signed in."}</p>
-        <div className="settings-panel">
-          <strong>Family</strong>
-          <p>
-            {familyProfile
-              ? `${familyProfile.displayName} is set up. Permissions can be adjusted here later.`
-              : "Family settings and child permissions will appear here once a family is created."}
-          </p>
-        </div>
-        <button className="secondary-button" type="button" onClick={onBack}>
-          Back to site
-        </button>
-        {user && (
-          <button className="primary-button" type="button" onClick={onSignOut}>
-            Sign out
+    <section className="settings-page">
+      <div className="settings-layout">
+        <aside className="settings-sidebar" aria-label="Settings sections">
+          <p className="eyebrow">Settings</p>
+          <button
+            className={activeSection === "account" ? "active" : ""}
+            type="button"
+            onClick={() => setActiveSection("account")}
+          >
+            Account
           </button>
-        )}
+          <button
+            className={activeSection === "family" ? "active" : ""}
+            type="button"
+            onClick={() => setActiveSection("family")}
+          >
+            Family
+          </button>
+          <button className="settings-back-button" type="button" onClick={onBack}>
+            Back to site
+          </button>
+        </aside>
+
+        <div className="settings-content">
+          {activeSection === "account" && (
+            <section className="settings-card">
+              <p className="eyebrow">Account</p>
+              <h2>Your account</h2>
+              <div className="settings-profile-row">
+                <ProfileAvatar user={user} />
+                <div>
+                  <strong>{user?.displayName || "Pizza Scale member"}</strong>
+                  <p>{user?.email || "You are not signed in."}</p>
+                </div>
+              </div>
+              <div className="settings-panel">
+                <strong>Profile</strong>
+                <p>
+                  Profile editing will live here soon, including display name and profile photo.
+                </p>
+              </div>
+              {user && (
+                <button className="primary-button" type="button" onClick={onSignOut}>
+                  Sign out
+                </button>
+              )}
+            </section>
+          )}
+
+          {activeSection === "family" && (
+            <section className={`settings-card ${familyFieldsDisabled ? "disabled" : ""}`}>
+              <p className="eyebrow">Family</p>
+              <h2>Family settings</h2>
+              {!familyProfile ? (
+                <div className="settings-panel">
+                  <strong>No family connected yet</strong>
+                  <p>
+                    Family settings and child permissions will appear here once a family is
+                    created or joined.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  {familyFieldsDisabled && (
+                    <div className="permission-notice">
+                      <strong>View only</strong>
+                      <p>
+                        You are a member of this family, but only a family leader or co-leader can
+                        change family settings.
+                      </p>
+                    </div>
+                  )}
+                  <label className="field-label">
+                    Family display name
+                    <input
+                      defaultValue={familyProfile.displayName}
+                      disabled={familyFieldsDisabled}
+                    />
+                  </label>
+                  <div className="settings-panel">
+                    <strong>Members</strong>
+                    <div className="settings-member-list">
+                      {familyProfile.members.map((member, index) => (
+                        <div
+                          className="settings-member-row"
+                          key={`${member.firstNameOrNickname}-${index}`}
+                        >
+                          <span>{member.firstNameOrNickname}</span>
+                          <small>
+                            {member.isLeadAdult
+                              ? "Family leader"
+                              : `${member.role || "Member"} · ${member.permission || "guided"}`}
+                          </small>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="settings-panel">
+                    <strong>Child permissions</strong>
+                    <p>
+                      Permission controls will let leaders decide who can browse, suggest movies,
+                      rate movies, and help manage the family.
+                    </p>
+                  </div>
+                </>
+              )}
+            </section>
+          )}
+        </div>
       </div>
     </section>
   );

@@ -736,6 +736,113 @@ p {
   width: fit-content;
 }
 
+.settings-page {
+  padding: 18px 0 48px;
+}
+
+.settings-layout {
+  width: min(100%, 1040px);
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 250px minmax(0, 1fr);
+  gap: 18px;
+  align-items: start;
+}
+
+.settings-sidebar,
+.settings-card {
+  border: 2px solid var(--line);
+  border-radius: 22px;
+  background: rgba(255, 250, 240, 0.94);
+  box-shadow: var(--shadow);
+}
+
+.settings-sidebar {
+  position: sticky;
+  top: 16px;
+  padding: 14px;
+  display: grid;
+  gap: 8px;
+}
+
+.settings-sidebar button {
+  width: 100%;
+  min-height: 46px;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--plum-ink);
+  text-align: left;
+  padding: 0 12px;
+  font-family: "Baloo 2", "Nunito", system-ui, sans-serif;
+  font-weight: 900;
+}
+
+.settings-sidebar button.active {
+  background: var(--plum-ink);
+  color: var(--cheese-gold);
+  box-shadow: 0 6px 0 rgba(52, 23, 53, 0.16);
+}
+
+.settings-sidebar .settings-back-button {
+  margin-top: 10px;
+  border: 2px solid var(--line);
+  background: var(--white);
+  color: var(--plum-soft);
+}
+
+.settings-content {
+  min-width: 0;
+}
+
+.settings-card {
+  padding: 24px;
+  display: grid;
+  gap: 16px;
+}
+
+.settings-card h2 {
+  font-size: clamp(2.1rem, 4vw, 3.65rem);
+}
+
+.settings-card.disabled {
+  opacity: 0.68;
+}
+
+.settings-card.disabled input,
+.settings-card.disabled select,
+.settings-card.disabled textarea {
+  cursor: not-allowed;
+}
+
+.settings-profile-row {
+  border: 2px solid var(--line);
+  border-radius: 16px;
+  background: var(--dough-card);
+  padding: 12px;
+  display: grid;
+  grid-template-columns: 58px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+}
+
+.settings-profile-row .profile-avatar {
+  width: 58px;
+  height: 58px;
+  border-radius: 16px;
+}
+
+.settings-profile-row strong {
+  display: block;
+  color: var(--plum-ink);
+  font-family: "Baloo 2", "Nunito", system-ui, sans-serif;
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.settings-profile-row p {
+  margin: 4px 0 0;
+}
+
 .settings-panel {
   border: 2px solid var(--line);
   border-radius: 16px;
@@ -748,6 +855,52 @@ p {
   margin-bottom: 4px;
   font-family: "Baloo 2", "Nunito", system-ui, sans-serif;
   font-size: 1.2rem;
+}
+
+.permission-notice {
+  border: 2px dashed var(--line-strong);
+  border-radius: 16px;
+  background: var(--cream-soft);
+  padding: 14px;
+}
+
+.permission-notice strong {
+  display: block;
+  margin-bottom: 4px;
+  font-family: "Baloo 2", "Nunito", system-ui, sans-serif;
+  font-size: 1.2rem;
+}
+
+.permission-notice p {
+  margin-bottom: 0;
+  line-height: 1.45;
+}
+
+.settings-member-list {
+  display: grid;
+  gap: 8px;
+}
+
+.settings-member-row {
+  border-radius: 12px;
+  background: var(--white);
+  border: 2px solid var(--line);
+  padding: 10px 12px;
+  display: grid;
+  gap: 2px;
+}
+
+.settings-member-row span {
+  color: var(--plum-ink);
+  font-family: "Baloo 2", "Nunito", system-ui, sans-serif;
+  font-size: 1.08rem;
+  line-height: 1;
+}
+
+.settings-member-row small {
+  color: var(--plum-soft);
+  font-weight: 900;
+  text-transform: capitalize;
 }
 
 .hero-band {
@@ -1404,8 +1557,19 @@ textarea {
   .content-grid,
   .review-grid,
   .family-grid,
+  .settings-layout,
   .search-results-grid {
     grid-template-columns: 1fr;
+  }
+
+  .settings-sidebar {
+    position: static;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .settings-sidebar .eyebrow,
+  .settings-sidebar .settings-back-button {
+    grid-column: 1 / -1;
   }
 
   .search-result-card {
@@ -1505,7 +1669,8 @@ textarea {
   }
 
   .account-card,
-  .family-card {
+  .family-card,
+  .settings-card {
     padding: 18px;
     border-radius: 20px;
   }
