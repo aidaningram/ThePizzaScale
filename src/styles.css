@@ -1078,28 +1078,12 @@ p {
   border: 2px solid var(--line);
   padding: 10px 12px;
   display: grid;
-  gap: 2px;
-}
-
-.settings-member-row span {
-  color: var(--plum-ink);
-  font-family: "Baloo 2", "Nunito", system-ui, sans-serif;
-  font-size: 1.08rem;
-  line-height: 1;
-}
-
-.settings-member-row small {
-  color: var(--plum-soft);
-  font-weight: 900;
-  text-transform: capitalize;
-}
-
-.settings-member-controls {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(170px, 1fr) minmax(0, 3fr);
   gap: 10px;
+  align-items: end;
 }
 
+.settings-member-row > label,
 .settings-member-controls label {
   display: grid;
   gap: 6px;
@@ -1108,7 +1092,8 @@ p {
   font-weight: 900;
 }
 
-.settings-member-controls select {
+.settings-member-row input,
+.settings-member-row select {
   width: 100%;
   min-height: 42px;
   border-radius: 12px;
@@ -1116,6 +1101,20 @@ p {
   background: var(--cream-soft);
   color: var(--plum-ink);
   padding: 0 10px;
+}
+
+.settings-member-row small {
+  color: var(--plum-soft);
+  font-weight: 900;
+  text-transform: capitalize;
+  align-self: center;
+}
+
+.settings-member-controls {
+  display: grid;
+  grid-template-columns: 80px minmax(120px, 1fr) minmax(120px, 1fr) minmax(170px, 1.25fr);
+  gap: 10px;
+  align-items: end;
 }
 
 .hero-band {

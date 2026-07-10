@@ -601,19 +601,45 @@ function App() {
       updatedAt: serverTimestamp(),
     });
 
-    await Promise.all(
+    const savedMembers = await Promise.all(
       nextFamilyProfile.members
-        .filter((member) => member.id)
-        .map((member) =>
-          updateDoc(doc(db, "familyMembers", member.id), {
-            role: member.role || "member",
+        .filter((member) => member.firstNameOrNickname?.trim())
+        .map(async (member) => {
+          const memberPayload = {
+            firstNameOrNickname: member.firstNameOrNickname.trim(),
+            role: member.role || "child",
+            age: member.age || "",
+            gender: member.gender || "",
             permission: member.permission || "guided",
             updatedAt: serverTimestamp(),
-          }),
-        ),
+          };
+
+          if (member.id) {
+            await updateDoc(doc(db, "familyMembers", member.id), memberPayload);
+            return { ...member, ...memberPayload };
+          }
+
+          const memberDoc = await addDoc(collection(db, "familyMembers"), {
+            ...memberPayload,
+            familyId: nextFamilyProfile.id,
+            isLeadAdult: false,
+            createdAt: serverTimestamp(),
+          });
+
+          return {
+            id: memberDoc.id,
+            ...member,
+            ...memberPayload,
+            familyId: nextFamilyProfile.id,
+            isLeadAdult: false,
+          };
+        }),
     );
 
-    setFamilyProfile(nextFamilyProfile);
+    setFamilyProfile({
+      ...nextFamilyProfile,
+      members: savedMembers,
+    });
   }
 
   async function handleCreateInviteCode() {
@@ -2161,6 +2187,20 @@ function SettingsPage({
     );
   }
 
+  function addEditableMember() {
+    setEditableMembers((members) => [
+      ...members,
+      {
+        firstNameOrNickname: "",
+        role: "child",
+        age: "",
+        gender: "",
+        permission: "guided",
+        isLeadAdult: false,
+      },
+    ]);
+  }
+
   async function handleAccountPhotoChange(event) {
     const file = event.target.files?.[0];
     event.target.value = "";
@@ -2483,20 +2523,67 @@ function SettingsPage({
                   )}
                   <div className="settings-panel">
                     <strong>Members</strong>
+                    <p>
+                      Add adults, teens, or kids here even when they do not need their own sign-in.
+                      These profiles help family ratings and future recommendations understand who
+                      is watching.
+                    </p>
                     <div className="settings-member-list">
                       {editableMembers.map((member, index) => (
                         <div
                           className="settings-member-row"
                           key={`${member.firstNameOrNickname}-${index}`}
                         >
-                          <span>{member.firstNameOrNickname}</span>
-                          {member.isLeadAdult ? (
-                            <small>Family leader</small>
-                          ) : (
-                            <div className="settings-member-controls">
-                              <label>
-                                Role
-                                <select
+                          <label>
+                            Name
+                            <input
+                              value={member.firstNameOrNickname || ""}
+                              onChange={(event) =>
+                                updateEditableMember(
+                                  index,
+                                  "firstNameOrNickname",
+                                  event.target.value,
+                                )
+                              }
+                              disabled={familyFieldsDisabled || member.isLeadAdult}
+                              placeholder="First name or nickname"
+                            />
+                          </label>
+                          <div className="settings-member-controls">
+                            <label>
+                              Age
+                              <input
+                                value={member.age || ""}
+                                onChange={(event) =>
+                                  updateEditableMember(index, "age", event.target.value)
+                                }
+                                disabled={familyFieldsDisabled}
+                                inputMode="numeric"
+                              />
+                            </label>
+                            <label>
+                              Gender
+                              <select
+                                value={member.gender || ""}
+                                onChange={(event) =>
+                                  updateEditableMember(index, "gender", event.target.value)
+                                }
+                                disabled={familyFieldsDisabled}
+                              >
+                                <option value="">Prefer not to say</option>
+                                <option value="female">Female</option>
+                                <option value="male">Male</option>
+                                <option value="nonbinary">Nonbinary</option>
+                                <option value="self-described">Self-described</option>
+                              </select>
+                            </label>
+                            {member.isLeadAdult ? (
+                              <small>Family leader</small>
+                            ) : (
+                              <>
+                                <label>
+                                  Role
+                                  <select
                                   value={member.role || "child"}
                                   onChange={(event) =>
                                     updateEditableMember(index, "role", event.target.value)
@@ -2521,14 +2608,25 @@ function SettingsPage({
                                   <option value="guided">Guided browsing</option>
                                   <option value="suggest">Can suggest movies</option>
                                   <option value="rate">Can add ratings</option>
-                                  <option value="manage">Can help manage family</option>
-                                </select>
-                              </label>
-                            </div>
-                          )}
+                                    <option value="manage">Can help manage family</option>
+                                  </select>
+                                </label>
+                              </>
+                            )}
+                          </div>
                         </div>
                       ))}
                     </div>
+                    {canManageFamily && (
+                      <button
+                        className="secondary-button add-member-button"
+                        type="button"
+                        onClick={addEditableMember}
+                      >
+                        <Plus size={18} />
+                        Add family member
+                      </button>
+                    )}
                   </div>
                   <div className="settings-panel">
                     <strong>Child permissions</strong>
