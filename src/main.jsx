@@ -310,6 +310,73 @@ function normalizeMemberPermission(role, permission) {
   return permission || "guided";
 }
 
+function buildFamilySnapshotForReview(familyProfile, user) {
+  const members = (familyProfile?.members || []).map((member) => ({
+    id: member.id || "",
+    hasAccount: Boolean(member.userId),
+    isReviewer: Boolean(member.userId && member.userId === user?.uid),
+    isLeadAdult: Boolean(member.isLeadAdult),
+    role: member.role || "member",
+    age: member.age || "",
+    gender: member.gender || "",
+    permission: member.permission || "member",
+  }));
+  const numericAges = members
+    .map((member) => Number(member.age))
+    .filter((age) => Number.isFinite(age));
+  const roleCounts = members.reduce(
+    (counts, member) => ({
+      ...counts,
+      [member.role]: (counts[member.role] || 0) + 1,
+    }),
+    {},
+  );
+
+  return {
+    familyId: familyProfile.id,
+    familyName: familyProfile.displayName,
+    leadAdultUserId: familyProfile.leadAdultUserId,
+    reviewerUserId: user?.uid || "",
+    memberCount: members.length,
+    accountMemberCount: members.filter((member) => member.hasAccount).length,
+    childCount: members.filter((member) => member.role === "child").length,
+    teenCount: members.filter((member) => member.role === "teen").length,
+    adultCount: members.filter((member) => member.role === "adult").length,
+    roleCounts,
+    youngestAge: numericAges.length ? Math.min(...numericAges) : null,
+    oldestAge: numericAges.length ? Math.max(...numericAges) : null,
+    members,
+  };
+}
+
+function getBroadChildAgeRanges(familySnapshot) {
+  return (familySnapshot?.members || [])
+    .filter((member) => ["child", "teen"].includes(member.role))
+    .map((member) => Number(member.age))
+    .filter((age) => Number.isFinite(age))
+    .map((age) => {
+      if (age <= 5) return "0-5";
+      if (age <= 8) return "6-8";
+      if (age <= 12) return "9-12";
+      if (age <= 15) return "13-15";
+      return "16-17";
+    })
+    .filter((range, index, ranges) => ranges.indexOf(range) === index);
+}
+
+function getRatingAdultUserIds(members, leadAdultUserId) {
+  const ratingUserIds = (members || [])
+    .filter(
+      (member) =>
+        member.userId &&
+        (member.role === "adult" || member.isLeadAdult) &&
+        ["lead", "colead", "co-lead", "manage", "rate"].includes(member.permission || ""),
+    )
+    .map((member) => member.userId);
+
+  return Array.from(new Set([leadAdultUserId, ...ratingUserIds].filter(Boolean)));
+}
+
 async function createUniqueInviteCode() {
   for (let attempt = 0; attempt < 8; attempt += 1) {
     const inviteCode = createInviteCode();
@@ -528,9 +595,8 @@ function App() {
       try {
         const reviewSnapshot = await getDocs(
           firestoreQuery(
-            collection(db, "reviews"),
+            collection(db, "publicReviews"),
             where("movieId", "==", selectedMovie.id),
-            where("visibility", "==", "public"),
             limit(8),
           ),
         );
@@ -737,6 +803,11 @@ function App() {
     const movieId = selectedMovie.id;
     const reviewId = `${familyProfile.id}_${movieId}`;
     const reviewRef = doc(db, "reviews", reviewId);
+    const publicReviewRef = doc(db, "publicReviews", reviewId);
+    const familySnapshotAtReview = buildFamilySnapshotForReview(familyProfile, user);
+    const publicChildAgeRanges = review.showAgeShape
+      ? getBroadChildAgeRanges(familySnapshotAtReview)
+      : [];
 
     setReviewSaveStatus("saving");
     setReviewMessage("Saving rating...");
@@ -777,6 +848,9 @@ function App() {
         visibility: reviewVisibility,
         writtenReview: review.writtenReview.trim(),
         showAgeShape: review.showAgeShape,
+        familySnapshotAtReview,
+        reviewerSnapshotAtReview:
+          familySnapshotAtReview.members.find((member) => member.isReviewer) || null,
         createdAt: serverTimestamp(),
         updatedAt: serverTimestamp(),
       };
@@ -786,6 +860,29 @@ function App() {
         reviewPayload,
         { merge: true },
       );
+
+      if (reviewVisibility === "public") {
+        await setDoc(
+          publicReviewRef,
+          {
+            familyId: familyProfile.id,
+            familyName: familyProfile.displayName,
+            movieId,
+            imdbId: selectedMovie.imdbId || movieId,
+            movieTitle: selectedMovie.title,
+            movieYear: selectedMovie.year,
+            pizzaScore,
+            parentScore,
+            kidScore,
+            writtenReview: review.writtenReview.trim(),
+            showAgeShape: review.showAgeShape,
+            publicChildAgeRanges,
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+          },
+          { merge: true },
+        );
+      }
 
       setFamilyMovieReview({
         id: reviewId,
@@ -801,6 +898,7 @@ function App() {
             writtenReview: review.writtenReview.trim(),
             parentScore,
             kidScore,
+            publicChildAgeRanges,
           },
           ...reviews.filter((publicReview) => publicReview.id !== reviewId),
         ]);
@@ -819,8 +917,14 @@ function App() {
       throw new Error("Only a family leader or co-leader can update family settings.");
     }
 
+    const ratingAdultUserIds = getRatingAdultUserIds(
+      nextFamilyProfile.members,
+      nextFamilyProfile.leadAdultUserId,
+    );
+
     await updateDoc(doc(db, "families", nextFamilyProfile.id), {
       displayName: nextFamilyProfile.displayName,
+      ratingAdultUserIds,
       updatedAt: serverTimestamp(),
     });
 
@@ -861,6 +965,7 @@ function App() {
 
     setFamilyProfile({
       ...nextFamilyProfile,
+      ratingAdultUserIds,
       members: savedMembers,
     });
   }
@@ -1947,6 +2052,11 @@ function MovieStatsPage({
                     <strong>{publicReview.familyName || "A Pizza Scale family"}</strong>
                     <span>{Number(publicReview.pizzaScore || 0).toFixed(1)} / 8 slices</span>
                   </div>
+                  {publicReview.publicChildAgeRanges?.length > 0 && (
+                    <small>
+                      Kids/teens in family: {publicReview.publicChildAgeRanges.join(", ")}
+                    </small>
+                  )}
                   {publicReview.writtenReview ? (
                     <p>{publicReview.writtenReview}</p>
                   ) : (
@@ -2241,6 +2351,7 @@ function FamilySetupPage({ user, onSaved, onBack }) {
       displayName: familyName.trim(),
       leadAdultUserId: user.uid,
       memberUserIds: [user.uid],
+      ratingAdultUserIds: [user.uid],
       inviteCode,
       publicAgeDisplayMode: "ranges",
       createdAt: serverTimestamp(),
@@ -2295,6 +2406,7 @@ function FamilySetupPage({ user, onSaved, onBack }) {
         displayName: familyPayload.displayName,
         leadAdultUserId: user.uid,
         memberUserIds: [user.uid],
+        ratingAdultUserIds: [user.uid],
         inviteCode,
         members: savedMembers,
       });

@@ -20,6 +20,16 @@ service cloud.firestore {
         );
     }
 
+    function canRateFamily(familyId) {
+      let family = get(/databases/$(database)/documents/families/$(familyId)).data;
+      return isSignedIn()
+        && (
+          family.leadAdultUserId == request.auth.uid
+          || (family.coLeaderUserIds is list && family.coLeaderUserIds.hasAny([request.auth.uid]))
+          || (family.ratingAdultUserIds is list && family.ratingAdultUserIds.hasAny([request.auth.uid]))
+        );
+    }
+
     function validReviewData(review) {
       return review.familyId is string
         && review.movieId is string
@@ -33,7 +43,8 @@ service cloud.firestore {
         && review.pizzaScore is number
         && review.pizzaScore >= 1
         && review.pizzaScore <= 8
-        && review.visibility in ["aggregate", "public"];
+        && review.visibility in ["aggregate", "public"]
+        && review.familySnapshotAtReview is map;
     }
 
     match /movies/{movieId} {
@@ -63,16 +74,28 @@ service cloud.firestore {
     }
 
     match /reviews/{reviewId} {
-      allow read: if resource.data.visibility == "public" || isFamilyMember(resource.data.familyId);
-      allow create: if canManageFamily(request.resource.data.familyId)
+      allow read: if isFamilyMember(resource.data.familyId);
+      allow create: if canRateFamily(request.resource.data.familyId)
         && reviewId == request.resource.data.familyId + "_" + request.resource.data.movieId
         && validReviewData(request.resource.data);
-      allow update: if canManageFamily(resource.data.familyId)
+      allow update: if canRateFamily(resource.data.familyId)
         && reviewId == resource.data.familyId + "_" + resource.data.movieId
         && request.resource.data.familyId == resource.data.familyId
         && request.resource.data.movieId == resource.data.movieId
         && validReviewData(request.resource.data);
       allow delete: if canManageFamily(resource.data.familyId);
+    }
+
+    match /publicReviews/{reviewId} {
+      allow read: if true;
+      allow create: if canRateFamily(request.resource.data.familyId)
+        && reviewId == request.resource.data.familyId + "_" + request.resource.data.movieId
+        && request.resource.data.movieId is string
+        && request.resource.data.familyName is string
+        && request.resource.data.pizzaScore is number
+        && request.resource.data.pizzaScore >= 1
+        && request.resource.data.pizzaScore <= 8;
+      allow update, delete: if canManageFamily(resource.data.familyId);
     }
 
     match /aggregates/{document=**} {
