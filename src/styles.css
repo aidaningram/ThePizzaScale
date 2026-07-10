@@ -289,7 +289,7 @@ p {
   right: 0;
   top: calc(100% + 10px);
   z-index: 4;
-  width: 190px;
+  width: 236px;
   border: 2px solid var(--line);
   border-radius: 16px;
   background: var(--white);
@@ -411,6 +411,53 @@ p {
 .sign-in-card {
   align-self: start;
   margin-top: 28px;
+}
+
+.recommendations-page {
+  display: grid;
+  place-items: start center;
+  padding: 18px 0 48px;
+}
+
+.recommendations-card {
+  width: min(100%, 880px);
+  border: 2px solid var(--line);
+  border-radius: 24px;
+  background: rgba(255, 250, 240, 0.94);
+  box-shadow: var(--shadow);
+  padding: 24px;
+  display: grid;
+  gap: 16px;
+}
+
+.recommendations-card h2 {
+  font-size: clamp(2rem, 4vw, 3.65rem);
+}
+
+.recommendation-empty-state {
+  border: 2px dashed var(--line-strong);
+  border-radius: 18px;
+  background: var(--cream-soft);
+  padding: 18px;
+  display: grid;
+  gap: 10px;
+}
+
+.recommendation-empty-state strong {
+  color: var(--plum-ink);
+  font-family: "Baloo 2", "Nunito", system-ui, sans-serif;
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.recommendation-empty-state p {
+  max-width: 640px;
+  margin-bottom: 0;
+  line-height: 1.5;
+}
+
+.recommendation-empty-state .sign-in-button {
+  width: fit-content;
 }
 
 .account-card,

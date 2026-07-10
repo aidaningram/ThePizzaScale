@@ -295,6 +295,10 @@ function App() {
           setQuery={setQuery}
           onHome={goHome}
           onSignIn={() => setPage("signin")}
+          onRecommendations={() => {
+            setMenuOpen(false);
+            setPage("recommendations");
+          }}
           onSettings={() => {
             setMenuOpen(false);
             setPage("settings");
@@ -346,6 +350,10 @@ function App() {
         />
       )}
 
+      {page === "recommendations" && (
+        <RecommendationsPage user={user} onSignIn={() => setPage("signin")} />
+      )}
+
       {page === "settings" && (
         <SettingsPage
           user={user}
@@ -366,6 +374,7 @@ function SiteHeader({
   setQuery,
   onHome,
   onSignIn,
+  onRecommendations,
   onSettings,
 }) {
   return (
@@ -386,6 +395,15 @@ function SiteHeader({
           <div className="account-menu site-menu">
             <button type="button" onClick={onHome}>
               Home
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setMenuOpen(false);
+                onRecommendations();
+              }}
+            >
+              Tailored recommendations
             </button>
             <button
               type="button"
@@ -453,6 +471,39 @@ function ProfileAvatar({ user, name, photoURL }) {
   }
 
   return <span className="profile-avatar initial-avatar">{initial}</span>;
+}
+
+function RecommendationsPage({ user, onSignIn }) {
+  return (
+    <section className="recommendations-page">
+      <div className="recommendations-card">
+        <p className="eyebrow">Tailored recommendations</p>
+        <h2>Movies picked for your family</h2>
+        {!user ? (
+          <div className="recommendation-empty-state">
+            <strong>Sign in to get recommendations</strong>
+            <p>
+              The Pizza Scale needs your account and family profile before it can shape movie
+              suggestions around your household.
+            </p>
+            <button className="sign-in-button" type="button" onClick={onSignIn}>
+              <Users size={18} />
+              Sign in
+            </button>
+          </div>
+        ) : (
+          <div className="recommendation-empty-state">
+            <strong>Not enough data yet</strong>
+            <p>
+              We do not have enough family ratings to make reliable tailored recommendations yet.
+              Once more families rate movies, this page will surface matches based on household
+              makeup and shared preferences.
+            </p>
+          </div>
+        )}
+      </div>
+    </section>
+  );
 }
 
 function HomePage({
