@@ -142,6 +142,14 @@ function normalizeInviteCode(value) {
     .slice(0, 12);
 }
 
+function normalizeMemberPermission(role, permission) {
+  if (permission === "rate" && role !== "adult") {
+    return "guided";
+  }
+
+  return permission || "guided";
+}
+
 async function createUniqueInviteCode() {
   for (let attempt = 0; attempt < 8; attempt += 1) {
     const inviteCode = createInviteCode();
@@ -175,6 +183,7 @@ function App() {
   const [familyProfile, setFamilyProfile] = useState(null);
   const [familyLoadStatus, setFamilyLoadStatus] = useState("idle");
   const [publicReviews, setPublicReviews] = useState([]);
+  const [familyMovieReview, setFamilyMovieReview] = useState(null);
   const [reviewMessage, setReviewMessage] = useState("");
   const [reviewSaveStatus, setReviewSaveStatus] = useState("idle");
   const [review, setReview] = useState({
@@ -387,6 +396,43 @@ function App() {
     };
   }, [selectedMovie]);
 
+  useEffect(() => {
+    let isCurrent = true;
+
+    async function loadFamilyMovieReview() {
+      if (!familyProfile?.id || !selectedMovie?.id) {
+        setFamilyMovieReview(null);
+        return;
+      }
+
+      try {
+        const reviewSnapshot = await getDoc(
+          doc(db, "reviews", `${familyProfile.id}_${selectedMovie.id}`),
+        );
+
+        if (!isCurrent) return;
+
+        setFamilyMovieReview(
+          reviewSnapshot.exists()
+            ? {
+                id: reviewSnapshot.id,
+                ...reviewSnapshot.data(),
+              }
+            : null,
+        );
+      } catch {
+        if (!isCurrent) return;
+        setFamilyMovieReview(null);
+      }
+    }
+
+    loadFamilyMovieReview();
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [familyProfile?.id, selectedMovie]);
+
   async function handleGoogleSignIn({ promptForFamily = true } = {}) {
     setAuthMessage("");
 
@@ -518,9 +564,9 @@ function App() {
       return;
     }
 
-    if (!canManageFamilyProfile(familyProfile, user)) {
+    if (!canRateForFamilyProfile(familyProfile, user)) {
       setReviewSaveStatus("error");
-      setReviewMessage("Only a family leader or co-leader can save ratings for the family.");
+      setReviewMessage("Only an adult with rating permission can save family ratings.");
       return;
     }
 
@@ -541,33 +587,50 @@ function App() {
         ? existingReviewSnapshot.data()
         : null;
 
+      if (existingReview) {
+        setFamilyMovieReview({
+          id: reviewId,
+          ...existingReview,
+        });
+        setReviewSaveStatus("error");
+        setReviewMessage("Your family has already rated this movie.");
+        return;
+      }
+
+      const reviewPayload = {
+        familyId: familyProfile.id,
+        familyName: familyProfile.displayName,
+        leadAdultUserId: familyProfile.leadAdultUserId,
+        userId: user.uid,
+        movieId,
+        imdbId: selectedMovie.imdbId || movieId,
+        movieTitle: selectedMovie.title,
+        movieYear: selectedMovie.year,
+        movieRated: selectedMovie.rated,
+        movieRuntime: selectedMovie.runtime,
+        movieGenre: selectedMovie.genre,
+        moviePosterUrl: selectedMovie.posterUrl || "",
+        moviePlot: selectedMovie.plot,
+        parentScore,
+        kidScore,
+        pizzaScore,
+        visibility: reviewVisibility,
+        writtenReview: review.writtenReview.trim(),
+        showAgeShape: review.showAgeShape,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp(),
+      };
+
       await setDoc(
         reviewRef,
-        {
-          familyId: familyProfile.id,
-          familyName: familyProfile.displayName,
-          leadAdultUserId: familyProfile.leadAdultUserId,
-          userId: user.uid,
-          movieId,
-          imdbId: selectedMovie.imdbId || movieId,
-          movieTitle: selectedMovie.title,
-          movieYear: selectedMovie.year,
-          movieRated: selectedMovie.rated,
-          movieRuntime: selectedMovie.runtime,
-          movieGenre: selectedMovie.genre,
-          moviePosterUrl: selectedMovie.posterUrl || "",
-          moviePlot: selectedMovie.plot,
-          parentScore,
-          kidScore,
-          pizzaScore,
-          visibility: reviewVisibility,
-          writtenReview: review.writtenReview.trim(),
-          showAgeShape: review.showAgeShape,
-          createdAt: existingReview?.createdAt || serverTimestamp(),
-          updatedAt: serverTimestamp(),
-        },
+        reviewPayload,
         { merge: true },
       );
+
+      setFamilyMovieReview({
+        id: reviewId,
+        ...reviewPayload,
+      });
 
       if (reviewVisibility === "public") {
         setPublicReviews((reviews) => [
@@ -610,7 +673,7 @@ function App() {
             role: member.role || "child",
             age: member.age || "",
             gender: member.gender || "",
-            permission: member.permission || "guided",
+            permission: normalizeMemberPermission(member.role || "child", member.permission),
             updatedAt: serverTimestamp(),
           };
 
@@ -797,6 +860,8 @@ function App() {
           setReview={setReview}
           user={user}
           familyProfile={familyProfile}
+          familyMovieReview={familyMovieReview}
+          canRateForFamily={canRateForFamilyProfile(familyProfile, user)}
           publicReviews={publicReviews}
           reviewMessage={reviewMessage}
           reviewSaveStatus={reviewSaveStatus}
@@ -944,6 +1009,25 @@ function canManageFamilyProfile(familyProfile, user) {
 
   const currentMember = familyProfile.members?.find((member) => member.userId === user.uid);
   return ["lead", "colead", "co-lead", "manage"].includes(currentMember?.permission);
+}
+
+function canRateForFamilyProfile(familyProfile, user) {
+  if (!familyProfile || !user) return false;
+  if (familyProfile.leadAdultUserId === user.uid) return true;
+
+  const currentMember = familyProfile.members?.find(
+    (member) =>
+      member.userId === user.uid ||
+      (member.isLeadAdult && familyProfile.leadAdultUserId === user.uid),
+  );
+  const role = currentMember?.role || "";
+  const permission = currentMember?.permission || "";
+  const isAdult = role === "adult" || currentMember?.isLeadAdult;
+
+  if (!isAdult) return false;
+  if (familyProfile.coLeaderUserIds?.includes(user.uid)) return true;
+
+  return ["lead", "colead", "co-lead", "manage", "rate"].includes(permission);
 }
 
 function SignOutConfirmDialog({ onCancel, onConfirm }) {
@@ -1509,6 +1593,8 @@ function MovieStatsPage({
   setReview,
   user,
   familyProfile,
+  familyMovieReview,
+  canRateForFamily,
   publicReviews,
   reviewMessage,
   reviewSaveStatus,
@@ -1518,6 +1604,7 @@ function MovieStatsPage({
 }) {
   const overallScore = (Number(review.parentScore) + Number(review.kidScore)) / 2;
   const selectedVisibility = review.visibility === "public" ? "public" : "aggregate";
+  const savedFamilyScore = Number(familyMovieReview?.pizzaScore || 0);
 
   return (
     <section className="movie-stats-page" aria-label={`${selectedMovie.title} statistics`}>
@@ -1551,95 +1638,142 @@ function MovieStatsPage({
         </div>
 
         <div className="review-grid">
-          <form className="review-form">
-            <div className="section-heading">
-              <Star size={20} />
-              <h2>Rate as Lead Adult</h2>
-            </div>
-
-            <SliceInput
-              label="Parent slice score"
-              value={review.parentScore}
-              onChange={(parentScore) => setReview({ ...review, parentScore })}
-            />
-            <SliceInput
-              label="Kids slice score"
-              value={review.kidScore}
-              onChange={(kidScore) => setReview({ ...review, kidScore })}
-            />
-
-            <div className="calculated-score">
-              <div className="calculated-score-pizza">
-                <PizzaFill value={overallScore} />
+          {familyMovieReview ? (
+            <section className="review-form family-rating-summary">
+              <div className="section-heading">
+                <Star size={20} />
+                <h2>Your family already rated this</h2>
               </div>
-              <div className="calculated-score-copy">
-                <span>Calculated overall</span>
-                <strong>{overallScore.toFixed(1)} / 8 slices</strong>
+              <div className="calculated-score">
+                <div className="calculated-score-pizza">
+                  <PizzaFill value={savedFamilyScore} />
+                </div>
+                <div className="calculated-score-copy">
+                  <span>Family rating</span>
+                  <strong>{savedFamilyScore.toFixed(1)} / 8 slices</strong>
+                </div>
               </div>
-            </div>
+              <div className="family-rating-breakdown">
+                <span>
+                  Parent score: {Number(familyMovieReview.parentScore || 0).toFixed(1)} / 8
+                </span>
+                <span>Kids score: {Number(familyMovieReview.kidScore || 0).toFixed(1)} / 8</span>
+                <span>
+                  Visibility:{" "}
+                  {familyMovieReview.visibility === "public"
+                    ? "Public family review"
+                    : "Anonymous aggregate"}
+                </span>
+              </div>
+              {familyMovieReview.writtenReview && (
+                <div className="settings-panel">
+                  <strong>Your written review</strong>
+                  <p>{familyMovieReview.writtenReview}</p>
+                </div>
+              )}
+              <p className="form-status ready">
+                Each family can submit one Pizza Scale rating per movie.
+              </p>
+            </section>
+          ) : (
+            <form className="review-form">
+              <div className="section-heading">
+                <Star size={20} />
+                <h2>Rate as Lead Adult</h2>
+              </div>
 
-            <label className="text-area-label">
-              Optional public review
-              <textarea
-                value={review.writtenReview}
-                onChange={(event) => setReview({ ...review, writtenReview: event.target.value })}
-                placeholder="What should another family know before movie night?"
-              />
-            </label>
+              {!canRateForFamily && user && familyProfile && (
+                <p className="form-status error">
+                  Only a parent/adult with rating permission can save family ratings.
+                </p>
+              )}
 
-            <fieldset className="visibility-group">
-              <legend>Review visibility</legend>
-              <VisibilityChoice
-                icon={<ShieldCheck size={18} />}
-                label="Anonymous aggregate"
-                value="aggregate"
-                selected={selectedVisibility}
-                onChange={(visibility) => setReview({ ...review, visibility })}
-                description={
-                  "Your slice scores help shape Pizza Scale totals, but your family name and written review will not be shown publicly."
-                }
+              <SliceInput
+                label="Parent slice score"
+                value={review.parentScore}
+                onChange={(parentScore) => setReview({ ...review, parentScore })}
               />
-              <VisibilityChoice
-                icon={<Eye size={18} />}
-                label="Public family review"
-                value="public"
-                selected={selectedVisibility}
-                onChange={(visibility) => setReview({ ...review, visibility })}
-                description={
-                  "Your family name, slice score, and optional written review can appear for other families."
-                }
+              <SliceInput
+                label="Kids slice score"
+                value={review.kidScore}
+                onChange={(kidScore) => setReview({ ...review, kidScore })}
               />
-            </fieldset>
 
-            {selectedVisibility === "public" && (
-              <label className="checkbox-row">
-                <input
-                  type="checkbox"
-                  checked={review.showAgeShape}
-                  onChange={(event) =>
-                    setReview({ ...review, showAgeShape: event.target.checked })
+              <div className="calculated-score">
+                <div className="calculated-score-pizza">
+                  <PizzaFill value={overallScore} />
+                </div>
+                <div className="calculated-score-copy">
+                  <span>Calculated overall</span>
+                  <strong>{overallScore.toFixed(1)} / 8 slices</strong>
+                </div>
+              </div>
+
+              <label className="text-area-label">
+                Optional public review
+                <textarea
+                  value={review.writtenReview}
+                  onChange={(event) => setReview({ ...review, writtenReview: event.target.value })}
+                  placeholder="What should another family know before movie night?"
+                />
+              </label>
+
+              <fieldset className="visibility-group">
+                <legend>Review visibility</legend>
+                <VisibilityChoice
+                  icon={<ShieldCheck size={18} />}
+                  label="Anonymous aggregate"
+                  value="aggregate"
+                  selected={selectedVisibility}
+                  onChange={(visibility) => setReview({ ...review, visibility })}
+                  description={
+                    "Your slice scores help shape Pizza Scale totals, but your family name and written review will not be shown publicly."
                   }
                 />
-                <span>Allow public review to show broad child age range</span>
-              </label>
-            )}
+                <VisibilityChoice
+                  icon={<Eye size={18} />}
+                  label="Public family review"
+                  value="public"
+                  selected={selectedVisibility}
+                  onChange={(visibility) => setReview({ ...review, visibility })}
+                  description={
+                    "Your family name, slice score, and optional written review can appear for other families."
+                  }
+                />
+              </fieldset>
 
-            {reviewMessage && (
-              <p className={`form-status ${reviewSaveStatus}`}>{reviewMessage}</p>
-            )}
-            <button
-              className="primary-button"
-              type="button"
-              onClick={user ? onSaveReview : onSignIn}
-              disabled={reviewSaveStatus === "saving"}
-            >
-              {!user
-                ? "Sign in to Save Rating"
-                : familyProfile
-                  ? "Save Rating"
-                  : "Create a Family to Save"}
-            </button>
-          </form>
+              {selectedVisibility === "public" && (
+                <label className="checkbox-row">
+                  <input
+                    type="checkbox"
+                    checked={review.showAgeShape}
+                    onChange={(event) =>
+                      setReview({ ...review, showAgeShape: event.target.checked })
+                    }
+                  />
+                  <span>Allow public review to show broad child age range</span>
+                </label>
+              )}
+
+              {reviewMessage && (
+                <p className={`form-status ${reviewSaveStatus}`}>{reviewMessage}</p>
+              )}
+              <button
+                className="primary-button"
+                type="button"
+                onClick={user ? onSaveReview : onSignIn}
+                disabled={
+                  reviewSaveStatus === "saving" || (user && familyProfile && !canRateForFamily)
+                }
+              >
+                {!user
+                  ? "Sign in to Save Rating"
+                  : familyProfile
+                    ? "Save Rating"
+                    : "Create a Family to Save"}
+              </button>
+            </form>
+          )}
 
           <aside className="public-reviews">
             <div className="section-heading">
@@ -1918,7 +2052,15 @@ function FamilySetupPage({ user, onSaved, onBack }) {
   function updateMember(index, key, value) {
     setMembers((currentMembers) =>
       currentMembers.map((member, memberIndex) =>
-        memberIndex === index ? { ...member, [key]: value } : member,
+        memberIndex === index
+          ? {
+              ...member,
+              [key]: value,
+              ...(key === "role"
+                ? { permission: normalizeMemberPermission(value, member.permission) }
+                : {}),
+            }
+          : member,
       ),
     );
   }
@@ -1971,7 +2113,7 @@ function FamilySetupPage({ user, onSaved, onBack }) {
             role: member.role,
             age: member.age,
             gender: member.gender,
-            permission: member.permission,
+            permission: normalizeMemberPermission(member.role, member.permission),
             isLeadAdult: false,
           })),
       ];
@@ -2070,7 +2212,7 @@ function FamilySetupPage({ user, onSaved, onBack }) {
                 >
                   <option value="child">Child</option>
                   <option value="teen">Teen</option>
-                  <option value="adult">Adult</option>
+                  <option value="adult">Parent/adult</option>
                 </select>
               </label>
               <label className="field-label">
@@ -2081,7 +2223,7 @@ function FamilySetupPage({ user, onSaved, onBack }) {
                 >
                   <option value="guided">Guided browsing</option>
                   <option value="suggest">Can suggest movies</option>
-                  <option value="rate">Can add ratings</option>
+                  {member.role === "adult" && <option value="rate">Can add ratings</option>}
                   <option value="manage">Can help manage family</option>
                 </select>
               </label>
@@ -2182,7 +2324,15 @@ function SettingsPage({
   function updateEditableMember(index, key, value) {
     setEditableMembers((members) =>
       members.map((member, memberIndex) =>
-        memberIndex === index ? { ...member, [key]: value } : member,
+        memberIndex === index
+          ? {
+              ...member,
+              [key]: value,
+              ...(key === "role"
+                ? { permission: normalizeMemberPermission(value, member.permission) }
+                : {}),
+            }
+          : member,
       ),
     );
   }
@@ -2584,30 +2734,32 @@ function SettingsPage({
                                 <label>
                                   Role
                                   <select
-                                  value={member.role || "child"}
-                                  onChange={(event) =>
-                                    updateEditableMember(index, "role", event.target.value)
-                                  }
-                                  disabled={familyFieldsDisabled}
-                                >
-                                  <option value="child">Child</option>
-                                  <option value="teen">Teen</option>
-                                  <option value="adult">Adult</option>
-                                </select>
-                              </label>
-                              <label>
-                                Permission
-                                <select
-                                  value={member.permission || "guided"}
-                                  onChange={(event) =>
-                                    updateEditableMember(index, "permission", event.target.value)
-                                  }
-                                  disabled={familyFieldsDisabled}
-                                >
-                                  <option value="member">Family member</option>
-                                  <option value="guided">Guided browsing</option>
-                                  <option value="suggest">Can suggest movies</option>
-                                  <option value="rate">Can add ratings</option>
+                                    value={member.role || "child"}
+                                    onChange={(event) =>
+                                      updateEditableMember(index, "role", event.target.value)
+                                    }
+                                    disabled={familyFieldsDisabled}
+                                  >
+                                    <option value="child">Child</option>
+                                    <option value="teen">Teen</option>
+                                    <option value="adult">Parent/adult</option>
+                                  </select>
+                                </label>
+                                <label>
+                                  Permission
+                                  <select
+                                    value={member.permission || "guided"}
+                                    onChange={(event) =>
+                                      updateEditableMember(index, "permission", event.target.value)
+                                    }
+                                    disabled={familyFieldsDisabled}
+                                  >
+                                    <option value="member">Family member</option>
+                                    <option value="guided">Guided browsing</option>
+                                    <option value="suggest">Can suggest movies</option>
+                                    {member.role === "adult" && (
+                                      <option value="rate">Can add ratings</option>
+                                    )}
                                     <option value="manage">Can help manage family</option>
                                   </select>
                                 </label>

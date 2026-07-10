@@ -65,8 +65,10 @@ service cloud.firestore {
     match /reviews/{reviewId} {
       allow read: if resource.data.visibility == "public" || isFamilyMember(resource.data.familyId);
       allow create: if canManageFamily(request.resource.data.familyId)
+        && reviewId == request.resource.data.familyId + "_" + request.resource.data.movieId
         && validReviewData(request.resource.data);
       allow update: if canManageFamily(resource.data.familyId)
+        && reviewId == resource.data.familyId + "_" + resource.data.movieId
         && request.resource.data.familyId == resource.data.familyId
         && request.resource.data.movieId == resource.data.movieId
         && validReviewData(request.resource.data);

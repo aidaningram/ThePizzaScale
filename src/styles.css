@@ -1672,6 +1672,24 @@ textarea::placeholder {
   gap: 14px;
 }
 
+.family-rating-summary {
+  align-content: start;
+}
+
+.family-rating-breakdown {
+  display: grid;
+  gap: 8px;
+}
+
+.family-rating-breakdown span {
+  border: 2px solid var(--line);
+  border-radius: 14px;
+  background: var(--cream-soft);
+  color: var(--plum-soft);
+  padding: 10px 12px;
+  font-weight: 900;
+}
+
 .slice-input {
   display: grid;
   grid-template-columns: 160px minmax(0, 1fr) 82px;
