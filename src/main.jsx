@@ -1256,6 +1256,14 @@ function HomePage({
   onSignIn,
 }) {
   const overallScore = (Number(review.parentScore) + Number(review.kidScore)) / 2;
+  const movieCategories = [
+    {
+      id: "movies-to-try",
+      title: "Movies to Try",
+      description: "Starter picks while The Pizza Scale gathers real family ratings.",
+      movies: movieResults,
+    },
+  ];
 
   return (
     <>
@@ -1269,33 +1277,18 @@ function HomePage({
         </div>
       </section>
 
-      <section className="content-grid" aria-label="Pizza Scale movie explorer">
-        <aside className="movie-column">
-          <div className="section-heading">
-            <Film size={20} />
-            <h2>Movies to Try</h2>
-          </div>
-          <div className="movie-list">
-            {movieResults.map((movie) => (
-              <button
-                className={`movie-card ${selectedMovie.id === movie.id ? "active" : ""}`}
-                key={movie.id}
-                type="button"
-                onClick={() => setSelectedMovie(movie)}
-              >
-                <PosterTile movie={movie} compact />
-                <span>
-                  <strong>{movie.title}</strong>
-                  <small>
-                    {movie.year} · {movie.rated || "NR"} ·{" "}
-                    {movie.reviewCount > 0 ? `${movie.familyMatch}% match` : "No ratings yet"}
-                  </small>
-                </span>
-              </button>
-            ))}
-          </div>
-        </aside>
+      <section className="home-browse" aria-label="Pizza Scale movie categories">
+        {movieCategories.map((category) => (
+          <MovieCategoryRow
+            category={category}
+            key={category.id}
+            selectedMovie={selectedMovie}
+            onSelectMovie={setSelectedMovie}
+          />
+        ))}
+      </section>
 
+      <section className="content-grid detail-only-grid" aria-label="Selected movie details">
         <section className="detail-panel">
           <button className="back-button" type="button">
             <ChevronLeft size={18} />
@@ -1450,6 +1443,45 @@ function HomePage({
         </section>
       </section>
     </>
+  );
+}
+
+function MovieCategoryRow({ category, selectedMovie, onSelectMovie }) {
+  return (
+    <section className="movie-category-row" aria-labelledby={`${category.id}-title`}>
+      <div className="category-heading">
+        <div>
+          <div className="section-heading">
+            <Film size={20} />
+            <h2 id={`${category.id}-title`}>{category.title}</h2>
+          </div>
+          <p>{category.description}</p>
+        </div>
+      </div>
+      <div className="movie-rail" tabIndex={0} aria-label={`${category.title} movies`}>
+        {category.movies.map((movie) => (
+          <button
+            className={`rail-movie-card ${selectedMovie.id === movie.id ? "active" : ""}`}
+            key={movie.id}
+            type="button"
+            onClick={() => onSelectMovie(movie)}
+          >
+            <PosterTile movie={movie} />
+            <span>
+              <strong>{movie.title}</strong>
+              <small>
+                {movie.year} · {movie.rated || "NR"}
+              </small>
+              <small>
+                {movie.reviewCount > 0
+                  ? `${Number(movie.pizzaScore).toFixed(1)} / 8 slices`
+                  : "No ratings yet"}
+              </small>
+            </span>
+          </button>
+        ))}
+      </div>
+    </section>
   );
 }
 
