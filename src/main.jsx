@@ -116,6 +116,7 @@ function App() {
   const [user, setUser] = useState(null);
   const [authMessage, setAuthMessage] = useState("");
   const [authMode, setAuthMode] = useState("login");
+  const [confirmingSignOut, setConfirmingSignOut] = useState(false);
   const [familyProfile, setFamilyProfile] = useState(null);
   const [review, setReview] = useState({
     parentScore: 7,
@@ -278,8 +279,14 @@ function App() {
   async function handleSignOut() {
     setMenuOpen(false);
     setAuthMessage("");
+    setConfirmingSignOut(false);
     await signOut(auth);
     setPage("home");
+  }
+
+  function requestSignOut() {
+    setMenuOpen(false);
+    setConfirmingSignOut(true);
   }
 
   function goHome() {
@@ -321,7 +328,7 @@ function App() {
           onHome={goHome}
           onSignIn={() => openSignIn("login")}
           onSignUp={() => openSignIn("create")}
-          onSignOut={handleSignOut}
+          onSignOut={requestSignOut}
           onSearch={() => {
             setMenuOpen(false);
             setAuthMessage("");
@@ -402,11 +409,44 @@ function App() {
         <SettingsPage
           user={user}
           familyProfile={familyProfile}
-          onSignOut={handleSignOut}
+          onSignOut={requestSignOut}
           onBack={goHome}
         />
       )}
+
+      {confirmingSignOut && (
+        <SignOutConfirmDialog
+          onCancel={() => setConfirmingSignOut(false)}
+          onConfirm={handleSignOut}
+        />
+      )}
     </main>
+  );
+}
+
+function SignOutConfirmDialog({ onCancel, onConfirm }) {
+  return (
+    <div className="dialog-backdrop" role="presentation" onMouseDown={onCancel}>
+      <section
+        className="confirm-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="sign-out-title"
+        onMouseDown={(event) => event.stopPropagation()}
+      >
+        <p className="eyebrow">Account</p>
+        <h2 id="sign-out-title">Sign out?</h2>
+        <p>You will need to sign back in before saving ratings or managing your family.</p>
+        <div className="dialog-actions">
+          <button className="secondary-button" type="button" onClick={onCancel}>
+            Stay signed in
+          </button>
+          <button className="primary-button" type="button" onClick={onConfirm}>
+            Sign out
+          </button>
+        </div>
+      </section>
+    </div>
   );
 }
 
