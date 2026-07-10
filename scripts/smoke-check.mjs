@@ -1,0 +1,53 @@
+import { access, readFile } from "node:fs/promises";
+
+const requiredFiles = [
+  "src/main.jsx",
+  "src/movieProvider.js",
+  "src/firebase.js",
+  "src/styles.css",
+  "firestore.rules",
+  "storage.rules",
+  "firebase.json",
+];
+
+const requiredMainSnippets = [
+  "handleSaveReview",
+  "handleUpdateFamily",
+  "loadFamilyProfile",
+  "hydrateMoviesWithStats",
+  "SearchPage",
+  "SettingsPage",
+];
+
+async function assertFileExists(path) {
+  try {
+    await access(path);
+  } catch {
+    throw new Error(`Missing required file: ${path}`);
+  }
+}
+
+for (const file of requiredFiles) {
+  await assertFileExists(file);
+}
+
+const mainSource = await readFile("src/main.jsx", "utf8");
+const missingSnippet = requiredMainSnippets.find((snippet) => !mainSource.includes(snippet));
+
+if (missingSnippet) {
+  throw new Error(`Missing expected app flow: ${missingSnippet}`);
+}
+
+const firestoreRules = await readFile("firestore.rules", "utf8");
+
+if (!firestoreRules.includes("canManageFamily") || !firestoreRules.includes("match /reviews")) {
+  throw new Error("Firestore rules are missing family management or review rules.");
+}
+
+const storageRules = await readFile("storage.rules", "utf8");
+
+if (!storageRules.includes("profilePhotos")) {
+  throw new Error("Storage rules are missing profile photo access.");
+}
+
+console.log("Smoke check passed.");

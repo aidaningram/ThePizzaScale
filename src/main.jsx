@@ -21,8 +21,21 @@ import {
   signOut,
   updateProfile,
 } from "firebase/auth";
-import { addDoc, collection, serverTimestamp } from "firebase/firestore";
-import { auth, db } from "./firebase";
+import {
+  addDoc,
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  limit,
+  query as firestoreQuery,
+  serverTimestamp,
+  setDoc,
+  updateDoc,
+  where,
+} from "firebase/firestore";
+import { getDownloadURL, ref, uploadString } from "firebase/storage";
+import { auth, db, storage } from "./firebase";
 import { getOmdbMovie, searchOmdbMovies } from "./movieProvider";
 import pizzaWordmark from "./assets/PizzaScaleWordmark.png";
 import "./styles.css";
@@ -120,6 +133,10 @@ function App() {
   const [confirmingSignOut, setConfirmingSignOut] = useState(false);
   const [profilePhotos, setProfilePhotos] = useState(() => readStoredProfilePhotos());
   const [familyProfile, setFamilyProfile] = useState(null);
+  const [familyLoadStatus, setFamilyLoadStatus] = useState("idle");
+  const [publicReviews, setPublicReviews] = useState([]);
+  const [reviewMessage, setReviewMessage] = useState("");
+  const [reviewSaveStatus, setReviewSaveStatus] = useState("idle");
   const [review, setReview] = useState({
     parentScore: 7,
     kidScore: 8,
@@ -128,7 +145,75 @@ function App() {
     showAgeShape: true,
   });
 
-  useEffect(() => onAuthStateChanged(auth, setUser), []);
+  useEffect(
+    () =>
+      onAuthStateChanged(auth, (currentUser) => {
+        setUser(currentUser);
+
+        if (!currentUser) {
+          setFamilyProfile(null);
+          setFamilyLoadStatus("idle");
+        }
+      }),
+    [],
+  );
+
+  useEffect(() => {
+    let isCurrent = true;
+
+    async function loadFamilyProfile() {
+      if (!user) return;
+
+      setFamilyLoadStatus("loading");
+
+      try {
+        const familiesSnapshot = await getDocs(
+          firestoreQuery(
+            collection(db, "families"),
+            where("memberUserIds", "array-contains", user.uid),
+            limit(1),
+          ),
+        );
+
+        if (!isCurrent) return;
+
+        if (familiesSnapshot.empty) {
+          setFamilyProfile(null);
+          setFamilyLoadStatus("empty");
+          return;
+        }
+
+        const familyDoc = familiesSnapshot.docs[0];
+        const membersSnapshot = await getDocs(
+          firestoreQuery(
+            collection(db, "familyMembers"),
+            where("familyId", "==", familyDoc.id),
+          ),
+        );
+
+        if (!isCurrent) return;
+
+        setFamilyProfile({
+          id: familyDoc.id,
+          ...familyDoc.data(),
+          members: membersSnapshot.docs.map((memberDoc) => ({
+            id: memberDoc.id,
+            ...memberDoc.data(),
+          })),
+        });
+        setFamilyLoadStatus("ready");
+      } catch {
+        if (!isCurrent) return;
+        setFamilyLoadStatus("error");
+      }
+    }
+
+    loadFamilyProfile();
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [user]);
 
   useEffect(() => {
     let isCurrent = true;
@@ -143,15 +228,16 @@ function App() {
           }
         }),
       );
+      const moviesWithStats = await hydrateMoviesWithStats(hydratedMovies);
 
       if (!isCurrent) return;
 
-      setFeaturedCatalog(hydratedMovies);
+      setFeaturedCatalog(moviesWithStats);
       setMovieResults((currentResults) =>
-        currentResults === featuredMovies ? hydratedMovies : currentResults,
+        currentResults === featuredMovies ? moviesWithStats : currentResults,
       );
       setSelectedMovie((currentMovie) =>
-        currentMovie.id === featuredMovies[0].id ? hydratedMovies[0] : currentMovie,
+        currentMovie.id === featuredMovies[0].id ? moviesWithStats[0] : currentMovie,
       );
     }
 
@@ -195,20 +281,23 @@ function App() {
             }
           }),
         );
+        const detailResultsWithStats = await hydrateMoviesWithStats(detailResults);
 
         if (!isCurrent) return;
 
-        setMovieResults(detailResults);
-        setSelectedMovie(detailResults[0] || featuredCatalog[0]);
-        setSearchStatus(detailResults.length ? "ready" : "empty");
-        setSearchMessage(detailResults.length ? "Live results from OMDb" : "No movies found");
-      } catch {
+        setMovieResults(detailResultsWithStats);
+        setSelectedMovie(detailResultsWithStats[0] || featuredCatalog[0]);
+        setSearchStatus(detailResultsWithStats.length ? "ready" : "empty");
+        setSearchMessage(
+          detailResultsWithStats.length ? "Live results from OMDb" : "No movies found",
+        );
+      } catch (error) {
         if (!isCurrent) return;
 
         setMovieResults(featuredCatalog);
         setSelectedMovie(featuredCatalog[0]);
         setSearchStatus("error");
-        setSearchMessage("Movie search is unavailable right now");
+        setSearchMessage(error.message || "Movie search is unavailable right now");
       }
     }, 350);
 
@@ -217,6 +306,46 @@ function App() {
       window.clearTimeout(searchTimer);
     };
   }, [featuredCatalog, query]);
+
+  useEffect(() => {
+    let isCurrent = true;
+
+    async function loadPublicReviews() {
+      if (!selectedMovie?.id) {
+        setPublicReviews([]);
+        return;
+      }
+
+      try {
+        const reviewSnapshot = await getDocs(
+          firestoreQuery(
+            collection(db, "reviews"),
+            where("movieId", "==", selectedMovie.id),
+            where("visibility", "==", "public"),
+            limit(8),
+          ),
+        );
+
+        if (!isCurrent) return;
+
+        setPublicReviews(
+          reviewSnapshot.docs.map((reviewDoc) => ({
+            id: reviewDoc.id,
+            ...reviewDoc.data(),
+          })),
+        );
+      } catch {
+        if (!isCurrent) return;
+        setPublicReviews([]);
+      }
+    }
+
+    loadPublicReviews();
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [selectedMovie]);
 
   async function handleGoogleSignIn({ promptForFamily = true } = {}) {
     setAuthMessage("");
@@ -259,12 +388,16 @@ function App() {
         }
 
         const result = await createUserWithEmailAndPassword(auth, email, password);
+        const uploadedPhotoURL = photoURL
+          ? await uploadProfilePhoto(result.user.uid, photoURL)
+          : "";
         await updateProfile(result.user, {
           displayName: cleanDisplayName,
+          ...(uploadedPhotoURL ? { photoURL: uploadedPhotoURL } : {}),
         });
         if (photoURL) {
           setProfilePhotos((currentPhotos) => {
-            const nextPhotos = { ...currentPhotos, [result.user.uid]: photoURL };
+            const nextPhotos = { ...currentPhotos, [result.user.uid]: uploadedPhotoURL || photoURL };
             writeStoredProfilePhotos(nextPhotos);
             return nextPhotos;
           });
@@ -273,7 +406,7 @@ function App() {
           uid: result.user.uid,
           displayName: cleanDisplayName,
           email: result.user.email,
-          photoURL,
+          photoURL: uploadedPhotoURL || photoURL,
         });
         setPage("family-prompt");
       } else {
@@ -324,6 +457,154 @@ function App() {
     }
   }
 
+  async function handleSaveReview() {
+    setReviewMessage("");
+
+    if (!user) {
+      openSignIn("login");
+      return;
+    }
+
+    if (!familyProfile) {
+      setReviewSaveStatus("error");
+      setReviewMessage("Create or join a family before saving Pizza Scale ratings.");
+      return;
+    }
+
+    if (!canManageFamilyProfile(familyProfile, user)) {
+      setReviewSaveStatus("error");
+      setReviewMessage("Only a family leader or co-leader can save ratings for the family.");
+      return;
+    }
+
+    const parentScore = Number(review.parentScore);
+    const kidScore = Number(review.kidScore);
+    const pizzaScore = (parentScore + kidScore) / 2;
+    const movieId = selectedMovie.id;
+    const reviewId = `${familyProfile.id}_${movieId}`;
+    const reviewRef = doc(db, "reviews", reviewId);
+    const movieRef = doc(db, "movies", movieId);
+
+    setReviewSaveStatus("saving");
+    setReviewMessage("Saving rating...");
+
+    try {
+      const [existingReviewSnapshot, movieSnapshot] = await Promise.all([
+        getDoc(reviewRef),
+        getDoc(movieRef),
+      ]);
+      const existingReview = existingReviewSnapshot.exists()
+        ? existingReviewSnapshot.data()
+        : null;
+      const existingMovie = movieSnapshot.exists() ? movieSnapshot.data() : {};
+      const previousCount = Number(existingMovie.reviewCount || 0);
+      const previousAverage = Number(existingMovie.avgPizzaScore || 0);
+      const previousTotal = previousAverage * previousCount;
+      const nextCount = existingReview ? previousCount : previousCount + 1;
+      const nextTotal = previousTotal - Number(existingReview?.pizzaScore || 0) + pizzaScore;
+      const nextAverage = nextCount > 0 ? Number((nextTotal / nextCount).toFixed(2)) : pizzaScore;
+      const nextStats = {
+        avgPizzaScore: nextAverage,
+        familyMatch: Math.round((nextAverage / 8) * 100),
+        reviewCount: nextCount,
+      };
+
+      await Promise.all([
+        setDoc(
+          reviewRef,
+          {
+            familyId: familyProfile.id,
+            familyName: familyProfile.displayName,
+            leadAdultUserId: familyProfile.leadAdultUserId,
+            userId: user.uid,
+            movieId,
+            imdbId: selectedMovie.imdbId || movieId,
+            movieTitle: selectedMovie.title,
+            parentScore,
+            kidScore,
+            pizzaScore,
+            visibility: review.visibility,
+            writtenReview: review.writtenReview.trim(),
+            showAgeShape: review.showAgeShape,
+            createdAt: existingReview?.createdAt || serverTimestamp(),
+            updatedAt: serverTimestamp(),
+          },
+          { merge: true },
+        ),
+        setDoc(
+          movieRef,
+          {
+            imdbId: selectedMovie.imdbId || movieId,
+            title: selectedMovie.title,
+            year: selectedMovie.year,
+            rated: selectedMovie.rated,
+            runtime: selectedMovie.runtime,
+            genre: selectedMovie.genre,
+            posterUrl: selectedMovie.posterUrl || "",
+            plot: selectedMovie.plot,
+            ...nextStats,
+            updatedAt: serverTimestamp(),
+          },
+          { merge: true },
+        ),
+      ]);
+
+      const updatedMovie = mergeMovieStats(selectedMovie, nextStats);
+      setSelectedMovie(updatedMovie);
+      setFeaturedCatalog((movies) =>
+        movies.map((movie) => (movie.id === movieId ? mergeMovieStats(movie, nextStats) : movie)),
+      );
+      setMovieResults((movies) =>
+        movies.map((movie) => (movie.id === movieId ? mergeMovieStats(movie, nextStats) : movie)),
+      );
+
+      if (review.visibility === "public") {
+        setPublicReviews((reviews) => [
+          {
+            id: reviewId,
+            familyName: familyProfile.displayName,
+            pizzaScore,
+            writtenReview: review.writtenReview.trim(),
+            parentScore,
+            kidScore,
+          },
+          ...reviews.filter((publicReview) => publicReview.id !== reviewId),
+        ]);
+      }
+
+      setReviewSaveStatus("ready");
+      setReviewMessage("Rating saved.");
+    } catch {
+      setReviewSaveStatus("error");
+      setReviewMessage("The rating could not be saved yet. Check Firebase rules and try again.");
+    }
+  }
+
+  async function handleUpdateFamily(nextFamilyProfile) {
+    if (!user || !canManageFamilyProfile(familyProfile, user)) {
+      throw new Error("Only a family leader or co-leader can update family settings.");
+    }
+
+    await updateDoc(doc(db, "families", nextFamilyProfile.id), {
+      displayName: nextFamilyProfile.displayName,
+      updatedAt: serverTimestamp(),
+    });
+
+    await Promise.all(
+      nextFamilyProfile.members
+        .filter((member) => member.id)
+        .map((member) =>
+          updateDoc(doc(db, "familyMembers", member.id), {
+            role: member.role || "member",
+            permission: member.permission || "guided",
+            updatedAt: serverTimestamp(),
+          }),
+        ),
+    );
+
+    setFamilyProfile(nextFamilyProfile);
+  }
+
   return (
     <main className="app-shell">
       {page !== "signin" && (
@@ -367,6 +648,11 @@ function App() {
           review={review}
           setReview={setReview}
           user={user}
+          familyProfile={familyProfile}
+          publicReviews={publicReviews}
+          reviewMessage={reviewMessage}
+          reviewSaveStatus={reviewSaveStatus}
+          onSaveReview={handleSaveReview}
           onSignIn={() => openSignIn("login")}
         />
       )}
@@ -420,6 +706,7 @@ function App() {
           user={user}
           profilePhoto={user ? profilePhotos[user.uid] : ""}
           familyProfile={familyProfile}
+          onUpdateFamily={handleUpdateFamily}
           onSignOut={requestSignOut}
           onBack={goHome}
         />
@@ -449,6 +736,59 @@ function writeStoredProfilePhotos(profilePhotos) {
   } catch {
     // Profile photos are cosmetic; account creation should still succeed if storage is full.
   }
+}
+
+async function uploadProfilePhoto(userId, dataUrl) {
+  try {
+    const photoRef = ref(storage, `profilePhotos/${userId}/avatar`);
+    await uploadString(photoRef, dataUrl, "data_url");
+    return await getDownloadURL(photoRef);
+  } catch {
+    return "";
+  }
+}
+
+async function hydrateMoviesWithStats(movies) {
+  return Promise.all(
+    movies.map(async (movie) => {
+      try {
+        const movieSnapshot = await getDoc(doc(db, "movies", movie.id));
+
+        if (!movieSnapshot.exists()) return movie;
+
+        return mergeMovieStats(movie, movieSnapshot.data());
+      } catch {
+        return movie;
+      }
+    }),
+  );
+}
+
+function mergeMovieStats(movie, stats) {
+  const pizzaScore = typeof stats.avgPizzaScore === "number" ? stats.avgPizzaScore : null;
+  const reviewCount = typeof stats.reviewCount === "number" ? stats.reviewCount : 0;
+
+  return {
+    ...movie,
+    pizzaScore,
+    familyMatch:
+      typeof stats.familyMatch === "number"
+        ? stats.familyMatch
+        : pizzaScore
+          ? Math.round((pizzaScore / 8) * 100)
+          : null,
+    reviewCount,
+    ageFit: reviewCount > 0 ? "Family reviewed" : movie.ageFit,
+  };
+}
+
+function canManageFamilyProfile(familyProfile, user) {
+  if (!familyProfile || !user) return false;
+  if (familyProfile.leadAdultUserId === user.uid) return true;
+  if (familyProfile.coLeaderUserIds?.includes(user.uid)) return true;
+
+  const currentMember = familyProfile.members?.find((member) => member.userId === user.uid);
+  return ["lead", "colead", "co-lead", "manage"].includes(currentMember?.permission);
 }
 
 function SignOutConfirmDialog({ onCancel, onConfirm }) {
@@ -717,26 +1057,46 @@ function SearchPage({
         )}
 
         {hasResults && (
-          <div className="search-results-grid">
-            {movieResults.map((movie) => (
-              <button
-                className={`search-result-card ${selectedMovie.id === movie.id ? "active" : ""}`}
-                key={movie.id}
-                type="button"
-                onClick={() => setSelectedMovie(movie)}
-              >
-                <PosterTile movie={movie} />
-                <span>
-                  <strong>{movie.title}</strong>
-                  <small>
-                    {movie.year} · {movie.rated || "NR"}
-                  </small>
-                  <small>{movie.genre}</small>
-                  <small>No Pizza Scale ratings yet</small>
-                </span>
-              </button>
-            ))}
-          </div>
+          <>
+            <div className="search-results-grid">
+              {movieResults.map((movie) => (
+                <button
+                  className={`search-result-card ${selectedMovie.id === movie.id ? "active" : ""}`}
+                  key={movie.id}
+                  type="button"
+                  onClick={() => setSelectedMovie(movie)}
+                >
+                  <PosterTile movie={movie} />
+                  <span>
+                    <strong>{movie.title}</strong>
+                    <small>
+                      {movie.year} · {movie.rated || "NR"}
+                    </small>
+                    <small>{movie.genre}</small>
+                    <small>
+                      {movie.reviewCount > 0
+                        ? `${Number(movie.pizzaScore).toFixed(1)} / 8 Pizza Score`
+                        : "No Pizza Scale ratings yet"}
+                    </small>
+                  </span>
+                </button>
+              ))}
+            </div>
+            <section className="search-detail-panel">
+              <PosterTile movie={selectedMovie} />
+              <div>
+                <p className="eyebrow">
+                  {selectedMovie.rated || "NR"} · {selectedMovie.runtime || "Runtime TBD"}
+                </p>
+                <h2>{selectedMovie.title}</h2>
+                <p className="plot">{selectedMovie.plot}</p>
+                <div className="score-row">
+                  <PizzaScore score={selectedMovie.pizzaScore} />
+                  <FamilyMatch value={selectedMovie.familyMatch} />
+                </div>
+              </div>
+            </section>
+          </>
         )}
       </div>
     </section>
@@ -750,6 +1110,11 @@ function HomePage({
   review,
   setReview,
   user,
+  familyProfile,
+  publicReviews,
+  reviewMessage,
+  reviewSaveStatus,
+  onSaveReview,
   onSignIn,
 }) {
   const overallScore = (Number(review.parentScore) + Number(review.kidScore)) / 2;
@@ -897,8 +1262,20 @@ function HomePage({
                 <span>Allow public review to show broad child age range</span>
               </label>
 
-              <button className="primary-button" type="button" onClick={!user ? onSignIn : undefined}>
-                {user ? "Save Rating" : "Sign in to Save Rating"}
+              {reviewMessage && (
+                <p className={`form-status ${reviewSaveStatus}`}>{reviewMessage}</p>
+              )}
+              <button
+                className="primary-button"
+                type="button"
+                onClick={user ? onSaveReview : onSignIn}
+                disabled={reviewSaveStatus === "saving"}
+              >
+                {!user
+                  ? "Sign in to Save Rating"
+                  : familyProfile
+                    ? "Save Rating"
+                    : "Create a Family to Save"}
               </button>
             </form>
 
@@ -907,13 +1284,29 @@ function HomePage({
                 <EyeOff size={20} />
                 <h2>Public Family Reviews</h2>
               </div>
-              <div className="empty-state">
-                <strong>No public family reviews yet</strong>
-                <p>
-                  The Pizza Scale is brand new. Once real families submit reviews, they will
-                  appear here.
-                </p>
-              </div>
+              {publicReviews.length > 0 ? (
+                publicReviews.map((publicReview) => (
+                  <article className="public-review" key={publicReview.id}>
+                    <div>
+                      <strong>{publicReview.familyName || "A Pizza Scale family"}</strong>
+                      <span>{Number(publicReview.pizzaScore || 0).toFixed(1)} / 8 slices</span>
+                    </div>
+                    {publicReview.writtenReview ? (
+                      <p>{publicReview.writtenReview}</p>
+                    ) : (
+                      <p>This family submitted a slice score without a written review.</p>
+                    )}
+                  </article>
+                ))
+              ) : (
+                <div className="empty-state">
+                  <strong>No public family reviews yet</strong>
+                  <p>
+                    The Pizza Scale is brand new. Once real families submit public reviews, they
+                    will appear here.
+                  </p>
+                </div>
+              )}
             </aside>
           </div>
         </section>
@@ -1128,21 +1521,24 @@ function FamilySetupPage({ user, onSaved, onBack }) {
           })),
       ];
 
-      await Promise.all(
-        cleanedMembers.map((member) =>
-          addDoc(collection(db, "familyMembers"), {
+      const savedMembers = await Promise.all(
+        cleanedMembers.map(async (member) => {
+          const memberDoc = await addDoc(collection(db, "familyMembers"), {
             ...member,
             familyId: familyDoc.id,
             createdAt: serverTimestamp(),
-          }),
-        ),
+          });
+
+          return { id: memberDoc.id, ...member, familyId: familyDoc.id };
+        }),
       );
 
       onSaved({
         id: familyDoc.id,
         displayName: familyPayload.displayName,
         leadAdultUserId: user.uid,
-        members: cleanedMembers,
+        memberUserIds: [user.uid],
+        members: savedMembers,
       });
     } catch {
       setSaveMessage("The family could not be saved yet. Please check Firebase permissions.");
@@ -1259,8 +1655,12 @@ function FamilySetupPage({ user, onSaved, onBack }) {
   );
 }
 
-function SettingsPage({ user, profilePhoto, familyProfile, onSignOut, onBack }) {
+function SettingsPage({ user, profilePhoto, familyProfile, onUpdateFamily, onSignOut, onBack }) {
   const [activeSection, setActiveSection] = useState("account");
+  const [familyName, setFamilyName] = useState(familyProfile?.displayName || "");
+  const [editableMembers, setEditableMembers] = useState(familyProfile?.members || []);
+  const [settingsMessage, setSettingsMessage] = useState("");
+  const [settingsSaveStatus, setSettingsSaveStatus] = useState("idle");
   const currentMember = familyProfile?.members?.find(
     (member) =>
       member.userId === user?.uid ||
@@ -1272,6 +1672,39 @@ function SettingsPage({ user, profilePhoto, familyProfile, onSignOut, onBack }) 
     (familyProfile.leadAdultUserId === user?.uid ||
       ["lead", "colead", "co-lead", "manage"].includes(currentPermission));
   const familyFieldsDisabled = Boolean(familyProfile) && !canManageFamily;
+
+  useEffect(() => {
+    setFamilyName(familyProfile?.displayName || "");
+    setEditableMembers(familyProfile?.members || []);
+    setSettingsMessage("");
+    setSettingsSaveStatus("idle");
+  }, [familyProfile]);
+
+  function updateEditableMember(index, key, value) {
+    setEditableMembers((members) =>
+      members.map((member, memberIndex) =>
+        memberIndex === index ? { ...member, [key]: value } : member,
+      ),
+    );
+  }
+
+  async function saveFamilySettings() {
+    setSettingsMessage("");
+    setSettingsSaveStatus("saving");
+
+    try {
+      await onUpdateFamily({
+        ...familyProfile,
+        displayName: familyName.trim(),
+        members: editableMembers,
+      });
+      setSettingsSaveStatus("ready");
+      setSettingsMessage("Family settings saved.");
+    } catch (error) {
+      setSettingsSaveStatus("error");
+      setSettingsMessage(error.message || "Family settings could not be saved.");
+    }
+  }
 
   return (
     <section className="settings-page">
@@ -1349,24 +1782,55 @@ function SettingsPage({ user, profilePhoto, familyProfile, onSignOut, onBack }) 
                   <label className="field-label">
                     Family display name
                     <input
-                      defaultValue={familyProfile.displayName}
-                      disabled
+                      value={familyName}
+                      onChange={(event) => setFamilyName(event.target.value)}
+                      disabled={familyFieldsDisabled}
                     />
                   </label>
                   <div className="settings-panel">
                     <strong>Members</strong>
                     <div className="settings-member-list">
-                      {familyProfile.members.map((member, index) => (
+                      {editableMembers.map((member, index) => (
                         <div
                           className="settings-member-row"
                           key={`${member.firstNameOrNickname}-${index}`}
                         >
                           <span>{member.firstNameOrNickname}</span>
-                          <small>
-                            {member.isLeadAdult
-                              ? "Family leader"
-                              : `${member.role || "Member"} · ${member.permission || "guided"}`}
-                          </small>
+                          {member.isLeadAdult ? (
+                            <small>Family leader</small>
+                          ) : (
+                            <div className="settings-member-controls">
+                              <label>
+                                Role
+                                <select
+                                  value={member.role || "child"}
+                                  onChange={(event) =>
+                                    updateEditableMember(index, "role", event.target.value)
+                                  }
+                                  disabled={familyFieldsDisabled}
+                                >
+                                  <option value="child">Child</option>
+                                  <option value="teen">Teen</option>
+                                  <option value="adult">Adult</option>
+                                </select>
+                              </label>
+                              <label>
+                                Permission
+                                <select
+                                  value={member.permission || "guided"}
+                                  onChange={(event) =>
+                                    updateEditableMember(index, "permission", event.target.value)
+                                  }
+                                  disabled={familyFieldsDisabled}
+                                >
+                                  <option value="guided">Guided browsing</option>
+                                  <option value="suggest">Can suggest movies</option>
+                                  <option value="rate">Can add ratings</option>
+                                  <option value="manage">Can help manage family</option>
+                                </select>
+                              </label>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -1378,14 +1842,18 @@ function SettingsPage({ user, profilePhoto, familyProfile, onSignOut, onBack }) 
                       rate movies, and help manage the family.
                     </p>
                   </div>
+                  {settingsMessage && (
+                    <p className={`form-status ${settingsSaveStatus}`}>{settingsMessage}</p>
+                  )}
                   {canManageFamily && (
-                    <div className="settings-panel">
-                      <strong>Editing coming next</strong>
-                      <p>
-                        These fields are visible now, but saving family changes still needs the
-                        Firestore update flow before it should be enabled.
-                      </p>
-                    </div>
+                    <button
+                      className="primary-button"
+                      type="button"
+                      onClick={saveFamilySettings}
+                      disabled={settingsSaveStatus === "saving" || !familyName.trim()}
+                    >
+                      Save family settings
+                    </button>
                   )}
                 </>
               )}

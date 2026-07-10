@@ -2,10 +2,19 @@ const OMDB_BASE_URL = "https://www.omdbapi.com/";
 
 export async function searchOmdbMovies(query) {
   const apiKey = import.meta.env.VITE_OMDB_API_KEY;
+
+  if (!apiKey) {
+    throw new Error("OMDb is not configured. Add VITE_OMDB_API_KEY to the site environment.");
+  }
+
   const response = await fetch(
     `${OMDB_BASE_URL}?apikey=${apiKey}&type=movie&s=${encodeURIComponent(query)}`,
   );
   const payload = await response.json();
+
+  if (payload.Error?.toLowerCase().includes("api key")) {
+    throw new Error("OMDb rejected the configured API key.");
+  }
 
   if (!response.ok || payload.Response === "False") {
     return [];
@@ -21,6 +30,11 @@ export async function searchOmdbMovies(query) {
 
 export async function getOmdbMovie(imdbId) {
   const apiKey = import.meta.env.VITE_OMDB_API_KEY;
+
+  if (!apiKey) {
+    throw new Error("OMDb is not configured. Add VITE_OMDB_API_KEY to the site environment.");
+  }
+
   const response = await fetch(`${OMDB_BASE_URL}?apikey=${apiKey}&i=${imdbId}&plot=short`);
   const movie = await response.json();
 
