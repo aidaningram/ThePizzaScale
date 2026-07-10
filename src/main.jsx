@@ -15,6 +15,7 @@ import {
   GoogleAuthProvider,
   createUserWithEmailAndPassword,
   onAuthStateChanged,
+  sendPasswordResetEmail,
   signInWithEmailAndPassword,
   signInWithPopup,
   signOut,
@@ -33,8 +34,9 @@ import {
   updateDoc,
   where,
 } from "firebase/firestore";
+import { httpsCallable } from "firebase/functions";
 import { getDownloadURL, ref, uploadString } from "firebase/storage";
-import { auth, db, storage } from "./firebase";
+import { auth, db, functions, storage } from "./firebase";
 import { getOmdbMovie, searchOmdbMovies } from "./movieProvider";
 import pizzaWordmark from "./assets/PizzaScaleWordmark.png";
 import "./styles.css";
@@ -44,6 +46,7 @@ const PROFILE_PHOTOS_STORAGE_KEY = "pizzaScaleProfilePhotos";
 const MAX_PROFILE_PHOTO_SOURCE_BYTES = 15 * 1024 * 1024;
 const PROFILE_PHOTO_OUTPUT_SIZE = 512;
 const PROFILE_PHOTO_OUTPUT_QUALITY = 0.82;
+const INVITE_CODE_LENGTH = 8;
 
 const featuredMovies = [
   {
@@ -119,6 +122,38 @@ const blankMember = {
   role: "child",
   permission: "guided",
 };
+
+function createInviteCode() {
+  const characters = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+  let code = "";
+
+  for (let index = 0; index < INVITE_CODE_LENGTH; index += 1) {
+    code += characters[Math.floor(Math.random() * characters.length)];
+  }
+
+  return code;
+}
+
+function normalizeInviteCode(value) {
+  return String(value || "")
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "")
+    .slice(0, 12);
+}
+
+async function createUniqueInviteCode() {
+  for (let attempt = 0; attempt < 8; attempt += 1) {
+    const inviteCode = createInviteCode();
+    const inviteSnapshot = await getDoc(doc(db, "familyInvites", inviteCode));
+
+    if (!inviteSnapshot.exists()) {
+      return inviteCode;
+    }
+  }
+
+  throw new Error("Invite code could not be created. Please try again.");
+}
 
 function App() {
   const [page, setPage] = useState("home");
@@ -581,6 +616,46 @@ function App() {
     setFamilyProfile(nextFamilyProfile);
   }
 
+  async function handleCreateInviteCode() {
+    if (!user || !canManageFamilyProfile(familyProfile, user)) {
+      throw new Error("Only a family leader or co-leader can create invite codes.");
+    }
+
+    const inviteCode = await createUniqueInviteCode();
+
+    await setDoc(doc(db, "familyInvites", inviteCode), {
+      code: inviteCode,
+      familyId: familyProfile.id,
+      familyName: familyProfile.displayName,
+      createdByUserId: user.uid,
+      status: "active",
+      createdAt: serverTimestamp(),
+    });
+
+    await updateDoc(doc(db, "families", familyProfile.id), {
+      inviteCode,
+      updatedAt: serverTimestamp(),
+    });
+
+    setFamilyProfile({ ...familyProfile, inviteCode });
+    return inviteCode;
+  }
+
+  async function handleJoinFamily({ inviteCode, displayName }) {
+    if (!user) {
+      throw new Error("Sign in before joining a family.");
+    }
+
+    const joinFamily = httpsCallable(functions, "joinFamilyByInvite");
+    const result = await joinFamily({
+      inviteCode: normalizeInviteCode(inviteCode),
+      displayName,
+    });
+
+    setFamilyProfile(result.data);
+    return result.data;
+  }
+
   async function handleUpdateAccount({ displayName, photoURL }) {
     if (!auth.currentUser) {
       throw new Error("Please sign in before updating your account.");
@@ -618,6 +693,16 @@ function App() {
     });
   }
 
+  async function handlePasswordReset(email) {
+    const cleanEmail = email.trim();
+
+    if (!cleanEmail) {
+      throw new Error("Enter your email address first.");
+    }
+
+    await sendPasswordResetEmail(auth, cleanEmail);
+  }
+
   return (
     <main className="app-shell">
       {page !== "signin" && (
@@ -642,6 +727,11 @@ function App() {
             setMenuOpen(false);
             setAuthMessage("");
             setPage("recommendations");
+          }}
+          onAbout={() => {
+            setMenuOpen(false);
+            setAuthMessage("");
+            setPage("about");
           }}
           onSettings={() => {
             setMenuOpen(false);
@@ -696,6 +786,7 @@ function App() {
           authMessage={authMessage}
           onEmailAuth={handleEmailAuth}
           onGoogleSignIn={() => handleGoogleSignIn({ promptForFamily: true })}
+          onPasswordReset={handlePasswordReset}
           onBack={goHome}
         />
       )}
@@ -727,6 +818,8 @@ function App() {
         <RecommendationsPage user={user} onSignIn={() => openSignIn("login")} />
       )}
 
+      {page === "about" && <AboutPage onSearch={() => setPage("search")} />}
+
       {page === "settings" && (
         <SettingsPage
           user={user}
@@ -735,6 +828,9 @@ function App() {
           initialSection={settingsInitialSection}
           onUpdateAccount={handleUpdateAccount}
           onUpdateFamily={handleUpdateFamily}
+          onCreateInviteCode={handleCreateInviteCode}
+          onJoinFamily={handleJoinFamily}
+          onPasswordReset={handlePasswordReset}
           onSignOut={requestSignOut}
           onBack={goHome}
           onCreateFamily={() => {
@@ -864,6 +960,7 @@ function SiteHeader({
   onSignOut,
   onSearch,
   onRecommendations,
+  onAbout,
   onSettings,
 }) {
   return (
@@ -900,6 +997,15 @@ function SiteHeader({
                 }}
               >
                 Recommendations
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false);
+                  onAbout();
+                }}
+              >
+                About
               </button>
               {user && (
                 <button
@@ -1178,6 +1284,73 @@ function RecommendationsPage({ user, onSignIn }) {
   );
 }
 
+function AboutPage({ onSearch }) {
+  const steps = [
+    {
+      title: "Find a movie",
+      body:
+        "Search for a movie from OMDb, open its statistics page, and see whether any Pizza Scale ratings exist yet.",
+    },
+    {
+      title: "Rate as a family",
+      body:
+        "A family leader or co-leader gives a parent slice score and a kids slice score. The overall score is the average out of 8 slices.",
+    },
+    {
+      title: "Choose what is public",
+      body:
+        "Ratings can help the anonymous aggregate, or they can be shared as a public family review using only the family display name.",
+    },
+    {
+      title: "Build better matches",
+      body:
+        "As more real families rate movies, The Pizza Scale can start showing stronger family match and recommendation signals.",
+    },
+  ];
+
+  return (
+    <section className="about-page">
+      <div className="about-card">
+        <p className="eyebrow">About</p>
+        <h1>How The Pizza Scale works</h1>
+        <p className="about-intro">
+          The Pizza Scale is a family-centered movie rating site. Instead of asking one person
+          whether a movie was good, it captures how the movie worked for the whole household.
+        </p>
+        <div className="about-steps">
+          {steps.map((step, index) => (
+            <article className="about-step" key={step.title}>
+              <span>{index + 1}</span>
+              <div>
+                <h2>{step.title}</h2>
+                <p>{step.body}</p>
+              </div>
+            </article>
+          ))}
+        </div>
+        <div className="settings-panel">
+          <strong>Privacy basics</strong>
+          <p>
+            Children&apos;s names are not shown publicly. Public reviews use the family display
+            name, and broad child age ranges are only included when the family allows it.
+          </p>
+        </div>
+        <div className="settings-panel">
+          <strong>Why some pages look empty right now</strong>
+          <p>
+            The site is new, so many movies will honestly show no Pizza Scale data yet. Scores,
+            public family reviews, and recommendations will become useful as real families add
+            ratings.
+          </p>
+        </div>
+        <button className="primary-button" type="button" onClick={onSearch}>
+          Search movies
+        </button>
+      </div>
+    </section>
+  );
+}
+
 function SearchPage({
   query,
   setQuery,
@@ -1223,47 +1396,41 @@ function SearchPage({
           <p className={`search-status ${searchStatus}`}>{searchMessage}</p>
         )}
 
+        {shouldShowResults && searchStatus === "empty" && (
+          <div className="empty-state search-empty-state">
+            <strong>No movies found</strong>
+            <p>
+              Try a different title or a shorter search. Pizza Scale can only show movies OMDb can
+              find.
+            </p>
+          </div>
+        )}
+
         {hasResults && (
-          <>
-            <div className="search-results-grid">
-              {movieResults.map((movie) => (
-                <button
-                  className={`search-result-card ${selectedMovie.id === movie.id ? "active" : ""}`}
-                  key={movie.id}
-                  type="button"
-                  onClick={() => setSelectedMovie(movie)}
-                >
-                  <PosterTile movie={movie} />
-                  <span>
-                    <strong>{movie.title}</strong>
-                    <small>
-                      {movie.year} · {movie.rated || "NR"}
-                    </small>
-                    <small>{movie.genre}</small>
-                    <small>
-                      {movie.reviewCount > 0
-                        ? `${Number(movie.pizzaScore).toFixed(1)} / 8 Pizza Score`
-                        : "No Pizza Scale ratings yet"}
-                    </small>
-                  </span>
-                </button>
-              ))}
-            </div>
-            <section className="search-detail-panel">
-              <PosterTile movie={selectedMovie} />
-              <div>
-                <p className="eyebrow">
-                  {selectedMovie.rated || "NR"} · {selectedMovie.runtime || "Runtime TBD"}
-                </p>
-                <h2>{selectedMovie.title}</h2>
-                <p className="plot">{selectedMovie.plot}</p>
-                <div className="score-row">
-                  <PizzaScore score={selectedMovie.pizzaScore} />
-                  <FamilyMatch value={selectedMovie.familyMatch} />
-                </div>
-              </div>
-            </section>
-          </>
+          <div className="search-results-grid">
+            {movieResults.map((movie) => (
+              <button
+                className={`search-result-card ${selectedMovie.id === movie.id ? "active" : ""}`}
+                key={movie.id}
+                type="button"
+                onClick={() => setSelectedMovie(movie)}
+              >
+                <PosterTile movie={movie} />
+                <span>
+                  <strong>{movie.title}</strong>
+                  <small>
+                    {movie.year} · {movie.rated || "NR"}
+                  </small>
+                  <small>{movie.genre}</small>
+                  <small>
+                    {movie.reviewCount > 0
+                      ? `${Number(movie.pizzaScore).toFixed(1)} / 8 Pizza Score`
+                      : "No Pizza Scale ratings yet"}
+                  </small>
+                </span>
+              </button>
+            ))}
+          </div>
         )}
       </div>
     </section>
@@ -1522,7 +1689,14 @@ function MovieCategoryRow({ category, selectedMovie, onSelectMovie }) {
   );
 }
 
-function SignInPage({ initialMode, authMessage, onEmailAuth, onGoogleSignIn, onBack }) {
+function SignInPage({
+  initialMode,
+  authMessage,
+  onEmailAuth,
+  onGoogleSignIn,
+  onPasswordReset,
+  onBack,
+}) {
   const [mode, setMode] = useState(initialMode);
   const [displayName, setDisplayName] = useState("");
   const [profileImage, setProfileImage] = useState("");
@@ -1531,6 +1705,8 @@ function SignInPage({ initialMode, authMessage, onEmailAuth, onGoogleSignIn, onB
   const [pendingProfileImage, setPendingProfileImage] = useState(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [resetMessage, setResetMessage] = useState("");
+  const [resetStatus, setResetStatus] = useState("idle");
   const isCreateMode = mode === "create";
 
   useEffect(() => {
@@ -1559,6 +1735,20 @@ function SignInPage({ initialMode, authMessage, onEmailAuth, onGoogleSignIn, onB
       setProfileImageError("");
     } catch (error) {
       setProfileImageError(error.message || "The image could not be opened.");
+    }
+  }
+
+  async function sendResetEmail() {
+    setResetMessage("");
+    setResetStatus("sending");
+
+    try {
+      await onPasswordReset(email);
+      setResetStatus("ready");
+      setResetMessage("Password reset email sent. Check your inbox.");
+    } catch (error) {
+      setResetStatus("error");
+      setResetMessage(error.message || "Password reset email could not be sent.");
     }
   }
 
@@ -1627,6 +1817,14 @@ function SignInPage({ initialMode, authMessage, onEmailAuth, onGoogleSignIn, onB
             type="password"
           />
         </label>
+        {!isCreateMode && (
+          <>
+            <button className="text-button" type="button" onClick={sendResetEmail}>
+              Forgot password?
+            </button>
+            {resetMessage && <p className={`form-status ${resetStatus}`}>{resetMessage}</p>}
+          </>
+        )}
         <button
           className="primary-button"
           type="button"
@@ -1710,16 +1908,26 @@ function FamilySetupPage({ user, onSaved, onBack }) {
       return;
     }
 
+    const inviteCode = await createUniqueInviteCode();
     const familyPayload = {
       displayName: familyName.trim(),
       leadAdultUserId: user.uid,
       memberUserIds: [user.uid],
+      inviteCode,
       publicAgeDisplayMode: "ranges",
       createdAt: serverTimestamp(),
     };
 
     try {
       const familyDoc = await addDoc(collection(db, "families"), familyPayload);
+      await setDoc(doc(db, "familyInvites", inviteCode), {
+        code: inviteCode,
+        familyId: familyDoc.id,
+        familyName: familyPayload.displayName,
+        createdByUserId: user.uid,
+        status: "active",
+        createdAt: serverTimestamp(),
+      });
       const cleanedMembers = [
         {
           firstNameOrNickname: leadName.trim(),
@@ -1759,6 +1967,7 @@ function FamilySetupPage({ user, onSaved, onBack }) {
         displayName: familyPayload.displayName,
         leadAdultUserId: user.uid,
         memberUserIds: [user.uid],
+        inviteCode,
         members: savedMembers,
       });
     } catch {
@@ -1883,6 +2092,9 @@ function SettingsPage({
   initialSection = "account",
   onUpdateAccount,
   onUpdateFamily,
+  onCreateInviteCode,
+  onJoinFamily,
+  onPasswordReset,
   onSignOut,
   onBack,
   onCreateFamily,
@@ -1899,6 +2111,12 @@ function SettingsPage({
   const [editableMembers, setEditableMembers] = useState(familyProfile?.members || []);
   const [settingsMessage, setSettingsMessage] = useState("");
   const [settingsSaveStatus, setSettingsSaveStatus] = useState("idle");
+  const [inviteCodeInput, setInviteCodeInput] = useState("");
+  const [joinDisplayName, setJoinDisplayName] = useState(user?.displayName || "");
+  const [joinMessage, setJoinMessage] = useState("");
+  const [joinStatus, setJoinStatus] = useState("idle");
+  const [inviteMessage, setInviteMessage] = useState("");
+  const [inviteStatus, setInviteStatus] = useState("idle");
   const currentMember = familyProfile?.members?.find(
     (member) =>
       member.userId === user?.uid ||
@@ -1919,6 +2137,7 @@ function SettingsPage({
     setPendingAccountPhoto(null);
     setAccountMessage("");
     setAccountSaveStatus("idle");
+    setJoinDisplayName(user?.displayName || "");
   }, [user]);
 
   useEffect(() => {
@@ -1926,6 +2145,8 @@ function SettingsPage({
     setEditableMembers(familyProfile?.members || []);
     setSettingsMessage("");
     setSettingsSaveStatus("idle");
+    setInviteMessage("");
+    setInviteStatus("idle");
   }, [familyProfile]);
 
   useEffect(() => {
@@ -1984,6 +2205,20 @@ function SettingsPage({
     }
   }
 
+  async function sendAccountPasswordReset() {
+    setAccountMessage("");
+    setAccountSaveStatus("sending");
+
+    try {
+      await onPasswordReset(user?.email || "");
+      setAccountSaveStatus("ready");
+      setAccountMessage("Password reset email sent.");
+    } catch (error) {
+      setAccountSaveStatus("error");
+      setAccountMessage(error.message || "Password reset email could not be sent.");
+    }
+  }
+
   async function saveFamilySettings() {
     setSettingsMessage("");
     setSettingsSaveStatus("saving");
@@ -2002,17 +2237,40 @@ function SettingsPage({
     }
   }
 
-  function showJoinFamilyMessage() {
+  async function joinFamily() {
+    setJoinMessage("");
+    setJoinStatus("joining");
+
     if (!user) {
-      setSettingsSaveStatus("error");
-      setSettingsMessage("Sign in before joining a family.");
+      setJoinStatus("error");
+      setJoinMessage("Sign in before joining a family.");
       return;
     }
 
-    setSettingsSaveStatus("ready");
-    setSettingsMessage(
-      "Joining by invite code is coming next. For now, a family leader can create the family here.",
-    );
+    if (!normalizeInviteCode(inviteCodeInput)) {
+      setJoinStatus("error");
+      setJoinMessage("Enter the invite code from your family leader.");
+      return;
+    }
+
+    if (!joinDisplayName.trim()) {
+      setJoinStatus("error");
+      setJoinMessage("Enter your name before joining a family.");
+      return;
+    }
+
+    try {
+      const family = await onJoinFamily({
+        inviteCode: inviteCodeInput,
+        displayName: joinDisplayName.trim(),
+      });
+      setJoinStatus("ready");
+      setJoinMessage(`Joined ${family.displayName}.`);
+      setInviteCodeInput("");
+    } catch (error) {
+      setJoinStatus("error");
+      setJoinMessage(error.message || "That invite code could not be used yet.");
+    }
   }
 
   function startFamilyCreation() {
@@ -2023,6 +2281,20 @@ function SettingsPage({
     }
 
     onCreateFamily();
+  }
+
+  async function createNewInviteCode() {
+    setInviteMessage("");
+    setInviteStatus("saving");
+
+    try {
+      const inviteCode = await onCreateInviteCode();
+      setInviteStatus("ready");
+      setInviteMessage(`Invite code ready: ${inviteCode}`);
+    } catch (error) {
+      setInviteStatus("error");
+      setInviteMessage(error.message || "Invite code could not be created.");
+    }
   }
 
   return (
@@ -2099,6 +2371,15 @@ function SettingsPage({
                   Save account settings
                 </button>
               )}
+              {user?.email && (
+                <button
+                  className="secondary-button"
+                  type="button"
+                  onClick={sendAccountPasswordReset}
+                >
+                  Send password reset email
+                </button>
+              )}
               {user && (
                 <button className="primary-button" type="button" onClick={onSignOut}>
                   Sign out
@@ -2118,20 +2399,45 @@ function SettingsPage({
                     Family settings and child permissions will appear here once a family is
                     created or joined.
                   </p>
+                  <label className="field-label">
+                    Your name
+                    <input
+                      value={joinDisplayName}
+                      onChange={(event) => setJoinDisplayName(event.target.value)}
+                      placeholder="Name inside the family"
+                      disabled={joinStatus === "joining"}
+                    />
+                  </label>
+                  <label className="field-label">
+                    Family invite code
+                    <input
+                      value={inviteCodeInput}
+                      onChange={(event) =>
+                        setInviteCodeInput(normalizeInviteCode(event.target.value))
+                      }
+                      placeholder="ABCD2345"
+                      disabled={joinStatus === "joining"}
+                    />
+                  </label>
                   <div className="family-connect-actions">
-                    <button className="primary-button" type="button" onClick={startFamilyCreation}>
+                    <button
+                      className="primary-button"
+                      type="button"
+                      onClick={startFamilyCreation}
+                    >
                       Create family
                     </button>
                     <button
                       className="secondary-button"
                       type="button"
-                      onClick={showJoinFamilyMessage}
+                      onClick={joinFamily}
+                      disabled={joinStatus === "joining"}
                     >
                       Join family
                     </button>
                   </div>
-                  {settingsMessage && (
-                    <p className={`form-status ${settingsSaveStatus}`}>{settingsMessage}</p>
+                  {joinMessage && (
+                    <p className={`form-status ${joinStatus}`}>{joinMessage}</p>
                   )}
                 </div>
               ) : (
@@ -2153,6 +2459,28 @@ function SettingsPage({
                       disabled={familyFieldsDisabled}
                     />
                   </label>
+                  {canManageFamily && (
+                    <div className="settings-panel invite-code-panel">
+                      <strong>Family invite code</strong>
+                      <p>
+                        Share this code with another adult account so they can join this family.
+                      </p>
+                      <div className="invite-code-row">
+                        <code>{familyProfile.inviteCode || "No invite code yet"}</code>
+                        <button
+                          className="secondary-button"
+                          type="button"
+                          onClick={createNewInviteCode}
+                          disabled={inviteStatus === "saving"}
+                        >
+                          {familyProfile.inviteCode ? "New code" : "Create code"}
+                        </button>
+                      </div>
+                      {inviteMessage && (
+                        <p className={`form-status ${inviteStatus}`}>{inviteMessage}</p>
+                      )}
+                    </div>
+                  )}
                   <div className="settings-panel">
                     <strong>Members</strong>
                     <div className="settings-member-list">
@@ -2189,6 +2517,7 @@ function SettingsPage({
                                   }
                                   disabled={familyFieldsDisabled}
                                 >
+                                  <option value="member">Family member</option>
                                   <option value="guided">Guided browsing</option>
                                   <option value="suggest">Can suggest movies</option>
                                   <option value="rate">Can add ratings</option>

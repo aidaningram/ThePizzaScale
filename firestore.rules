@@ -20,6 +20,22 @@ service cloud.firestore {
         );
     }
 
+    function validReviewData(review) {
+      return review.familyId is string
+        && review.movieId is string
+        && review.userId == request.auth.uid
+        && review.parentScore is number
+        && review.parentScore >= 1
+        && review.parentScore <= 8
+        && review.kidScore is number
+        && review.kidScore >= 1
+        && review.kidScore <= 8
+        && review.pizzaScore is number
+        && review.pizzaScore >= 1
+        && review.pizzaScore <= 8
+        && review.visibility in ["aggregate", "public"];
+    }
+
     match /movies/{movieId} {
       allow read: if true;
       allow write: if false;
@@ -37,10 +53,24 @@ service cloud.firestore {
       allow update, delete: if canManageFamily(resource.data.familyId);
     }
 
+    match /familyInvites/{inviteCode} {
+      allow get: if true;
+      allow list: if false;
+      allow create: if canManageFamily(request.resource.data.familyId)
+        && inviteCode == request.resource.data.code
+        && request.resource.data.status == "active";
+      allow update, delete: if canManageFamily(resource.data.familyId);
+    }
+
     match /reviews/{reviewId} {
       allow read: if resource.data.visibility == "public" || isFamilyMember(resource.data.familyId);
-      allow create: if canManageFamily(request.resource.data.familyId);
-      allow update, delete: if canManageFamily(resource.data.familyId);
+      allow create: if canManageFamily(request.resource.data.familyId)
+        && validReviewData(request.resource.data);
+      allow update: if canManageFamily(resource.data.familyId)
+        && request.resource.data.familyId == resource.data.familyId
+        && request.resource.data.movieId == resource.data.movieId
+        && validReviewData(request.resource.data);
+      allow delete: if canManageFamily(resource.data.familyId);
     }
 
     match /aggregates/{document=**} {

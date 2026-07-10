@@ -535,7 +535,8 @@ p {
   margin-top: 28px;
 }
 
-.recommendations-page {
+.recommendations-page,
+.about-page {
   display: grid;
   place-items: start center;
   padding: 18px 0 48px;
@@ -624,21 +625,6 @@ p {
   line-height: 1.25;
 }
 
-.search-detail-panel {
-  border: 2px solid var(--line);
-  border-radius: 20px;
-  background: var(--dough-card);
-  padding: 16px;
-  display: grid;
-  grid-template-columns: 160px minmax(0, 1fr);
-  gap: 18px;
-  align-items: start;
-}
-
-.search-detail-panel > .poster-tile {
-  width: 100%;
-}
-
 .recommendations-card {
   width: min(100%, 880px);
   border: 2px solid var(--line);
@@ -652,6 +638,71 @@ p {
 
 .recommendations-card h2 {
   font-size: clamp(2rem, 4vw, 3.65rem);
+}
+
+.about-card {
+  width: min(100%, 940px);
+  border: 2px solid var(--line);
+  border-radius: 24px;
+  background: rgba(255, 250, 240, 0.94);
+  box-shadow: var(--shadow);
+  padding: clamp(20px, 4vw, 34px);
+  display: grid;
+  gap: 18px;
+}
+
+.about-card h1 {
+  max-width: 760px;
+  font-size: clamp(2.4rem, 6vw, 4.7rem);
+}
+
+.about-intro {
+  max-width: 760px;
+  color: var(--plum-soft);
+  font-size: 1.08rem;
+  font-weight: 800;
+  line-height: 1.55;
+}
+
+.about-steps {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.about-step {
+  border: 2px solid var(--line);
+  border-radius: 18px;
+  background: var(--dough-card);
+  padding: 14px;
+  display: grid;
+  grid-template-columns: 42px minmax(0, 1fr);
+  gap: 12px;
+}
+
+.about-step > span {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--cheese-gold);
+  color: var(--plum-ink);
+  display: grid;
+  place-items: center;
+  font-family: "Baloo 2", "Nunito", system-ui, sans-serif;
+  font-size: 1.25rem;
+  font-weight: 900;
+}
+
+.about-step h2 {
+  font-size: 1.45rem;
+  line-height: 1;
+}
+
+.about-step p {
+  margin-top: 6px;
+  color: var(--plum-soft);
+  font-weight: 800;
+  line-height: 1.45;
 }
 
 .recommendation-empty-state {
@@ -785,6 +836,14 @@ p {
   border-color: rgba(255, 201, 77, 0.55);
   background: #fff3cd;
   color: var(--plum-ink);
+}
+
+.form-status.saving,
+.form-status.joining,
+.form-status.sending {
+  border-color: rgba(255, 201, 77, 0.55);
+  background: var(--cream-soft);
+  color: var(--plum-soft);
 }
 
 .button-row {
@@ -949,6 +1008,31 @@ p {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
   margin-top: 14px;
+}
+
+.invite-code-panel {
+  display: grid;
+  gap: 10px;
+}
+
+.invite-code-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.invite-code-row code {
+  border: 2px dashed var(--line-strong);
+  border-radius: 14px;
+  background: var(--cream-soft);
+  color: var(--plum-ink);
+  padding: 10px 12px;
+  font-family: "Baloo 2", "Nunito", system-ui, sans-serif;
+  font-size: 1.15rem;
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  text-align: center;
 }
 
 .account-photo-panel {
@@ -1800,7 +1884,6 @@ textarea {
   .review-grid,
   .family-grid,
   .settings-layout,
-  .search-detail-panel,
   .search-results-grid {
     grid-template-columns: 1fr;
   }
@@ -1904,12 +1987,14 @@ textarea {
   .metric-strip,
   .movie-detail,
   .movie-list,
+  .about-steps,
   .visibility-group,
   .slice-input,
   .dialog-actions,
   .crop-control-grid,
   .button-row,
   .family-connect-actions,
+  .invite-code-row,
   .settings-member-controls,
   .family-member-row {
     grid-template-columns: 1fr;

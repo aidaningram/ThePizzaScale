@@ -1,5 +1,6 @@
 import { initializeApp } from "firebase-admin/app";
 import { FieldValue, getFirestore } from "firebase-admin/firestore";
+import { HttpsError, onCall } from "firebase-functions/v2/https";
 import { onDocumentWritten } from "firebase-functions/v2/firestore";
 
 initializeApp();
@@ -19,51 +20,132 @@ export const aggregateMovieRating = onDocumentWritten(
     if (!movieId) return;
 
     const movieRef = db.collection("movies").doc(movieId);
+    const movieSnapshot = await movieRef.get();
+    const movie = movieSnapshot.exists ? movieSnapshot.data() : {};
+    const reviewsSnapshot = await db
+      .collection("reviews")
+      .where("movieId", "==", movieId)
+      .get();
+    const reviewScores = reviewsSnapshot.docs
+      .map((reviewDoc) => Number(reviewDoc.data().pizzaScore))
+      .filter((score) => Number.isFinite(score));
+    const reviewCount = reviewScores.length;
+    const totalPizzaScore = reviewScores.reduce((total, score) => total + score, 0);
+    const avgPizzaScore =
+      reviewCount > 0 ? Number((totalPizzaScore / reviewCount).toFixed(2)) : null;
+    const familyMatch = avgPizzaScore ? Math.round((avgPizzaScore / 8) * 100) : null;
+    const movieSource = after || before || {};
 
-    await db.runTransaction(async (transaction) => {
-      const movieSnapshot = await transaction.get(movieRef);
-      const movie = movieSnapshot.exists ? movieSnapshot.data() : {};
-      const previousCount = Number(movie.reviewCount || 0);
-      const previousTotal = Number(movie.totalPizzaScore || 0);
-      const beforeScore = Number(before?.pizzaScore || 0);
-      const afterScore = Number(after?.pizzaScore || 0);
-      let nextCount = previousCount;
-      let nextTotal = previousTotal;
-
-      if (!before && after) {
-        nextCount += 1;
-        nextTotal += afterScore;
-      } else if (before && after) {
-        nextTotal = nextTotal - beforeScore + afterScore;
-      } else if (before && !after) {
-        nextCount = Math.max(0, nextCount - 1);
-        nextTotal = Math.max(0, nextTotal - beforeScore);
-      }
-
-      const avgPizzaScore =
-        nextCount > 0 ? Number((nextTotal / nextCount).toFixed(2)) : null;
-      const familyMatch = avgPizzaScore ? Math.round((avgPizzaScore / 8) * 100) : null;
-      const movieSource = after || before || {};
-
-      transaction.set(
-        movieRef,
-        {
-          imdbId: movieSource.imdbId || movie.imdbId || movieId,
-          title: movieSource.movieTitle || movie.title || "Untitled movie",
-          year: movieSource.movieYear || movie.year || "",
-          rated: movieSource.movieRated || movie.rated || "",
-          runtime: movieSource.movieRuntime || movie.runtime || "",
-          genre: movieSource.movieGenre || movie.genre || "",
-          posterUrl: movieSource.moviePosterUrl || movie.posterUrl || "",
-          plot: movieSource.moviePlot || movie.plot || "",
-          reviewCount: nextCount,
-          totalPizzaScore: Number(nextTotal.toFixed(2)),
-          avgPizzaScore,
-          familyMatch,
-          updatedAt: FieldValue.serverTimestamp(),
-        },
-        { merge: true },
-      );
-    });
+    await movieRef.set(
+      {
+        imdbId: movieSource.imdbId || movie.imdbId || movieId,
+        title: movieSource.movieTitle || movie.title || "Untitled movie",
+        year: movieSource.movieYear || movie.year || "",
+        rated: movieSource.movieRated || movie.rated || "",
+        runtime: movieSource.movieRuntime || movie.runtime || "",
+        genre: movieSource.movieGenre || movie.genre || "",
+        posterUrl: movieSource.moviePosterUrl || movie.posterUrl || "",
+        plot: movieSource.moviePlot || movie.plot || "",
+        reviewCount,
+        totalPizzaScore: Number(totalPizzaScore.toFixed(2)),
+        avgPizzaScore,
+        familyMatch,
+        updatedAt: FieldValue.serverTimestamp(),
+      },
+      { merge: true },
+    );
   },
 );
+
+export const joinFamilyByInvite = onCall(
+  {
+    region: "us-central1",
+  },
+  async (request) => {
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "Sign in before joining a family.");
+    }
+
+    const inviteCode = normalizeInviteCode(request.data?.inviteCode);
+    const displayName = String(request.data?.displayName || "").trim().slice(0, 80);
+
+    if (!inviteCode) {
+      throw new HttpsError("invalid-argument", "Enter a valid family invite code.");
+    }
+
+    if (!displayName) {
+      throw new HttpsError("invalid-argument", "Enter your name before joining a family.");
+    }
+
+    const inviteRef = db.collection("familyInvites").doc(inviteCode);
+    const inviteSnapshot = await inviteRef.get();
+
+    if (!inviteSnapshot.exists || inviteSnapshot.data()?.status !== "active") {
+      throw new HttpsError("not-found", "That family invite code was not found.");
+    }
+
+    const invite = inviteSnapshot.data();
+    const familyRef = db.collection("families").doc(invite.familyId);
+    const familySnapshot = await familyRef.get();
+
+    if (!familySnapshot.exists) {
+      throw new HttpsError("not-found", "That family no longer exists.");
+    }
+
+    const userId = request.auth.uid;
+    const family = familySnapshot.data();
+    const memberUserIds = Array.isArray(family.memberUserIds) ? family.memberUserIds : [];
+
+    if (!memberUserIds.includes(userId)) {
+      await familyRef.update({
+        memberUserIds: FieldValue.arrayUnion(userId),
+        updatedAt: FieldValue.serverTimestamp(),
+      });
+    }
+
+    const existingMemberSnapshot = await db
+      .collection("familyMembers")
+      .where("familyId", "==", invite.familyId)
+      .where("userId", "==", userId)
+      .limit(1)
+      .get();
+
+    if (existingMemberSnapshot.empty) {
+      await db.collection("familyMembers").add({
+        familyId: invite.familyId,
+        firstNameOrNickname: displayName,
+        userId,
+        role: "adult",
+        age: "",
+        gender: "",
+        permission: "member",
+        isLeadAdult: false,
+        joinedWithInviteCode: inviteCode,
+        createdAt: FieldValue.serverTimestamp(),
+      });
+    }
+
+    const membersSnapshot = await db
+      .collection("familyMembers")
+      .where("familyId", "==", invite.familyId)
+      .get();
+    const nextFamilySnapshot = await familyRef.get();
+
+    return {
+      id: invite.familyId,
+      ...nextFamilySnapshot.data(),
+      members: membersSnapshot.docs.map((memberDoc) => ({
+        id: memberDoc.id,
+        ...memberDoc.data(),
+      })),
+    };
+  },
+);
+
+function normalizeInviteCode(value) {
+  return String(value || "")
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z0-9]/g, "")
+    .slice(0, 12);
+}
