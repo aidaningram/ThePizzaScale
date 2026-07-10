@@ -1211,8 +1211,10 @@ textarea::placeholder {
   align-items: start;
 }
 
-.detail-only-grid {
-  grid-template-columns: 1fr;
+.movie-stats-page {
+  display: grid;
+  gap: 14px;
+  padding: 18px 0 48px;
 }
 
 .movie-column,
@@ -1383,6 +1385,11 @@ textarea::placeholder {
 .back-button {
   display: none;
   margin-bottom: 12px;
+}
+
+.back-button.visible {
+  display: inline-flex;
+  width: fit-content;
 }
 
 .movie-detail {

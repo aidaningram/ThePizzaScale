@@ -123,6 +123,7 @@ const blankMember = {
 
 function App() {
   const [page, setPage] = useState("home");
+  const [movieBackPage, setMovieBackPage] = useState("home");
   const [menuOpen, setMenuOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [featuredCatalog, setFeaturedCatalog] = useState(featuredMovies);
@@ -460,6 +461,13 @@ function App() {
     }
   }
 
+  function openMovieStats(movie, backPage = page) {
+    setSelectedMovie(movie);
+    setAuthMessage("");
+    setMovieBackPage(backPage === "movie" ? "home" : backPage);
+    setPage("movie");
+  }
+
   async function handleSaveReview() {
     setReviewMessage("");
 
@@ -647,16 +655,7 @@ function App() {
         <HomePage
           movieResults={featuredCatalog}
           selectedMovie={selectedMovie}
-          setSelectedMovie={setSelectedMovie}
-          review={review}
-          setReview={setReview}
-          user={user}
-          familyProfile={familyProfile}
-          publicReviews={publicReviews}
-          reviewMessage={reviewMessage}
-          reviewSaveStatus={reviewSaveStatus}
-          onSaveReview={handleSaveReview}
-          onSignIn={() => openSignIn("login")}
+          onOpenMovie={(movie) => openMovieStats(movie, "home")}
         />
       )}
 
@@ -666,9 +665,25 @@ function App() {
           setQuery={setQuery}
           movieResults={movieResults}
           selectedMovie={selectedMovie}
-          setSelectedMovie={setSelectedMovie}
+          setSelectedMovie={(movie) => openMovieStats(movie, "search")}
           searchMessage={searchMessage}
           searchStatus={searchStatus}
+        />
+      )}
+
+      {page === "movie" && (
+        <MovieStatsPage
+          selectedMovie={selectedMovie}
+          review={review}
+          setReview={setReview}
+          user={user}
+          familyProfile={familyProfile}
+          publicReviews={publicReviews}
+          reviewMessage={reviewMessage}
+          reviewSaveStatus={reviewSaveStatus}
+          onSaveReview={handleSaveReview}
+          onSignIn={() => openSignIn("login")}
+          onBack={() => setPage(movieBackPage)}
         />
       )}
 
@@ -1244,18 +1259,8 @@ function SearchPage({
 function HomePage({
   movieResults,
   selectedMovie,
-  setSelectedMovie,
-  review,
-  setReview,
-  user,
-  familyProfile,
-  publicReviews,
-  reviewMessage,
-  reviewSaveStatus,
-  onSaveReview,
-  onSignIn,
+  onOpenMovie,
 }) {
-  const overallScore = (Number(review.parentScore) + Number(review.kidScore)) / 2;
   const movieCategories = [
     {
       id: "movies-to-try",
@@ -1283,166 +1288,180 @@ function HomePage({
             category={category}
             key={category.id}
             selectedMovie={selectedMovie}
-            onSelectMovie={setSelectedMovie}
+            onSelectMovie={onOpenMovie}
           />
         ))}
       </section>
+    </>
+  );
+}
 
-      <section className="content-grid detail-only-grid" aria-label="Selected movie details">
-        <section className="detail-panel">
-          <button className="back-button" type="button">
-            <ChevronLeft size={18} />
-            Browse
-          </button>
-          <div className="movie-detail">
-            <PosterTile movie={selectedMovie} />
-            <div className="movie-copy">
-              <p className="eyebrow">
-                {selectedMovie.rated || "NR"} · {selectedMovie.runtime || "Runtime TBD"}
-              </p>
-              <h2>{selectedMovie.title}</h2>
-              <p className="plot">{selectedMovie.plot}</p>
-              <div className="score-row">
-                <PizzaScore score={selectedMovie.pizzaScore} />
-                <FamilyMatch value={selectedMovie.familyMatch} />
-              </div>
-              <div className="tags">
-                <span>{selectedMovie.genre}</span>
-                <span>{selectedMovie.ageFit}</span>
-                <span>
-                  {selectedMovie.reviewCount > 0
-                    ? `${selectedMovie.reviewCount} family ratings`
-                    : "No Pizza Scale reviews yet"}
-                </span>
-              </div>
+function MovieStatsPage({
+  selectedMovie,
+  review,
+  setReview,
+  user,
+  familyProfile,
+  publicReviews,
+  reviewMessage,
+  reviewSaveStatus,
+  onSaveReview,
+  onSignIn,
+  onBack,
+}) {
+  const overallScore = (Number(review.parentScore) + Number(review.kidScore)) / 2;
+
+  return (
+    <section className="movie-stats-page" aria-label={`${selectedMovie.title} statistics`}>
+      <button className="back-button visible" type="button" onClick={onBack}>
+        <ChevronLeft size={18} />
+        Back to movies
+      </button>
+      <section className="detail-panel">
+        <div className="movie-detail">
+          <PosterTile movie={selectedMovie} />
+          <div className="movie-copy">
+            <p className="eyebrow">
+              {selectedMovie.rated || "NR"} · {selectedMovie.runtime || "Runtime TBD"}
+            </p>
+            <h2>{selectedMovie.title}</h2>
+            <p className="plot">{selectedMovie.plot}</p>
+            <div className="score-row">
+              <PizzaScore score={selectedMovie.pizzaScore} />
+              <FamilyMatch value={selectedMovie.familyMatch} />
+            </div>
+            <div className="tags">
+              <span>{selectedMovie.genre}</span>
+              <span>{selectedMovie.ageFit}</span>
+              <span>
+                {selectedMovie.reviewCount > 0
+                  ? `${selectedMovie.reviewCount} family ratings`
+                  : "No Pizza Scale reviews yet"}
+              </span>
             </div>
           </div>
+        </div>
 
-          <div className="review-grid">
-            <form className="review-form">
-              <div className="section-heading">
-                <Star size={20} />
-                <h2>Rate as Lead Adult</h2>
+        <div className="review-grid">
+          <form className="review-form">
+            <div className="section-heading">
+              <Star size={20} />
+              <h2>Rate as Lead Adult</h2>
+            </div>
+
+            <SliceInput
+              label="Parent slice score"
+              value={review.parentScore}
+              onChange={(parentScore) => setReview({ ...review, parentScore })}
+            />
+            <SliceInput
+              label="Kids slice score"
+              value={review.kidScore}
+              onChange={(kidScore) => setReview({ ...review, kidScore })}
+            />
+
+            <div className="calculated-score">
+              <div className="calculated-score-pizza">
+                <PizzaFill value={overallScore} />
               </div>
+              <div className="calculated-score-copy">
+                <span>Calculated overall</span>
+                <strong>{overallScore.toFixed(1)} / 8 slices</strong>
+              </div>
+            </div>
 
-              <SliceInput
-                label="Parent slice score"
-                value={review.parentScore}
-                onChange={(parentScore) => setReview({ ...review, parentScore })}
+            <label className="text-area-label">
+              Optional public review
+              <textarea
+                value={review.writtenReview}
+                onChange={(event) => setReview({ ...review, writtenReview: event.target.value })}
+                placeholder="What should another family know before movie night?"
               />
-              <SliceInput
-                label="Kids slice score"
-                value={review.kidScore}
-                onChange={(kidScore) => setReview({ ...review, kidScore })}
+            </label>
+
+            <fieldset className="visibility-group">
+              <legend>Review visibility</legend>
+              <VisibilityChoice
+                icon={<Lock size={18} />}
+                label="Private history"
+                value="private"
+                selected={review.visibility}
+                onChange={(visibility) => setReview({ ...review, visibility })}
               />
+              <VisibilityChoice
+                icon={<ShieldCheck size={18} />}
+                label="Anonymous aggregate"
+                value="aggregate"
+                selected={review.visibility}
+                onChange={(visibility) => setReview({ ...review, visibility })}
+              />
+              <VisibilityChoice
+                icon={<Eye size={18} />}
+                label="Public family review"
+                value="public"
+                selected={review.visibility}
+                onChange={(visibility) => setReview({ ...review, visibility })}
+              />
+            </fieldset>
 
-              <div className="calculated-score">
-                <div className="calculated-score-pizza">
-                  <PizzaFill value={overallScore} />
-                </div>
-                <div className="calculated-score-copy">
-                  <span>Calculated overall</span>
-                  <strong>{overallScore.toFixed(1)} / 8 slices</strong>
-                </div>
+            <label className="checkbox-row">
+              <input
+                type="checkbox"
+                checked={review.showAgeShape}
+                onChange={(event) => setReview({ ...review, showAgeShape: event.target.checked })}
+              />
+              <span>Allow public review to show broad child age range</span>
+            </label>
+
+            {reviewMessage && (
+              <p className={`form-status ${reviewSaveStatus}`}>{reviewMessage}</p>
+            )}
+            <button
+              className="primary-button"
+              type="button"
+              onClick={user ? onSaveReview : onSignIn}
+              disabled={reviewSaveStatus === "saving"}
+            >
+              {!user
+                ? "Sign in to Save Rating"
+                : familyProfile
+                  ? "Save Rating"
+                  : "Create a Family to Save"}
+            </button>
+          </form>
+
+          <aside className="public-reviews">
+            <div className="section-heading">
+              <EyeOff size={20} />
+              <h2>Public Family Reviews</h2>
+            </div>
+            {publicReviews.length > 0 ? (
+              publicReviews.map((publicReview) => (
+                <article className="public-review" key={publicReview.id}>
+                  <div>
+                    <strong>{publicReview.familyName || "A Pizza Scale family"}</strong>
+                    <span>{Number(publicReview.pizzaScore || 0).toFixed(1)} / 8 slices</span>
+                  </div>
+                  {publicReview.writtenReview ? (
+                    <p>{publicReview.writtenReview}</p>
+                  ) : (
+                    <p>This family submitted a slice score without a written review.</p>
+                  )}
+                </article>
+              ))
+            ) : (
+              <div className="empty-state">
+                <strong>No public family reviews yet</strong>
+                <p>
+                  The Pizza Scale is brand new. Once real families submit public reviews, they
+                  will appear here.
+                </p>
               </div>
-
-              <label className="text-area-label">
-                Optional public review
-                <textarea
-                  value={review.writtenReview}
-                  onChange={(event) =>
-                    setReview({ ...review, writtenReview: event.target.value })
-                  }
-                  placeholder="What should another family know before movie night?"
-                />
-              </label>
-
-              <fieldset className="visibility-group">
-                <legend>Review visibility</legend>
-                <VisibilityChoice
-                  icon={<Lock size={18} />}
-                  label="Private history"
-                  value="private"
-                  selected={review.visibility}
-                  onChange={(visibility) => setReview({ ...review, visibility })}
-                />
-                <VisibilityChoice
-                  icon={<ShieldCheck size={18} />}
-                  label="Anonymous aggregate"
-                  value="aggregate"
-                  selected={review.visibility}
-                  onChange={(visibility) => setReview({ ...review, visibility })}
-                />
-                <VisibilityChoice
-                  icon={<Eye size={18} />}
-                  label="Public family review"
-                  value="public"
-                  selected={review.visibility}
-                  onChange={(visibility) => setReview({ ...review, visibility })}
-                />
-              </fieldset>
-
-              <label className="checkbox-row">
-                <input
-                  type="checkbox"
-                  checked={review.showAgeShape}
-                  onChange={(event) =>
-                    setReview({ ...review, showAgeShape: event.target.checked })
-                  }
-                />
-                <span>Allow public review to show broad child age range</span>
-              </label>
-
-              {reviewMessage && (
-                <p className={`form-status ${reviewSaveStatus}`}>{reviewMessage}</p>
-              )}
-              <button
-                className="primary-button"
-                type="button"
-                onClick={user ? onSaveReview : onSignIn}
-                disabled={reviewSaveStatus === "saving"}
-              >
-                {!user
-                  ? "Sign in to Save Rating"
-                  : familyProfile
-                    ? "Save Rating"
-                    : "Create a Family to Save"}
-              </button>
-            </form>
-
-            <aside className="public-reviews">
-              <div className="section-heading">
-                <EyeOff size={20} />
-                <h2>Public Family Reviews</h2>
-              </div>
-              {publicReviews.length > 0 ? (
-                publicReviews.map((publicReview) => (
-                  <article className="public-review" key={publicReview.id}>
-                    <div>
-                      <strong>{publicReview.familyName || "A Pizza Scale family"}</strong>
-                      <span>{Number(publicReview.pizzaScore || 0).toFixed(1)} / 8 slices</span>
-                    </div>
-                    {publicReview.writtenReview ? (
-                      <p>{publicReview.writtenReview}</p>
-                    ) : (
-                      <p>This family submitted a slice score without a written review.</p>
-                    )}
-                  </article>
-                ))
-              ) : (
-                <div className="empty-state">
-                  <strong>No public family reviews yet</strong>
-                  <p>
-                    The Pizza Scale is brand new. Once real families submit public reviews, they
-                    will appear here.
-                  </p>
-                </div>
-              )}
-            </aside>
-          </div>
-        </section>
+            )}
+          </aside>
+        </div>
       </section>
-    </>
+    </section>
   );
 }
 
