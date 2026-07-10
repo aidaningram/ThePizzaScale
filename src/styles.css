@@ -419,6 +419,89 @@ p {
   padding: 18px 0 48px;
 }
 
+.search-page {
+  display: grid;
+  place-items: start center;
+  padding: 18px 0 48px;
+}
+
+.search-page-card {
+  width: min(100%, 1040px);
+  border: 2px solid var(--line);
+  border-radius: 24px;
+  background: rgba(255, 250, 240, 0.94);
+  box-shadow: var(--shadow);
+  padding: 24px;
+  display: grid;
+  gap: 18px;
+}
+
+.search-page-heading h1 {
+  max-width: 720px;
+  font-size: clamp(2.35rem, 4.7vw, 4.7rem);
+}
+
+.search-page-input {
+  min-height: 66px;
+  background: var(--white);
+  box-shadow: 0 8px 18px rgba(83, 45, 18, 0.08);
+}
+
+.search-empty-state {
+  min-height: 140px;
+  display: grid;
+  align-content: center;
+}
+
+.search-results-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.search-result-card {
+  min-width: 0;
+  border: 2px solid var(--line);
+  border-radius: 18px;
+  background: var(--white);
+  color: var(--plum-ink);
+  padding: 12px;
+  text-align: left;
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.search-result-card.active {
+  border-color: var(--cheese-gold);
+  background: #fff3cd;
+  box-shadow: inset 0 0 0 2px rgba(255, 201, 77, 0.28);
+}
+
+.search-result-card .poster-tile {
+  border-radius: 14px;
+  box-shadow: none;
+}
+
+.search-result-card span {
+  min-width: 0;
+  display: grid;
+  gap: 6px;
+  align-content: start;
+}
+
+.search-result-card strong {
+  font-family: "Baloo 2", "Nunito", system-ui, sans-serif;
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.search-result-card small {
+  color: var(--plum-soft);
+  line-height: 1.25;
+}
+
 .recommendations-card {
   width: min(100%, 880px);
   border: 2px solid var(--line);
@@ -1248,8 +1331,13 @@ textarea {
 
   .content-grid,
   .review-grid,
-  .family-grid {
+  .family-grid,
+  .search-results-grid {
     grid-template-columns: 1fr;
+  }
+
+  .search-result-card {
+    grid-template-columns: 96px minmax(0, 1fr);
   }
 
   .family-member-row {
@@ -1311,6 +1399,10 @@ textarea {
     grid-row: 2;
   }
 
+  .site-header > div:nth-child(2):empty {
+    display: none;
+  }
+
   .site-header > div:nth-child(2) {
     display: contents;
   }
@@ -1347,6 +1439,16 @@ textarea {
 
   .movie-card {
     grid-template-columns: 52px minmax(0, 1fr);
+  }
+
+  .search-page-card {
+    padding: 18px;
+    border-radius: 20px;
+  }
+
+  .search-result-card {
+    grid-template-columns: 78px minmax(0, 1fr);
+    gap: 12px;
   }
 
   .poster-tile.compact {

@@ -282,7 +282,19 @@ function App() {
 
   function goHome() {
     setMenuOpen(false);
+    setQuery("");
+    setMovieResults(featuredCatalog);
+    setSelectedMovie(featuredCatalog[0]);
     setPage("home");
+  }
+
+  function handleHeaderSearchChange(nextQuery) {
+    setQuery(nextQuery);
+
+    if (nextQuery.trim()) {
+      setMenuOpen(false);
+      setPage("search");
+    }
   }
 
   return (
@@ -293,9 +305,14 @@ function App() {
           menuOpen={menuOpen}
           setMenuOpen={setMenuOpen}
           query={query}
-          setQuery={setQuery}
+          setQuery={handleHeaderSearchChange}
+          showHeaderSearch={page !== "search"}
           onHome={goHome}
           onSignIn={() => setPage("signin")}
+          onSearch={() => {
+            setMenuOpen(false);
+            setPage("search");
+          }}
           onRecommendations={() => {
             setMenuOpen(false);
             setPage("recommendations");
@@ -311,16 +328,25 @@ function App() {
 
       {page === "home" && (
         <HomePage
+          movieResults={featuredCatalog}
+          selectedMovie={selectedMovie}
+          setSelectedMovie={setSelectedMovie}
+          review={review}
+          setReview={setReview}
+          user={user}
+          onSignIn={() => setPage("signin")}
+        />
+      )}
+
+      {page === "search" && (
+        <SearchPage
           query={query}
+          setQuery={setQuery}
           movieResults={movieResults}
           selectedMovie={selectedMovie}
           setSelectedMovie={setSelectedMovie}
           searchMessage={searchMessage}
           searchStatus={searchStatus}
-          review={review}
-          setReview={setReview}
-          user={user}
-          onSignIn={() => setPage("signin")}
         />
       )}
 
@@ -373,8 +399,10 @@ function SiteHeader({
   setMenuOpen,
   query,
   setQuery,
+  showHeaderSearch = true,
   onHome,
   onSignIn,
+  onSearch,
   onRecommendations,
   onSettings,
 }) {
@@ -396,6 +424,15 @@ function SiteHeader({
           <div className="account-menu site-menu">
             <button type="button" onClick={onHome}>
               Home
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setMenuOpen(false);
+                onSearch();
+              }}
+            >
+              Search
             </button>
             <button
               type="button"
@@ -431,15 +468,17 @@ function SiteHeader({
         </button>
       </div>
       <div>
-        <label className="search-label header-search" htmlFor="movie-search">
-          <Search size={18} />
-          <input
-            id="movie-search"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search family-tested movies"
-          />
-        </label>
+        {showHeaderSearch && (
+          <label className="search-label header-search" htmlFor="site-movie-search">
+            <Search size={18} />
+            <input
+              id="site-movie-search"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search family-tested movies"
+            />
+          </label>
+        )}
       </div>
       <div className="account-actions">
         {!user ? (
@@ -532,13 +571,82 @@ function RecommendationsPage({ user, onSignIn }) {
   );
 }
 
-function HomePage({
+function SearchPage({
   query,
+  setQuery,
   movieResults,
   selectedMovie,
   setSelectedMovie,
   searchMessage,
   searchStatus,
+}) {
+  const normalizedQuery = query.trim();
+  const shouldShowResults = normalizedQuery.length >= 2;
+  const hasResults = shouldShowResults && movieResults.length > 0 && searchStatus !== "loading";
+
+  return (
+    <section className="search-page">
+      <div className="search-page-card">
+        <div className="search-page-heading">
+          <p className="eyebrow">Movie search</p>
+          <h1>Search the movie shelf.</h1>
+        </div>
+        <label className="search-label search-page-input" htmlFor="search-page-movie-search">
+          <Search size={20} />
+          <input
+            id="search-page-movie-search"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Type a movie title"
+            autoFocus
+          />
+        </label>
+
+        {!shouldShowResults && (
+          <div className="empty-state search-empty-state">
+            <strong>Search for a movie to begin</strong>
+            <p>
+              Results will appear here from OMDb. Pizza Scale ratings will stay empty until real
+              family reviews are submitted.
+            </p>
+          </div>
+        )}
+
+        {shouldShowResults && searchMessage && (
+          <p className={`search-status ${searchStatus}`}>{searchMessage}</p>
+        )}
+
+        {hasResults && (
+          <div className="search-results-grid">
+            {movieResults.map((movie) => (
+              <button
+                className={`search-result-card ${selectedMovie.id === movie.id ? "active" : ""}`}
+                key={movie.id}
+                type="button"
+                onClick={() => setSelectedMovie(movie)}
+              >
+                <PosterTile movie={movie} />
+                <span>
+                  <strong>{movie.title}</strong>
+                  <small>
+                    {movie.year} · {movie.rated || "NR"}
+                  </small>
+                  <small>{movie.genre}</small>
+                  <small>No Pizza Scale ratings yet</small>
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
+  );
+}
+
+function HomePage({
+  movieResults,
+  selectedMovie,
+  setSelectedMovie,
   review,
   setReview,
   user,
@@ -562,9 +670,8 @@ function HomePage({
         <aside className="movie-column">
           <div className="section-heading">
             <Film size={20} />
-            <h2>{query.trim().length >= 2 ? "Movie Search Results" : "Movies to Try"}</h2>
+            <h2>Movies to Try</h2>
           </div>
-          {searchMessage && <p className={`search-status ${searchStatus}`}>{searchMessage}</p>}
           <div className="movie-list">
             {movieResults.map((movie) => (
               <button
