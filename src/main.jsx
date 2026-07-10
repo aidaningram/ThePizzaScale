@@ -6,7 +6,6 @@ import {
   EyeOff,
   Film,
   Lock,
-  Menu,
   Plus,
   Search,
   ShieldCheck,
@@ -373,12 +372,15 @@ function SiteHeader({
     <header className="site-header">
       <div className="header-left">
         <button
-          className="menu-button"
+          className={`menu-button ${menuOpen ? "open" : ""}`}
           type="button"
-          aria-label="Open site menu"
+          aria-label={menuOpen ? "Close site menu" : "Open site menu"}
+          aria-expanded={menuOpen}
           onClick={() => setMenuOpen(!menuOpen)}
         >
-          <Menu size={24} />
+          <span aria-hidden="true" />
+          <span aria-hidden="true" />
+          <span aria-hidden="true" />
         </button>
         {menuOpen && (
           <div className="account-menu site-menu">
