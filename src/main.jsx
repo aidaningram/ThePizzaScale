@@ -568,6 +568,43 @@ function App() {
     setFamilyProfile(nextFamilyProfile);
   }
 
+  async function handleUpdateAccount({ displayName, photoURL }) {
+    if (!auth.currentUser) {
+      throw new Error("Please sign in before updating your account.");
+    }
+
+    const cleanDisplayName = displayName.trim();
+
+    if (!cleanDisplayName) {
+      throw new Error("Display name cannot be empty.");
+    }
+
+    const uploadedPhotoURL = photoURL
+      ? await uploadProfilePhoto(auth.currentUser.uid, photoURL)
+      : "";
+    const nextPhotoURL =
+      uploadedPhotoURL || photoURL || profilePhotos[auth.currentUser.uid] || user?.photoURL || "";
+
+    await updateProfile(auth.currentUser, {
+      displayName: cleanDisplayName,
+      ...(uploadedPhotoURL ? { photoURL: uploadedPhotoURL } : {}),
+    });
+
+    if (nextPhotoURL) {
+      setProfilePhotos((currentPhotos) => {
+        const nextPhotos = { ...currentPhotos, [auth.currentUser.uid]: nextPhotoURL };
+        writeStoredProfilePhotos(nextPhotos);
+        return nextPhotos;
+      });
+    }
+
+    setUser({
+      ...auth.currentUser,
+      displayName: cleanDisplayName,
+      photoURL: nextPhotoURL || auth.currentUser.photoURL,
+    });
+  }
+
   return (
     <main className="app-shell">
       {page !== "signin" && (
@@ -669,6 +706,7 @@ function App() {
           user={user}
           profilePhoto={user ? profilePhotos[user.uid] : ""}
           familyProfile={familyProfile}
+          onUpdateAccount={handleUpdateAccount}
           onUpdateFamily={handleUpdateFamily}
           onSignOut={requestSignOut}
           onBack={goHome}
@@ -1618,8 +1656,22 @@ function FamilySetupPage({ user, onSaved, onBack }) {
   );
 }
 
-function SettingsPage({ user, profilePhoto, familyProfile, onUpdateFamily, onSignOut, onBack }) {
+function SettingsPage({
+  user,
+  profilePhoto,
+  familyProfile,
+  onUpdateAccount,
+  onUpdateFamily,
+  onSignOut,
+  onBack,
+}) {
   const [activeSection, setActiveSection] = useState("account");
+  const [accountDisplayName, setAccountDisplayName] = useState(user?.displayName || "");
+  const [accountPhoto, setAccountPhoto] = useState("");
+  const [accountPhotoName, setAccountPhotoName] = useState("");
+  const [accountPhotoError, setAccountPhotoError] = useState("");
+  const [accountMessage, setAccountMessage] = useState("");
+  const [accountSaveStatus, setAccountSaveStatus] = useState("idle");
   const [familyName, setFamilyName] = useState(familyProfile?.displayName || "");
   const [editableMembers, setEditableMembers] = useState(familyProfile?.members || []);
   const [settingsMessage, setSettingsMessage] = useState("");
@@ -1637,6 +1689,15 @@ function SettingsPage({ user, profilePhoto, familyProfile, onUpdateFamily, onSig
   const familyFieldsDisabled = Boolean(familyProfile) && !canManageFamily;
 
   useEffect(() => {
+    setAccountDisplayName(user?.displayName || "");
+    setAccountPhoto("");
+    setAccountPhotoName("");
+    setAccountPhotoError("");
+    setAccountMessage("");
+    setAccountSaveStatus("idle");
+  }, [user]);
+
+  useEffect(() => {
     setFamilyName(familyProfile?.displayName || "");
     setEditableMembers(familyProfile?.members || []);
     setSettingsMessage("");
@@ -1649,6 +1710,49 @@ function SettingsPage({ user, profilePhoto, familyProfile, onUpdateFamily, onSig
         memberIndex === index ? { ...member, [key]: value } : member,
       ),
     );
+  }
+
+  function handleAccountPhotoChange(event) {
+    const file = event.target.files?.[0];
+
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setAccountPhotoError("Please choose an image file.");
+      return;
+    }
+
+    if (file.size > 500_000) {
+      setAccountPhotoError("Please choose an image smaller than 500 KB for now.");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      setAccountPhoto(String(reader.result));
+      setAccountPhotoName(file.name);
+      setAccountPhotoError("");
+    };
+    reader.readAsDataURL(file);
+  }
+
+  async function saveAccountSettings() {
+    setAccountMessage("");
+    setAccountSaveStatus("saving");
+
+    try {
+      await onUpdateAccount({
+        displayName: accountDisplayName,
+        photoURL: accountPhoto,
+      });
+      setAccountSaveStatus("ready");
+      setAccountMessage("Account settings saved.");
+      setAccountPhoto("");
+      setAccountPhotoName("");
+    } catch (error) {
+      setAccountSaveStatus("error");
+      setAccountMessage(error.message || "Account settings could not be saved.");
+    }
   }
 
   async function saveFamilySettings() {
@@ -1699,18 +1803,50 @@ function SettingsPage({ user, profilePhoto, familyProfile, onUpdateFamily, onSig
               <p className="eyebrow">Account</p>
               <h2>Your account</h2>
               <div className="settings-profile-row">
-                <ProfileAvatar user={user} photoURL={profilePhoto} />
+                <ProfileAvatar user={user} photoURL={accountPhoto || profilePhoto} />
                 <div>
                   <strong>{user?.displayName || "Pizza Scale member"}</strong>
                   <p>{user?.email || "You are not signed in."}</p>
                 </div>
               </div>
-              <div className="settings-panel">
-                <strong>Profile</strong>
-                <p>
-                  Profile editing will live here soon, including display name and profile photo.
-                </p>
+              <label className="field-label">
+                Display name
+                <input
+                  value={accountDisplayName}
+                  onChange={(event) => setAccountDisplayName(event.target.value)}
+                  disabled={!user || accountSaveStatus === "saving"}
+                />
+              </label>
+              <div className="settings-panel account-photo-panel">
+                <ProfileAvatar user={user} photoURL={accountPhoto || profilePhoto} />
+                <div>
+                  <strong>Profile picture</strong>
+                  <p>{accountPhotoName || "Choose a new profile photo from your device."}</p>
+                  <label className="choose-photo-button">
+                    Choose photo
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleAccountPhotoChange}
+                      disabled={!user || accountSaveStatus === "saving"}
+                    />
+                  </label>
+                  {accountPhotoError && <small className="inline-error">{accountPhotoError}</small>}
+                </div>
               </div>
+              {accountMessage && (
+                <p className={`form-status ${accountSaveStatus}`}>{accountMessage}</p>
+              )}
+              {user && (
+                <button
+                  className="primary-button"
+                  type="button"
+                  onClick={saveAccountSettings}
+                  disabled={accountSaveStatus === "saving" || !accountDisplayName.trim()}
+                >
+                  Save account settings
+                </button>
+              )}
               {user && (
                 <button className="primary-button" type="button" onClick={onSignOut}>
                   Sign out

@@ -899,6 +899,19 @@ p {
   font-size: 1.2rem;
 }
 
+.account-photo-panel {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+}
+
+.account-photo-panel .profile-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+}
+
 .permission-notice {
   border: 2px dashed var(--line-strong);
   border-radius: 16px;
