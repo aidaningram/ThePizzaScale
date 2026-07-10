@@ -28,6 +28,7 @@ import pizzaWordmark from "./assets/PizzaScaleWordmark.png";
 import "./styles.css";
 
 const posterThemes = ["marmalade", "neon", "stage", "woodland"];
+const PROFILE_PHOTOS_STORAGE_KEY = "pizzaScaleProfilePhotos";
 
 const featuredMovies = [
   {
@@ -117,6 +118,7 @@ function App() {
   const [authMessage, setAuthMessage] = useState("");
   const [authMode, setAuthMode] = useState("login");
   const [confirmingSignOut, setConfirmingSignOut] = useState(false);
+  const [profilePhotos, setProfilePhotos] = useState(() => readStoredProfilePhotos());
   const [familyProfile, setFamilyProfile] = useState(null);
   const [review, setReview] = useState({
     parentScore: 7,
@@ -260,6 +262,13 @@ function App() {
         await updateProfile(result.user, {
           displayName: cleanDisplayName,
         });
+        if (photoURL) {
+          setProfilePhotos((currentPhotos) => {
+            const nextPhotos = { ...currentPhotos, [result.user.uid]: photoURL };
+            writeStoredProfilePhotos(nextPhotos);
+            return nextPhotos;
+          });
+        }
         setUser({
           uid: result.user.uid,
           displayName: cleanDisplayName,
@@ -325,6 +334,7 @@ function App() {
           query={query}
           setQuery={handleHeaderSearchChange}
           showHeaderSearch={page !== "search"}
+          profilePhoto={user ? profilePhotos[user.uid] : ""}
           onHome={goHome}
           onSignIn={() => openSignIn("login")}
           onSignUp={() => openSignIn("create")}
@@ -408,6 +418,7 @@ function App() {
       {page === "settings" && (
         <SettingsPage
           user={user}
+          profilePhoto={user ? profilePhotos[user.uid] : ""}
           familyProfile={familyProfile}
           onSignOut={requestSignOut}
           onBack={goHome}
@@ -422,6 +433,22 @@ function App() {
       )}
     </main>
   );
+}
+
+function readStoredProfilePhotos() {
+  try {
+    return JSON.parse(window.localStorage.getItem(PROFILE_PHOTOS_STORAGE_KEY) || "{}");
+  } catch {
+    return {};
+  }
+}
+
+function writeStoredProfilePhotos(profilePhotos) {
+  try {
+    window.localStorage.setItem(PROFILE_PHOTOS_STORAGE_KEY, JSON.stringify(profilePhotos));
+  } catch {
+    // Profile photos are cosmetic; account creation should still succeed if storage is full.
+  }
 }
 
 function SignOutConfirmDialog({ onCancel, onConfirm }) {
@@ -457,6 +484,7 @@ function SiteHeader({
   query,
   setQuery,
   showHeaderSearch = true,
+  profilePhoto,
   onHome,
   onSignIn,
   onSignUp,
@@ -565,7 +593,7 @@ function SiteHeader({
             aria-label="Open account settings"
             onClick={onSettings}
           >
-            <ProfileAvatar user={user} />
+            <ProfileAvatar user={user} photoURL={profilePhoto} />
           </button>
         )}
       </div>
@@ -1231,7 +1259,7 @@ function FamilySetupPage({ user, onSaved, onBack }) {
   );
 }
 
-function SettingsPage({ user, familyProfile, onSignOut, onBack }) {
+function SettingsPage({ user, profilePhoto, familyProfile, onSignOut, onBack }) {
   const [activeSection, setActiveSection] = useState("account");
   const currentMember = familyProfile?.members?.find(
     (member) =>
@@ -1275,7 +1303,7 @@ function SettingsPage({ user, familyProfile, onSignOut, onBack }) {
               <p className="eyebrow">Account</p>
               <h2>Your account</h2>
               <div className="settings-profile-row">
-                <ProfileAvatar user={user} />
+                <ProfileAvatar user={user} photoURL={profilePhoto} />
                 <div>
                   <strong>{user?.displayName || "Pizza Scale member"}</strong>
                   <p>{user?.email || "You are not signed in."}</p>
@@ -1322,7 +1350,7 @@ function SettingsPage({ user, familyProfile, onSignOut, onBack }) {
                     Family display name
                     <input
                       defaultValue={familyProfile.displayName}
-                      disabled={familyFieldsDisabled}
+                      disabled
                     />
                   </label>
                   <div className="settings-panel">
@@ -1350,6 +1378,15 @@ function SettingsPage({ user, familyProfile, onSignOut, onBack }) {
                       rate movies, and help manage the family.
                     </p>
                   </div>
+                  {canManageFamily && (
+                    <div className="settings-panel">
+                      <strong>Editing coming next</strong>
+                      <p>
+                        These fields are visible now, but saving family changes still needs the
+                        Firestore update flow before it should be enabled.
+                      </p>
+                    </div>
+                  )}
                 </>
               )}
             </section>

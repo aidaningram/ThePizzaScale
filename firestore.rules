@@ -24,7 +24,9 @@ service cloud.firestore {
     }
 
     match /familyMembers/{memberId} {
-      allow read, write: if isFamilyLead(request.resource.data.familyId);
+      allow read: if isFamilyLead(resource.data.familyId);
+      allow create: if isFamilyLead(request.resource.data.familyId);
+      allow update, delete: if isFamilyLead(resource.data.familyId);
     }
 
     match /reviews/{reviewId} {
