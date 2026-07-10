@@ -124,6 +124,8 @@ const blankMember = {
 function App() {
   const [page, setPage] = useState("home");
   const [movieBackPage, setMovieBackPage] = useState("home");
+  const [familySetupReturnPage, setFamilySetupReturnPage] = useState("home");
+  const [settingsInitialSection, setSettingsInitialSection] = useState("account");
   const [menuOpen, setMenuOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [featuredCatalog, setFeaturedCatalog] = useState(featuredMovies);
@@ -644,6 +646,7 @@ function App() {
           onSettings={() => {
             setMenuOpen(false);
             setAuthMessage("");
+            setSettingsInitialSection("account");
             setPage("settings");
           }}
         />
@@ -700,7 +703,10 @@ function App() {
       {page === "family-prompt" && (
         <FamilyPromptPage
           onSkip={goHome}
-          onCreateFamily={() => setPage("family-setup")}
+          onCreateFamily={() => {
+            setFamilySetupReturnPage("home");
+            setPage("family-setup");
+          }}
         />
       )}
 
@@ -709,9 +715,11 @@ function App() {
           user={user}
           onSaved={(family) => {
             setFamilyProfile(family);
-            setPage("home");
+            setPage(familySetupReturnPage);
           }}
-          onBack={() => setPage("family-prompt")}
+          onBack={() =>
+            setPage(familySetupReturnPage === "settings" ? "settings" : "family-prompt")
+          }
         />
       )}
 
@@ -724,10 +732,16 @@ function App() {
           user={user}
           profilePhoto={user ? profilePhotos[user.uid] : ""}
           familyProfile={familyProfile}
+          initialSection={settingsInitialSection}
           onUpdateAccount={handleUpdateAccount}
           onUpdateFamily={handleUpdateFamily}
           onSignOut={requestSignOut}
           onBack={goHome}
+          onCreateFamily={() => {
+            setFamilySetupReturnPage("settings");
+            setSettingsInitialSection("family");
+            setPage("family-setup");
+          }}
         />
       )}
 
@@ -1862,12 +1876,14 @@ function SettingsPage({
   user,
   profilePhoto,
   familyProfile,
+  initialSection = "account",
   onUpdateAccount,
   onUpdateFamily,
   onSignOut,
   onBack,
+  onCreateFamily,
 }) {
-  const [activeSection, setActiveSection] = useState("account");
+  const [activeSection, setActiveSection] = useState(initialSection);
   const [accountDisplayName, setAccountDisplayName] = useState(user?.displayName || "");
   const [accountPhoto, setAccountPhoto] = useState("");
   const [accountPhotoName, setAccountPhotoName] = useState("");
@@ -1907,6 +1923,10 @@ function SettingsPage({
     setSettingsMessage("");
     setSettingsSaveStatus("idle");
   }, [familyProfile]);
+
+  useEffect(() => {
+    setActiveSection(initialSection);
+  }, [initialSection]);
 
   function updateEditableMember(index, key, value) {
     setEditableMembers((members) =>
@@ -1976,6 +1996,29 @@ function SettingsPage({
       setSettingsSaveStatus("error");
       setSettingsMessage(error.message || "Family settings could not be saved.");
     }
+  }
+
+  function showJoinFamilyMessage() {
+    if (!user) {
+      setSettingsSaveStatus("error");
+      setSettingsMessage("Sign in before joining a family.");
+      return;
+    }
+
+    setSettingsSaveStatus("ready");
+    setSettingsMessage(
+      "Joining by invite code is coming next. For now, a family leader can create the family here.",
+    );
+  }
+
+  function startFamilyCreation() {
+    if (!user) {
+      setSettingsSaveStatus("error");
+      setSettingsMessage("Sign in before creating a family.");
+      return;
+    }
+
+    onCreateFamily();
   }
 
   return (
@@ -2071,6 +2114,21 @@ function SettingsPage({
                     Family settings and child permissions will appear here once a family is
                     created or joined.
                   </p>
+                  <div className="family-connect-actions">
+                    <button className="primary-button" type="button" onClick={startFamilyCreation}>
+                      Create family
+                    </button>
+                    <button
+                      className="secondary-button"
+                      type="button"
+                      onClick={showJoinFamilyMessage}
+                    >
+                      Join family
+                    </button>
+                  </div>
+                  {settingsMessage && (
+                    <p className={`form-status ${settingsSaveStatus}`}>{settingsMessage}</p>
+                  )}
                 </div>
               ) : (
                 <>

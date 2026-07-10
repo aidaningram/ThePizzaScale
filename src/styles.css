@@ -944,6 +944,13 @@ p {
   font-size: 1.2rem;
 }
 
+.family-connect-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
 .account-photo-panel {
   display: grid;
   grid-template-columns: 64px minmax(0, 1fr);
@@ -1889,6 +1896,7 @@ textarea {
   .dialog-actions,
   .crop-control-grid,
   .button-row,
+  .family-connect-actions,
   .settings-member-controls,
   .family-member-row {
     grid-template-columns: 1fr;
