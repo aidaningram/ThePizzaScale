@@ -42,6 +42,9 @@ import "./styles.css";
 
 const posterThemes = ["marmalade", "neon", "stage", "woodland"];
 const PROFILE_PHOTOS_STORAGE_KEY = "pizzaScaleProfilePhotos";
+const MAX_PROFILE_PHOTO_SOURCE_BYTES = 15 * 1024 * 1024;
+const PROFILE_PHOTO_OUTPUT_SIZE = 512;
+const PROFILE_PHOTO_OUTPUT_QUALITY = 0.82;
 
 const featuredMovies = [
   {
@@ -954,6 +957,140 @@ function ProfileAvatar({ user, name, photoURL }) {
   return <span className="profile-avatar initial-avatar">{initial}</span>;
 }
 
+function ProfilePhotoCropper({ source, fileName, onCancel, onApply }) {
+  const [zoom, setZoom] = useState(1);
+  const [offsetX, setOffsetX] = useState(0);
+  const [offsetY, setOffsetY] = useState(0);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const previewStyle = {
+    transform: `translate(${offsetX / 2}%, ${offsetY / 2}%) scale(${zoom})`,
+  };
+
+  async function applyCrop() {
+    setIsProcessing(true);
+
+    try {
+      const dataUrl = await createCompressedProfilePhoto(source, { zoom, offsetX, offsetY });
+      onApply({ dataUrl, fileName });
+    } finally {
+      setIsProcessing(false);
+    }
+  }
+
+  return (
+    <div className="dialog-backdrop" role="presentation" onMouseDown={onCancel}>
+      <section
+        className="confirm-dialog crop-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="crop-photo-title"
+        onMouseDown={(event) => event.stopPropagation()}
+      >
+        <p className="eyebrow">Profile picture</p>
+        <h2 id="crop-photo-title">Crop your photo</h2>
+        <div className="crop-preview" aria-label="Profile picture crop preview">
+          <img src={source} alt="" style={previewStyle} />
+        </div>
+        <label className="crop-control">
+          Zoom
+          <input
+            type="range"
+            min="1"
+            max="3"
+            step="0.01"
+            value={zoom}
+            onChange={(event) => setZoom(Number(event.target.value))}
+          />
+        </label>
+        <div className="crop-control-grid">
+          <label className="crop-control">
+            Move sideways
+            <input
+              type="range"
+              min="-100"
+              max="100"
+              value={offsetX}
+              onChange={(event) => setOffsetX(Number(event.target.value))}
+            />
+          </label>
+          <label className="crop-control">
+            Move up/down
+            <input
+              type="range"
+              min="-100"
+              max="100"
+              value={offsetY}
+              onChange={(event) => setOffsetY(Number(event.target.value))}
+            />
+          </label>
+        </div>
+        <p>
+          We will save this as a compressed square avatar so normal phone photos work without
+          slowing down the site.
+        </p>
+        <div className="dialog-actions">
+          <button className="secondary-button" type="button" onClick={onCancel}>
+            Cancel
+          </button>
+          <button
+            className="primary-button"
+            type="button"
+            onClick={applyCrop}
+            disabled={isProcessing}
+          >
+            {isProcessing ? "Preparing..." : "Use photo"}
+          </button>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function readProfilePhotoFile(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.onload = () => resolve(String(reader.result));
+    reader.onerror = () => reject(new Error("The image could not be read."));
+    reader.readAsDataURL(file);
+  });
+}
+
+function loadImage(source) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+
+    image.onload = () => resolve(image);
+    image.onerror = () => reject(new Error("The image could not be loaded."));
+    image.src = source;
+  });
+}
+
+async function createCompressedProfilePhoto(source, crop) {
+  const image = await loadImage(source);
+  const canvas = document.createElement("canvas");
+  const outputSize = PROFILE_PHOTO_OUTPUT_SIZE;
+  const context = canvas.getContext("2d");
+
+  canvas.width = outputSize;
+  canvas.height = outputSize;
+  context.fillStyle = "#fff7e7";
+  context.fillRect(0, 0, outputSize, outputSize);
+
+  const baseScale = Math.max(outputSize / image.naturalWidth, outputSize / image.naturalHeight);
+  const scale = baseScale * crop.zoom;
+  const drawWidth = image.naturalWidth * scale;
+  const drawHeight = image.naturalHeight * scale;
+  const maxShiftX = Math.max(0, (drawWidth - outputSize) / 2);
+  const maxShiftY = Math.max(0, (drawHeight - outputSize) / 2);
+  const drawX = (outputSize - drawWidth) / 2 + maxShiftX * (crop.offsetX / 100);
+  const drawY = (outputSize - drawHeight) / 2 + maxShiftY * (crop.offsetY / 100);
+
+  context.drawImage(image, drawX, drawY, drawWidth, drawHeight);
+
+  return canvas.toDataURL("image/jpeg", PROFILE_PHOTO_OUTPUT_QUALITY);
+}
+
 function getEmailAuthErrorMessage(error, mode) {
   switch (error.code) {
     case "auth/operation-not-allowed":
@@ -1322,6 +1459,7 @@ function SignInPage({ initialMode, authMessage, onEmailAuth, onGoogleSignIn, onB
   const [profileImage, setProfileImage] = useState("");
   const [profileImageName, setProfileImageName] = useState("");
   const [profileImageError, setProfileImageError] = useState("");
+  const [pendingProfileImage, setPendingProfileImage] = useState(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const isCreateMode = mode === "create";
@@ -1330,8 +1468,9 @@ function SignInPage({ initialMode, authMessage, onEmailAuth, onGoogleSignIn, onB
     setMode(initialMode);
   }, [initialMode]);
 
-  function handleProfileImageChange(event) {
+  async function handleProfileImageChange(event) {
     const file = event.target.files?.[0];
+    event.target.value = "";
 
     if (!file) return;
 
@@ -1340,18 +1479,18 @@ function SignInPage({ initialMode, authMessage, onEmailAuth, onGoogleSignIn, onB
       return;
     }
 
-    if (file.size > 500_000) {
-      setProfileImageError("Please choose an image smaller than 500 KB for now.");
+    if (file.size > MAX_PROFILE_PHOTO_SOURCE_BYTES) {
+      setProfileImageError("Please choose an image smaller than 15 MB.");
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      setProfileImage(String(reader.result));
-      setProfileImageName(file.name);
+    try {
+      const source = await readProfilePhotoFile(file);
+      setPendingProfileImage({ source, fileName: file.name });
       setProfileImageError("");
-    };
-    reader.readAsDataURL(file);
+    } catch (error) {
+      setProfileImageError(error.message || "The image could not be opened.");
+    }
   }
 
   return (
@@ -1438,6 +1577,18 @@ function SignInPage({ initialMode, authMessage, onEmailAuth, onGoogleSignIn, onB
           Continue with Google
         </button>
       </div>
+      {pendingProfileImage && (
+        <ProfilePhotoCropper
+          source={pendingProfileImage.source}
+          fileName={pendingProfileImage.fileName}
+          onCancel={() => setPendingProfileImage(null)}
+          onApply={({ dataUrl, fileName }) => {
+            setProfileImage(dataUrl);
+            setProfileImageName(fileName);
+            setPendingProfileImage(null);
+          }}
+        />
+      )}
     </section>
   );
 }
@@ -1670,6 +1821,7 @@ function SettingsPage({
   const [accountPhoto, setAccountPhoto] = useState("");
   const [accountPhotoName, setAccountPhotoName] = useState("");
   const [accountPhotoError, setAccountPhotoError] = useState("");
+  const [pendingAccountPhoto, setPendingAccountPhoto] = useState(null);
   const [accountMessage, setAccountMessage] = useState("");
   const [accountSaveStatus, setAccountSaveStatus] = useState("idle");
   const [familyName, setFamilyName] = useState(familyProfile?.displayName || "");
@@ -1693,6 +1845,7 @@ function SettingsPage({
     setAccountPhoto("");
     setAccountPhotoName("");
     setAccountPhotoError("");
+    setPendingAccountPhoto(null);
     setAccountMessage("");
     setAccountSaveStatus("idle");
   }, [user]);
@@ -1712,8 +1865,9 @@ function SettingsPage({
     );
   }
 
-  function handleAccountPhotoChange(event) {
+  async function handleAccountPhotoChange(event) {
     const file = event.target.files?.[0];
+    event.target.value = "";
 
     if (!file) return;
 
@@ -1722,18 +1876,18 @@ function SettingsPage({
       return;
     }
 
-    if (file.size > 500_000) {
-      setAccountPhotoError("Please choose an image smaller than 500 KB for now.");
+    if (file.size > MAX_PROFILE_PHOTO_SOURCE_BYTES) {
+      setAccountPhotoError("Please choose an image smaller than 15 MB.");
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      setAccountPhoto(String(reader.result));
-      setAccountPhotoName(file.name);
+    try {
+      const source = await readProfilePhotoFile(file);
+      setPendingAccountPhoto({ source, fileName: file.name });
       setAccountPhotoError("");
-    };
-    reader.readAsDataURL(file);
+    } catch (error) {
+      setAccountPhotoError(error.message || "The image could not be opened.");
+    }
   }
 
   async function saveAccountSettings() {
@@ -1960,6 +2114,18 @@ function SettingsPage({
           )}
         </div>
       </div>
+      {pendingAccountPhoto && (
+        <ProfilePhotoCropper
+          source={pendingAccountPhoto.source}
+          fileName={pendingAccountPhoto.fileName}
+          onCancel={() => setPendingAccountPhoto(null)}
+          onApply={({ dataUrl, fileName }) => {
+            setAccountPhoto(dataUrl);
+            setAccountPhotoName(fileName);
+            setPendingAccountPhoto(null);
+          }}
+        />
+      )}
     </section>
   );
 }

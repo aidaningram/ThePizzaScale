@@ -212,6 +212,51 @@ p {
   line-height: 1.45;
 }
 
+.crop-dialog {
+  width: min(100%, 520px);
+}
+
+.crop-preview {
+  width: min(100%, 280px);
+  aspect-ratio: 1;
+  margin: 0 auto;
+  border: 6px solid var(--crust-orange);
+  border-radius: 50%;
+  background: var(--dough-card);
+  overflow: hidden;
+  display: grid;
+  place-items: center;
+  box-shadow:
+    inset 0 0 0 2px rgba(52, 23, 53, 0.16),
+    0 8px 0 rgba(52, 23, 53, 0.12);
+}
+
+.crop-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform-origin: center;
+}
+
+.crop-control {
+  display: grid;
+  gap: 8px;
+  color: var(--plum-ink);
+  font-family: "Baloo 2", "Nunito", system-ui, sans-serif;
+  font-weight: 800;
+}
+
+.crop-control input {
+  width: 100%;
+  accent-color: var(--sauce-red);
+}
+
+.crop-control-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
 .dialog-actions {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1733,6 +1778,7 @@ textarea {
   .visibility-group,
   .slice-input,
   .dialog-actions,
+  .crop-control-grid,
   .button-row,
   .settings-member-controls,
   .family-member-row {
