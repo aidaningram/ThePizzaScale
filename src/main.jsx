@@ -5,7 +5,6 @@ import {
   Eye,
   EyeOff,
   Film,
-  Lock,
   Plus,
   Search,
   ShieldCheck,
@@ -493,6 +492,7 @@ function App() {
     const parentScore = Number(review.parentScore);
     const kidScore = Number(review.kidScore);
     const pizzaScore = (parentScore + kidScore) / 2;
+    const reviewVisibility = review.visibility === "public" ? "public" : "aggregate";
     const movieId = selectedMovie.id;
     const reviewId = `${familyProfile.id}_${movieId}`;
     const reviewRef = doc(db, "reviews", reviewId);
@@ -525,7 +525,7 @@ function App() {
           parentScore,
           kidScore,
           pizzaScore,
-          visibility: review.visibility,
+          visibility: reviewVisibility,
           writtenReview: review.writtenReview.trim(),
           showAgeShape: review.showAgeShape,
           createdAt: existingReview?.createdAt || serverTimestamp(),
@@ -534,7 +534,7 @@ function App() {
         { merge: true },
       );
 
-      if (review.visibility === "public") {
+      if (reviewVisibility === "public") {
         setPublicReviews((reviews) => [
           {
             id: reviewId,
@@ -1324,6 +1324,7 @@ function MovieStatsPage({
   onBack,
 }) {
   const overallScore = (Number(review.parentScore) + Number(review.kidScore)) / 2;
+  const selectedVisibility = review.visibility === "public" ? "public" : "aggregate";
 
   return (
     <section className="movie-stats-page" aria-label={`${selectedMovie.title} statistics`}>
@@ -1396,36 +1397,39 @@ function MovieStatsPage({
             <fieldset className="visibility-group">
               <legend>Review visibility</legend>
               <VisibilityChoice
-                icon={<Lock size={18} />}
-                label="Private history"
-                value="private"
-                selected={review.visibility}
-                onChange={(visibility) => setReview({ ...review, visibility })}
-              />
-              <VisibilityChoice
                 icon={<ShieldCheck size={18} />}
                 label="Anonymous aggregate"
                 value="aggregate"
-                selected={review.visibility}
+                selected={selectedVisibility}
                 onChange={(visibility) => setReview({ ...review, visibility })}
+                description={
+                  "Your slice scores help shape Pizza Scale totals, but your family name and written review will not be shown publicly."
+                }
               />
               <VisibilityChoice
                 icon={<Eye size={18} />}
                 label="Public family review"
                 value="public"
-                selected={review.visibility}
+                selected={selectedVisibility}
                 onChange={(visibility) => setReview({ ...review, visibility })}
+                description={
+                  "Your family name, slice score, and optional written review can appear for other families."
+                }
               />
             </fieldset>
 
-            <label className="checkbox-row">
-              <input
-                type="checkbox"
-                checked={review.showAgeShape}
-                onChange={(event) => setReview({ ...review, showAgeShape: event.target.checked })}
-              />
-              <span>Allow public review to show broad child age range</span>
-            </label>
+            {selectedVisibility === "public" && (
+              <label className="checkbox-row">
+                <input
+                  type="checkbox"
+                  checked={review.showAgeShape}
+                  onChange={(event) =>
+                    setReview({ ...review, showAgeShape: event.target.checked })
+                  }
+                />
+                <span>Allow public review to show broad child age range</span>
+              </label>
+            )}
 
             {reviewMessage && (
               <p className={`form-status ${reviewSaveStatus}`}>{reviewMessage}</p>
@@ -2372,18 +2376,21 @@ function SliceInput({ label, value, onChange }) {
   );
 }
 
-function VisibilityChoice({ icon, label, value, selected, onChange }) {
+function VisibilityChoice({ icon, label, value, selected, onChange, description }) {
+  const isSelected = selected === value;
+
   return (
-    <label className={`visibility-choice ${selected === value ? "selected" : ""}`}>
+    <label className={`visibility-choice ${isSelected ? "selected" : ""}`}>
       <input
         type="radio"
         name="visibility"
         value={value}
-        checked={selected === value}
+        checked={isSelected}
         onChange={() => onChange(value)}
       />
       {icon}
       <span>{label}</span>
+      {isSelected && description && <small>{description}</small>}
     </label>
   );
 }

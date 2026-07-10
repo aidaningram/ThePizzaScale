@@ -1667,7 +1667,7 @@ textarea {
   padding: 0;
   margin: 0;
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 10px;
 }
 
@@ -1686,8 +1686,8 @@ textarea {
   display: grid;
   grid-template-columns: 20px 1fr;
   gap: 8px;
-  align-content: center;
-  align-items: center;
+  align-content: start;
+  align-items: start;
   padding: 10px;
 }
 
@@ -1703,8 +1703,21 @@ textarea {
 }
 
 .visibility-choice svg {
+  margin-top: 2px;
   color: var(--sauce-red);
   stroke-width: 2.7;
+}
+
+.visibility-choice span {
+  font-weight: 900;
+}
+
+.visibility-choice small {
+  grid-column: 2;
+  color: var(--plum-soft);
+  font-size: 0.82rem;
+  font-weight: 800;
+  line-height: 1.35;
 }
 
 .checkbox-row {
