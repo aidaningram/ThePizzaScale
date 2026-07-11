@@ -217,6 +217,48 @@ export const joinFamilyByInvite = onCall(
   },
 );
 
+export const deleteFamily = onCall(
+  {
+    region: "us-central1",
+  },
+  async (request) => {
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "Sign in before deleting a family.");
+    }
+
+    const familyId = String(request.data?.familyId || "").trim();
+
+    if (!familyId) {
+      throw new HttpsError("invalid-argument", "Choose a family to delete.");
+    }
+
+    const familyRef = db.collection("families").doc(familyId);
+    const familySnapshot = await familyRef.get();
+
+    if (!familySnapshot.exists) {
+      throw new HttpsError("not-found", "That family no longer exists.");
+    }
+
+    const family = familySnapshot.data();
+    const creatorUserId = family.createdByUserId || family.leadAdultUserId;
+
+    if (creatorUserId !== request.auth.uid) {
+      throw new HttpsError(
+        "permission-denied",
+        "Only the person who created this family can delete it.",
+      );
+    }
+
+    await deleteCollectionDocumentsByFamilyId("familyMembers", familyId);
+    await deleteCollectionDocumentsByFamilyId("familyInvites", familyId);
+    await deleteCollectionDocumentsByFamilyId("reviews", familyId);
+    await deleteCollectionDocumentsByFamilyId("publicReviews", familyId);
+    await familyRef.delete();
+
+    return { deleted: true, familyId };
+  },
+);
+
 function normalizeInviteCode(value) {
   return String(value || "")
     .trim()
@@ -237,4 +279,24 @@ function canMemberRate(member) {
     (member.role === "adult" || member.isLeadAdult) &&
     ["lead", "colead", "co-lead", "manage", "rate"].includes(member.permission || "")
   );
+}
+
+async function deleteCollectionDocumentsByFamilyId(collectionName, familyId) {
+  const batchSize = 450;
+
+  while (true) {
+    const snapshot = await db
+      .collection(collectionName)
+      .where("familyId", "==", familyId)
+      .limit(batchSize)
+      .get();
+
+    if (snapshot.empty) return;
+
+    const batch = db.batch();
+    snapshot.docs.forEach((documentSnapshot) => {
+      batch.delete(documentSnapshot.ref);
+    });
+    await batch.commit();
+  }
 }

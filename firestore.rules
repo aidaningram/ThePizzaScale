@@ -20,6 +20,15 @@ service cloud.firestore {
         );
     }
 
+    function canDeleteFamily(familyId) {
+      let family = get(/databases/$(database)/documents/families/$(familyId)).data;
+      return isSignedIn()
+        && (
+          family.createdByUserId == request.auth.uid
+          || (family.createdByUserId == null && family.leadAdultUserId == request.auth.uid)
+        );
+    }
+
     function canRateFamily(familyId) {
       let family = get(/databases/$(database)/documents/families/$(familyId)).data;
       return isSignedIn()
@@ -54,8 +63,11 @@ service cloud.firestore {
 
     match /families/{familyId} {
       allow read: if isSignedIn() && resource.data.memberUserIds.hasAny([request.auth.uid]);
-      allow create: if isSignedIn() && request.resource.data.leadAdultUserId == request.auth.uid;
-      allow update, delete: if canManageFamily(familyId);
+      allow create: if isSignedIn()
+        && request.resource.data.leadAdultUserId == request.auth.uid
+        && request.resource.data.createdByUserId == request.auth.uid;
+      allow update: if canManageFamily(familyId);
+      allow delete: if canDeleteFamily(familyId);
     }
 
     match /familyMembers/{memberId} {

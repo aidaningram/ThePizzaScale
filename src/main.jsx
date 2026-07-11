@@ -1016,6 +1016,26 @@ function App() {
     });
   }
 
+  async function handleDeleteFamily() {
+    if (!user || !canDeleteFamilyProfile(familyProfile, user)) {
+      throw new Error("Only the person who created this family can delete it.");
+    }
+
+    const familyId = familyProfile.id;
+    const deleteFamily = httpsCallable(functions, "deleteFamily");
+    await deleteFamily({ familyId });
+
+    setFamilyProfile(null);
+    setFamilyMovieReview(null);
+    setPublicReviews((reviews) =>
+      reviews.filter(
+        (reviewItem) =>
+          reviewItem.familyId !== familyId && !String(reviewItem.id || "").startsWith(`${familyId}_`),
+      ),
+    );
+    setSettingsInitialSection("family");
+  }
+
   async function handleCreateInviteCode() {
     if (!user || !canManageFamilyProfile(familyProfile, user)) {
       throw new Error("Only a family leader or co-leader can create invite codes.");
@@ -1240,6 +1260,7 @@ function App() {
           initialJoinCode={pendingJoinCode}
           onUpdateAccount={handleUpdateAccount}
           onUpdateFamily={handleUpdateFamily}
+          onDeleteFamily={handleDeleteFamily}
           onCreateInviteCode={handleCreateInviteCode}
           onJoinFamily={handleJoinFamily}
           onPasswordReset={handlePasswordReset}
@@ -1330,6 +1351,12 @@ function canManageFamilyProfile(familyProfile, user) {
 
   const currentMember = familyProfile.members?.find((member) => member.userId === user.uid);
   return ["lead", "colead", "co-lead", "manage"].includes(currentMember?.permission);
+}
+
+function canDeleteFamilyProfile(familyProfile, user) {
+  if (!familyProfile || !user) return false;
+
+  return (familyProfile.createdByUserId || familyProfile.leadAdultUserId) === user.uid;
 }
 
 function canRateForFamilyProfile(familyProfile, user) {
@@ -2406,6 +2433,7 @@ function FamilySetupPage({ user, onSaved, onBack }) {
     const familyPayload = {
       displayName: familyName.trim(),
       leadAdultUserId: user.uid,
+      createdByUserId: user.uid,
       memberUserIds: [user.uid],
       ratingAdultUserIds: [user.uid],
       inviteCode,
@@ -2463,6 +2491,7 @@ function FamilySetupPage({ user, onSaved, onBack }) {
         id: familyDoc.id,
         displayName: familyPayload.displayName,
         leadAdultUserId: user.uid,
+        createdByUserId: user.uid,
         memberUserIds: [user.uid],
         ratingAdultUserIds: [user.uid],
         inviteCode,
@@ -2601,6 +2630,7 @@ function SettingsPage({
   initialJoinCode = "",
   onUpdateAccount,
   onUpdateFamily,
+  onDeleteFamily,
   onCreateInviteCode,
   onJoinFamily,
   onPasswordReset,
@@ -2620,6 +2650,9 @@ function SettingsPage({
   const [editableMembers, setEditableMembers] = useState(familyProfile?.members || []);
   const [settingsMessage, setSettingsMessage] = useState("");
   const [settingsSaveStatus, setSettingsSaveStatus] = useState("idle");
+  const [deleteConfirmStep, setDeleteConfirmStep] = useState(0);
+  const [deleteStatus, setDeleteStatus] = useState("idle");
+  const [deleteMessage, setDeleteMessage] = useState("");
   const [inviteCodeInput, setInviteCodeInput] = useState("");
   const [joinDisplayName, setJoinDisplayName] = useState(user?.displayName || "");
   const [joinMessage, setJoinMessage] = useState("");
@@ -2638,6 +2671,7 @@ function SettingsPage({
     (familyProfile.leadAdultUserId === user?.uid ||
       ["lead", "colead", "co-lead", "manage"].includes(currentPermission));
   const familyFieldsDisabled = Boolean(familyProfile) && !canManageFamily;
+  const canDeleteFamily = canDeleteFamilyProfile(familyProfile, user);
 
   useEffect(() => {
     setAccountDisplayName(user?.displayName || "");
@@ -2655,6 +2689,9 @@ function SettingsPage({
     setEditableMembers(familyProfile?.members || []);
     setSettingsMessage("");
     setSettingsSaveStatus("idle");
+    setDeleteConfirmStep(0);
+    setDeleteStatus("idle");
+    setDeleteMessage("");
     setInviteMessage("");
     setInviteStatus("idle");
   }, [familyProfile]);
@@ -2842,6 +2879,21 @@ function SettingsPage({
     } catch (error) {
       setInviteStatus("error");
       setInviteMessage(error.message || "Invite code could not be created.");
+    }
+  }
+
+  async function deleteFamilyPermanently() {
+    setDeleteMessage("");
+    setDeleteStatus("deleting");
+
+    try {
+      await onDeleteFamily();
+      setDeleteStatus("ready");
+      setDeleteConfirmStep(0);
+      setDeleteMessage("Family deleted.");
+    } catch (error) {
+      setDeleteStatus("error");
+      setDeleteMessage(error.message || "Family could not be deleted.");
     }
   }
 
@@ -3191,6 +3243,86 @@ function SettingsPage({
                       rate movies, and help manage the family.
                     </p>
                   </div>
+                  {canDeleteFamily && (
+                    <div className="settings-panel danger-panel">
+                      <strong>Delete family</strong>
+                      <p>
+                        Only the person who created this family can delete it. Deleting removes the
+                        family group, member profiles, invite codes, private ratings, and public
+                        family reviews connected to this family. This cannot be undone.
+                      </p>
+                      {deleteConfirmStep === 0 && (
+                        <button
+                          className="danger-button"
+                          type="button"
+                          onClick={() => {
+                            setDeleteMessage("");
+                            setDeleteConfirmStep(1);
+                          }}
+                        >
+                          Delete family
+                        </button>
+                      )}
+                      {deleteConfirmStep === 1 && (
+                        <div className="delete-confirm-panel">
+                          <strong>First confirmation</strong>
+                          <p>
+                            This will permanently erase {familyProfile.displayName} and disconnect
+                            every account linked to it.
+                          </p>
+                          <div className="dialog-actions">
+                            <button
+                              className="secondary-button"
+                              type="button"
+                              onClick={() => setDeleteConfirmStep(0)}
+                              disabled={deleteStatus === "deleting"}
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              className="danger-button"
+                              type="button"
+                              onClick={() => setDeleteConfirmStep(2)}
+                              disabled={deleteStatus === "deleting"}
+                            >
+                              I understand
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                      {deleteConfirmStep === 2 && (
+                        <div className="delete-confirm-panel">
+                          <strong>Final confirmation</strong>
+                          <p>
+                            Last chance: deleting this family removes the family ratings that help
+                            Pizza Scale understand your household. The site cannot restore it
+                            afterward.
+                          </p>
+                          <div className="dialog-actions">
+                            <button
+                              className="secondary-button"
+                              type="button"
+                              onClick={() => setDeleteConfirmStep(0)}
+                              disabled={deleteStatus === "deleting"}
+                            >
+                              Keep family
+                            </button>
+                            <button
+                              className="danger-button"
+                              type="button"
+                              onClick={deleteFamilyPermanently}
+                              disabled={deleteStatus === "deleting"}
+                            >
+                              {deleteStatus === "deleting" ? "Deleting..." : "Permanently delete"}
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                      {deleteMessage && (
+                        <p className={`form-status ${deleteStatus}`}>{deleteMessage}</p>
+                      )}
+                    </div>
+                  )}
                   {settingsMessage && (
                     <p className={`form-status ${settingsSaveStatus}`}>{settingsMessage}</p>
                   )}

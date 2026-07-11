@@ -142,6 +142,7 @@ p {
 .primary-button,
 .back-button,
 .secondary-button,
+.danger-button,
 .menu-button,
 .text-button,
 .add-member-button {
@@ -278,6 +279,15 @@ p {
   border: 2px solid var(--line);
   padding: 0 18px;
   box-shadow: 0 7px 0 var(--line-strong);
+}
+
+.danger-button {
+  width: 100%;
+  background: var(--plum-ink);
+  color: var(--white);
+  border: 2px solid rgba(239, 70, 62, 0.45);
+  padding: 0 18px;
+  box-shadow: 0 7px 0 rgba(239, 70, 62, 0.45);
 }
 
 .text-button {
@@ -840,7 +850,8 @@ p {
 
 .form-status.saving,
 .form-status.joining,
-.form-status.sending {
+.form-status.sending,
+.form-status.deleting {
   border-color: rgba(255, 201, 77, 0.55);
   background: var(--cream-soft);
   color: var(--plum-soft);
@@ -1001,6 +1012,22 @@ p {
   margin-bottom: 4px;
   font-family: "Baloo 2", "Nunito", system-ui, sans-serif;
   font-size: 1.2rem;
+}
+
+.danger-panel {
+  border-color: rgba(239, 70, 62, 0.45);
+  background: #fff1eb;
+  display: grid;
+  gap: 10px;
+}
+
+.delete-confirm-panel {
+  border: 2px dashed rgba(239, 70, 62, 0.45);
+  border-radius: 14px;
+  background: var(--white);
+  padding: 12px;
+  display: grid;
+  gap: 8px;
 }
 
 .family-connect-actions {
