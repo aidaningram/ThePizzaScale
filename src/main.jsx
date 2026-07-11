@@ -377,6 +377,21 @@ function getRatingAdultUserIds(members, leadAdultUserId) {
   return Array.from(new Set([leadAdultUserId, ...ratingUserIds].filter(Boolean)));
 }
 
+function getInitialJoinCode() {
+  try {
+    const searchParams = new URLSearchParams(window.location.search);
+    return normalizeInviteCode(searchParams.get("familyCode") || searchParams.get("invite") || "");
+  } catch {
+    return "";
+  }
+}
+
+function buildFamilyInviteLink(inviteCode) {
+  if (!inviteCode) return "";
+
+  return `${window.location.origin}${window.location.pathname}?familyCode=${inviteCode}`;
+}
+
 async function createUniqueInviteCode() {
   for (let attempt = 0; attempt < 8; attempt += 1) {
     const inviteCode = createInviteCode();
@@ -395,6 +410,7 @@ function App() {
   const [movieBackPage, setMovieBackPage] = useState("home");
   const [familySetupReturnPage, setFamilySetupReturnPage] = useState("home");
   const [settingsInitialSection, setSettingsInitialSection] = useState("account");
+  const [pendingJoinCode, setPendingJoinCode] = useState(() => getInitialJoinCode());
   const [menuOpen, setMenuOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [featuredCatalog, setFeaturedCatalog] = useState(featuredMovies);
@@ -433,6 +449,21 @@ function App() {
       }),
     [],
   );
+
+  useEffect(() => {
+    if (!pendingJoinCode) return;
+
+    setMenuOpen(false);
+    setAuthMessage("");
+    setSettingsInitialSection("family");
+
+    if (user) {
+      setPage("settings");
+    } else {
+      setAuthMode("create");
+      setPage("signin");
+    }
+  }, [pendingJoinCode, user]);
 
   useEffect(() => {
     let isCurrent = true;
@@ -667,7 +698,12 @@ function App() {
       const result = await signInWithPopup(auth, provider);
       const isNewUser =
         result.user.metadata.creationTime === result.user.metadata.lastSignInTime;
-      setPage(promptForFamily && isNewUser ? "family-prompt" : "home");
+      if (pendingJoinCode) {
+        setSettingsInitialSection("family");
+        setPage("settings");
+      } else {
+        setPage(promptForFamily && isNewUser ? "family-prompt" : "home");
+      }
     } catch (error) {
       setAuthMessage(
         error.code === "auth/operation-not-allowed"
@@ -720,10 +756,20 @@ function App() {
           email: result.user.email,
           photoURL: uploadedPhotoURL || photoURL,
         });
-        setPage("family-prompt");
+        if (pendingJoinCode) {
+          setSettingsInitialSection("family");
+          setPage("settings");
+        } else {
+          setPage("family-prompt");
+        }
       } else {
         await signInWithEmailAndPassword(auth, email, password);
-        setPage("home");
+        if (pendingJoinCode) {
+          setSettingsInitialSection("family");
+          setPage("settings");
+        } else {
+          setPage("home");
+        }
       }
     } catch (error) {
       setAuthMessage(getEmailAuthErrorMessage(error, mode));
@@ -979,6 +1025,7 @@ function App() {
 
     await setDoc(doc(db, "familyInvites", inviteCode), {
       code: inviteCode,
+      familyCode: inviteCode,
       familyId: familyProfile.id,
       familyName: familyProfile.displayName,
       createdByUserId: user.uid,
@@ -988,14 +1035,15 @@ function App() {
 
     await updateDoc(doc(db, "families", familyProfile.id), {
       inviteCode,
+      familyCode: inviteCode,
       updatedAt: serverTimestamp(),
     });
 
-    setFamilyProfile({ ...familyProfile, inviteCode });
+    setFamilyProfile({ ...familyProfile, inviteCode, familyCode: inviteCode });
     return inviteCode;
   }
 
-  async function handleJoinFamily({ inviteCode, displayName }) {
+  async function handleJoinFamily({ inviteCode, displayName, claimMemberId, createNewProfile }) {
     if (!user) {
       throw new Error("Sign in before joining a family.");
     }
@@ -1004,9 +1052,16 @@ function App() {
     const result = await joinFamily({
       inviteCode: normalizeInviteCode(inviteCode),
       displayName,
+      claimMemberId,
+      createNewProfile,
     });
 
+    if (result.data?.requiresMemberConfirmation) {
+      return result.data;
+    }
+
     setFamilyProfile(result.data);
+    setPendingJoinCode("");
     return result.data;
   }
 
@@ -1182,6 +1237,7 @@ function App() {
           profilePhoto={user ? profilePhotos[user.uid] : ""}
           familyProfile={familyProfile}
           initialSection={settingsInitialSection}
+          initialJoinCode={pendingJoinCode}
           onUpdateAccount={handleUpdateAccount}
           onUpdateFamily={handleUpdateFamily}
           onCreateInviteCode={handleCreateInviteCode}
@@ -2353,6 +2409,7 @@ function FamilySetupPage({ user, onSaved, onBack }) {
       memberUserIds: [user.uid],
       ratingAdultUserIds: [user.uid],
       inviteCode,
+      familyCode: inviteCode,
       publicAgeDisplayMode: "ranges",
       createdAt: serverTimestamp(),
     };
@@ -2361,6 +2418,7 @@ function FamilySetupPage({ user, onSaved, onBack }) {
       const familyDoc = await addDoc(collection(db, "families"), familyPayload);
       await setDoc(doc(db, "familyInvites", inviteCode), {
         code: inviteCode,
+        familyCode: inviteCode,
         familyId: familyDoc.id,
         familyName: familyPayload.displayName,
         createdByUserId: user.uid,
@@ -2408,6 +2466,7 @@ function FamilySetupPage({ user, onSaved, onBack }) {
         memberUserIds: [user.uid],
         ratingAdultUserIds: [user.uid],
         inviteCode,
+        familyCode: inviteCode,
         members: savedMembers,
       });
     } catch {
@@ -2420,6 +2479,15 @@ function FamilySetupPage({ user, onSaved, onBack }) {
       <div className="family-card">
         <p className="eyebrow">Family group</p>
         <h2>Name your household</h2>
+        <div className="settings-panel family-guidance-panel">
+          <strong>Two ways to add people</strong>
+          <p>
+            Add every person who affects movie night here, including kids who will not have
+            accounts. Later, share the family code or invite link with anyone who should sign in.
+            If their account name matches a profile you created, they can link to that profile and
+            keep the age, gender, role, and permissions you already set.
+          </p>
+        </div>
         {saveMessage && <p className="form-error">{saveMessage}</p>}
         <div className="family-grid">
           <label className="field-label">
@@ -2530,6 +2598,7 @@ function SettingsPage({
   profilePhoto,
   familyProfile,
   initialSection = "account",
+  initialJoinCode = "",
   onUpdateAccount,
   onUpdateFamily,
   onCreateInviteCode,
@@ -2555,6 +2624,7 @@ function SettingsPage({
   const [joinDisplayName, setJoinDisplayName] = useState(user?.displayName || "");
   const [joinMessage, setJoinMessage] = useState("");
   const [joinStatus, setJoinStatus] = useState("idle");
+  const [pendingMemberMatch, setPendingMemberMatch] = useState(null);
   const [inviteMessage, setInviteMessage] = useState("");
   const [inviteStatus, setInviteStatus] = useState("idle");
   const currentMember = familyProfile?.members?.find(
@@ -2592,6 +2662,12 @@ function SettingsPage({
   useEffect(() => {
     setActiveSection(initialSection);
   }, [initialSection]);
+
+  useEffect(() => {
+    if (initialJoinCode) {
+      setInviteCodeInput(initialJoinCode);
+    }
+  }, [initialJoinCode]);
 
   function updateEditableMember(index, key, value) {
     setEditableMembers((members) =>
@@ -2699,7 +2775,7 @@ function SettingsPage({
     }
   }
 
-  async function joinFamily() {
+  async function joinFamily(joinOptions = {}) {
     setJoinMessage("");
     setJoinStatus("joining");
 
@@ -2725,9 +2801,19 @@ function SettingsPage({
       const family = await onJoinFamily({
         inviteCode: inviteCodeInput,
         displayName: joinDisplayName.trim(),
+        ...joinOptions,
       });
+
+      if (family.requiresMemberConfirmation) {
+        setPendingMemberMatch(family);
+        setJoinStatus("idle");
+        setJoinMessage("");
+        return;
+      }
+
       setJoinStatus("ready");
       setJoinMessage(`Joined ${family.displayName}.`);
+      setPendingMemberMatch(null);
       setInviteCodeInput("");
     } catch (error) {
       setJoinStatus("error");
@@ -2752,7 +2838,7 @@ function SettingsPage({
     try {
       const inviteCode = await onCreateInviteCode();
       setInviteStatus("ready");
-      setInviteMessage(`Invite code ready: ${inviteCode}`);
+      setInviteMessage(`Family code ready: ${inviteCode}`);
     } catch (error) {
       setInviteStatus("error");
       setInviteMessage(error.message || "Invite code could not be created.");
@@ -2858,8 +2944,8 @@ function SettingsPage({
                 <div className="settings-panel">
                   <strong>No family connected yet</strong>
                   <p>
-                    Family settings and child permissions will appear here once a family is
-                    created or joined.
+                    Create a family if you are organizing the household. Join with a family code
+                    if someone already created the group and invited you.
                   </p>
                   <label className="field-label">
                     Your name
@@ -2871,7 +2957,7 @@ function SettingsPage({
                     />
                   </label>
                   <label className="field-label">
-                    Family invite code
+                    Family code
                     <input
                       value={inviteCodeInput}
                       onChange={(event) =>
@@ -2881,6 +2967,37 @@ function SettingsPage({
                       disabled={joinStatus === "joining"}
                     />
                   </label>
+                  {pendingMemberMatch && (
+                    <div className="member-match-panel">
+                      <strong>Is this you?</strong>
+                      <p>
+                        This family already has a profile with your name. Linking keeps the age,
+                        gender, role, and permissions that were already set for that person.
+                      </p>
+                      {pendingMemberMatch.matchedMembers.map((member) => (
+                        <div className="member-match-row" key={member.id}>
+                          <span>
+                            {member.firstNameOrNickname} · {member.role || "member"}
+                            {member.age ? ` · age ${member.age}` : ""}
+                          </span>
+                          <button
+                            className="primary-button"
+                            type="button"
+                            onClick={() => joinFamily({ claimMemberId: member.id })}
+                          >
+                            Yes, link me
+                          </button>
+                        </div>
+                      ))}
+                      <button
+                        className="secondary-button"
+                        type="button"
+                        onClick={() => joinFamily({ createNewProfile: true })}
+                      >
+                        No, create a new profile
+                      </button>
+                    </div>
+                  )}
                   <div className="family-connect-actions">
                     <button
                       className="primary-button"
@@ -2923,12 +3040,14 @@ function SettingsPage({
                   </label>
                   {canManageFamily && (
                     <div className="settings-panel invite-code-panel">
-                      <strong>Family invite code</strong>
+                      <strong>Family code and invite link</strong>
                       <p>
-                        Share this code with another adult account so they can join this family.
+                        Share the code or link with someone who should sign in. If their name
+                        matches a profile you already created, they can link their account to that
+                        profile.
                       </p>
                       <div className="invite-code-row">
-                        <code>{familyProfile.inviteCode || "No invite code yet"}</code>
+                        <code>{familyProfile.familyCode || familyProfile.inviteCode || "No code yet"}</code>
                         <button
                           className="secondary-button"
                           type="button"
@@ -2938,6 +3057,17 @@ function SettingsPage({
                           {familyProfile.inviteCode ? "New code" : "Create code"}
                         </button>
                       </div>
+                      {(familyProfile.familyCode || familyProfile.inviteCode) && (
+                        <label className="field-label">
+                          Invite link
+                          <input
+                            value={buildFamilyInviteLink(
+                              familyProfile.familyCode || familyProfile.inviteCode,
+                            )}
+                            readOnly
+                          />
+                        </label>
+                      )}
                       {inviteMessage && (
                         <p className={`form-status ${inviteStatus}`}>{inviteMessage}</p>
                       )}
@@ -2948,7 +3078,8 @@ function SettingsPage({
                     <p>
                       Add adults, teens, or kids here even when they do not need their own sign-in.
                       These profiles help family ratings and future recommendations understand who
-                      is watching.
+                      is watching. If someone later joins with the family code and their name
+                      matches one of these profiles, they can link their account to it.
                     </p>
                     <div className="settings-member-list">
                       {editableMembers.map((member, index) => (
@@ -2970,6 +3101,7 @@ function SettingsPage({
                               disabled={familyFieldsDisabled || member.isLeadAdult}
                               placeholder="First name or nickname"
                             />
+                            <small>{member.userId ? "Linked account" : "Profile only"}</small>
                           </label>
                           <div className="settings-member-controls">
                             <label>

@@ -68,6 +68,8 @@ export const joinFamilyByInvite = onCall(
 
     const inviteCode = normalizeInviteCode(request.data?.inviteCode);
     const displayName = String(request.data?.displayName || "").trim().slice(0, 80);
+    const claimMemberId = String(request.data?.claimMemberId || "").trim();
+    const createNewProfile = Boolean(request.data?.createNewProfile);
 
     if (!inviteCode) {
       throw new HttpsError("invalid-argument", "Enter a valid family invite code.");
@@ -95,14 +97,17 @@ export const joinFamilyByInvite = onCall(
     const userId = request.auth.uid;
     const family = familySnapshot.data();
     const memberUserIds = Array.isArray(family.memberUserIds) ? family.memberUserIds : [];
+    const shouldAddUserToFamily = !memberUserIds.includes(userId);
 
-    if (!memberUserIds.includes(userId)) {
-      await familyRef.update({
-        memberUserIds: FieldValue.arrayUnion(userId),
-        updatedAt: FieldValue.serverTimestamp(),
-      });
-    }
-
+    const membersSnapshot = await db
+      .collection("familyMembers")
+      .where("familyId", "==", invite.familyId)
+      .get();
+    const familyMembers = membersSnapshot.docs.map((memberDoc) => ({
+      id: memberDoc.id,
+      ref: memberDoc.ref,
+      ...memberDoc.data(),
+    }));
     const existingMemberSnapshot = await db
       .collection("familyMembers")
       .where("familyId", "==", invite.familyId)
@@ -111,21 +116,91 @@ export const joinFamilyByInvite = onCall(
       .get();
 
     if (existingMemberSnapshot.empty) {
-      await db.collection("familyMembers").add({
-        familyId: invite.familyId,
-        firstNameOrNickname: displayName,
-        userId,
-        role: "adult",
-        age: "",
-        gender: "",
-        permission: "member",
-        isLeadAdult: false,
-        joinedWithInviteCode: inviteCode,
-        createdAt: FieldValue.serverTimestamp(),
+      const matchingMembers = familyMembers.filter(
+        (member) =>
+          !member.userId &&
+          normalizeName(member.firstNameOrNickname) === normalizeName(displayName),
+      );
+
+      if (claimMemberId) {
+        const claimedMember = matchingMembers.find((member) => member.id === claimMemberId);
+
+        if (!claimedMember) {
+          throw new HttpsError("not-found", "That family profile could not be linked.");
+        }
+
+        await claimedMember.ref.update({
+          userId,
+          joinedWithInviteCode: inviteCode,
+          linkedAccountUserId: userId,
+          linkedAt: FieldValue.serverTimestamp(),
+          updatedAt: FieldValue.serverTimestamp(),
+        });
+
+        if (shouldAddUserToFamily) {
+          await familyRef.update({
+            memberUserIds: FieldValue.arrayUnion(userId),
+            updatedAt: FieldValue.serverTimestamp(),
+          });
+        }
+
+        if (canMemberRate(claimedMember)) {
+          await familyRef.update({
+            ratingAdultUserIds: FieldValue.arrayUnion(userId),
+            updatedAt: FieldValue.serverTimestamp(),
+          });
+        }
+        await inviteRef.update({
+          lastUsedAt: FieldValue.serverTimestamp(),
+        });
+      } else if (matchingMembers.length > 0 && !createNewProfile) {
+        return {
+          requiresMemberConfirmation: true,
+          familyId: invite.familyId,
+          familyName: family.displayName,
+          inviteCode,
+          matchedMembers: matchingMembers.slice(0, 3).map((member) => ({
+            id: member.id,
+            firstNameOrNickname: member.firstNameOrNickname,
+            role: member.role || "member",
+            age: member.age || "",
+            gender: member.gender || "",
+          })),
+        };
+      } else {
+        await db.collection("familyMembers").add({
+          familyId: invite.familyId,
+          firstNameOrNickname: displayName,
+          userId,
+          role: "adult",
+          age: "",
+          gender: "",
+          permission: "member",
+          isLeadAdult: false,
+          joinedWithInviteCode: inviteCode,
+          linkedAccountUserId: userId,
+          linkedAt: FieldValue.serverTimestamp(),
+          createdAt: FieldValue.serverTimestamp(),
+        });
+        await inviteRef.update({
+          lastUsedAt: FieldValue.serverTimestamp(),
+        });
+
+        if (shouldAddUserToFamily) {
+          await familyRef.update({
+            memberUserIds: FieldValue.arrayUnion(userId),
+            updatedAt: FieldValue.serverTimestamp(),
+          });
+        }
+      }
+    } else if (shouldAddUserToFamily) {
+      await familyRef.update({
+        memberUserIds: FieldValue.arrayUnion(userId),
+        updatedAt: FieldValue.serverTimestamp(),
       });
     }
 
-    const membersSnapshot = await db
+    const nextMembersSnapshot = await db
       .collection("familyMembers")
       .where("familyId", "==", invite.familyId)
       .get();
@@ -134,7 +209,7 @@ export const joinFamilyByInvite = onCall(
     return {
       id: invite.familyId,
       ...nextFamilySnapshot.data(),
-      members: membersSnapshot.docs.map((memberDoc) => ({
+      members: nextMembersSnapshot.docs.map((memberDoc) => ({
         id: memberDoc.id,
         ...memberDoc.data(),
       })),
@@ -148,4 +223,18 @@ function normalizeInviteCode(value) {
     .toUpperCase()
     .replace(/[^A-Z0-9]/g, "")
     .slice(0, 12);
+}
+
+function normalizeName(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ");
+}
+
+function canMemberRate(member) {
+  return (
+    (member.role === "adult" || member.isLeadAdult) &&
+    ["lead", "colead", "co-lead", "manage", "rate"].includes(member.permission || "")
+  );
 }

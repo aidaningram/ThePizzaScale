@@ -1035,6 +1035,36 @@ p {
   text-align: center;
 }
 
+.member-match-panel {
+  border: 2px dashed var(--line-strong);
+  border-radius: 16px;
+  background: var(--cream-soft);
+  padding: 14px;
+  display: grid;
+  gap: 10px;
+}
+
+.member-match-panel strong {
+  font-family: "Baloo 2", "Nunito", system-ui, sans-serif;
+  font-size: 1.2rem;
+}
+
+.member-match-row {
+  border: 2px solid var(--line);
+  border-radius: 14px;
+  background: var(--white);
+  padding: 10px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.member-match-row span {
+  color: var(--plum-ink);
+  font-weight: 900;
+}
+
 .account-photo-panel {
   display: grid;
   grid-template-columns: 64px minmax(0, 1fr);
@@ -2012,6 +2042,7 @@ textarea {
   .button-row,
   .family-connect-actions,
   .invite-code-row,
+  .member-match-row,
   .settings-member-controls,
   .family-member-row {
     grid-template-columns: 1fr;
