@@ -6,6 +6,8 @@ import { onDocumentWritten } from "firebase-functions/v2/firestore";
 initializeApp();
 
 const db = getFirestore();
+const INVITE_CODE_LENGTH = 8;
+const INVITE_CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
 export const aggregateMovieRating = onDocumentWritten(
   {
@@ -54,6 +56,99 @@ export const aggregateMovieRating = onDocumentWritten(
       },
       { merge: true },
     );
+  },
+);
+
+export const createFamily = onCall(
+  {
+    region: "us-central1",
+  },
+  async (request) => {
+    if (!request.auth) {
+      throw new HttpsError("unauthenticated", "Sign in before creating a family.");
+    }
+
+    const familyName = String(request.data?.familyName || "").trim().slice(0, 90);
+    const leadName = String(request.data?.leadName || "").trim().slice(0, 80);
+    const leadAge = String(request.data?.leadAge || "").trim().slice(0, 3);
+    const leadGender = String(request.data?.leadGender || "").trim().slice(0, 40);
+    const rawMembers = Array.isArray(request.data?.members) ? request.data.members : [];
+
+    if (!familyName || !leadName || !leadAge || !leadGender) {
+      throw new HttpsError(
+        "invalid-argument",
+        "Family name, your name, your age, and your gender are required.",
+      );
+    }
+
+    const inviteCode = await createUniqueInviteCode();
+    const familyRef = db.collection("families").doc();
+    const familyPayload = {
+      displayName: familyName,
+      leadAdultUserId: request.auth.uid,
+      createdByUserId: request.auth.uid,
+      memberUserIds: [request.auth.uid],
+      ratingAdultUserIds: [request.auth.uid],
+      inviteCode,
+      familyCode: inviteCode,
+      publicAgeDisplayMode: "ranges",
+      createdAt: FieldValue.serverTimestamp(),
+    };
+    const cleanedMembers = [
+      {
+        firstNameOrNickname: leadName,
+        userId: request.auth.uid,
+        role: "adult",
+        age: leadAge,
+        gender: leadGender,
+        permission: "lead",
+        isLeadAdult: true,
+      },
+      ...rawMembers
+        .map(cleanFamilyMemberInput)
+        .filter((member) => member.firstNameOrNickname),
+    ];
+    const batch = db.batch();
+    const savedMembers = cleanedMembers.map((member) => {
+      const memberRef = db.collection("familyMembers").doc();
+      const memberPayload = {
+        ...member,
+        familyId: familyRef.id,
+        createdAt: FieldValue.serverTimestamp(),
+      };
+      batch.set(memberRef, memberPayload);
+
+      return {
+        id: memberRef.id,
+        ...member,
+        familyId: familyRef.id,
+      };
+    });
+
+    batch.set(familyRef, familyPayload);
+    batch.set(db.collection("familyInvites").doc(inviteCode), {
+      code: inviteCode,
+      familyCode: inviteCode,
+      familyId: familyRef.id,
+      familyName,
+      createdByUserId: request.auth.uid,
+      status: "active",
+      createdAt: FieldValue.serverTimestamp(),
+    });
+    await batch.commit();
+
+    return {
+      id: familyRef.id,
+      displayName: familyName,
+      leadAdultUserId: request.auth.uid,
+      createdByUserId: request.auth.uid,
+      memberUserIds: [request.auth.uid],
+      ratingAdultUserIds: [request.auth.uid],
+      inviteCode,
+      familyCode: inviteCode,
+      publicAgeDisplayMode: "ranges",
+      members: savedMembers,
+    };
   },
 );
 
@@ -274,11 +369,58 @@ function normalizeName(value) {
     .replace(/\s+/g, " ");
 }
 
+function cleanFamilyMemberInput(member) {
+  const role = ["child", "teen", "adult"].includes(member?.role) ? member.role : "child";
+
+  return {
+    firstNameOrNickname: String(member?.name || member?.firstNameOrNickname || "")
+      .trim()
+      .slice(0, 80),
+    role,
+    age: String(member?.age || "").trim().slice(0, 3),
+    gender: String(member?.gender || "").trim().slice(0, 40),
+    permission: normalizeMemberPermission(role, member?.permission),
+    isLeadAdult: false,
+  };
+}
+
+function normalizeMemberPermission(role, permission) {
+  const cleanPermission = String(permission || "").trim();
+
+  if (cleanPermission === "rate" && role !== "adult") {
+    return "guided";
+  }
+
+  return ["lead", "colead", "co-lead", "manage", "rate", "member", "guided", "suggest"].includes(
+    cleanPermission,
+  )
+    ? cleanPermission
+    : "guided";
+}
+
 function canMemberRate(member) {
   return (
     (member.role === "adult" || member.isLeadAdult) &&
     ["lead", "colead", "co-lead", "manage", "rate"].includes(member.permission || "")
   );
+}
+
+async function createUniqueInviteCode() {
+  for (let attempt = 0; attempt < 10; attempt += 1) {
+    let inviteCode = "";
+
+    for (let index = 0; index < INVITE_CODE_LENGTH; index += 1) {
+      inviteCode += INVITE_CODE_CHARS[Math.floor(Math.random() * INVITE_CODE_CHARS.length)];
+    }
+
+    const inviteSnapshot = await db.collection("familyInvites").doc(inviteCode).get();
+
+    if (!inviteSnapshot.exists) {
+      return inviteCode;
+    }
+  }
+
+  throw new HttpsError("internal", "Family code could not be created. Please try again.");
 }
 
 async function deleteCollectionDocumentsByFamilyId(collectionName, familyId) {

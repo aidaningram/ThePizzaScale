@@ -2438,76 +2438,18 @@ function FamilySetupPage({ user, onSaved, onBack }) {
 
     try {
       setCreateStatus("saving");
-      const inviteCode = await createUniqueInviteCode();
-      const familyPayload = {
-        displayName: familyName.trim(),
-        leadAdultUserId: user.uid,
-        createdByUserId: user.uid,
-        memberUserIds: [user.uid],
-        ratingAdultUserIds: [user.uid],
-        inviteCode,
-        familyCode: inviteCode,
-        publicAgeDisplayMode: "ranges",
-        createdAt: serverTimestamp(),
-      };
-
-      const familyDoc = await addDoc(collection(db, "families"), familyPayload);
-      await setDoc(doc(db, "familyInvites", inviteCode), {
-        code: inviteCode,
-        familyCode: inviteCode,
-        familyId: familyDoc.id,
-        familyName: familyPayload.displayName,
-        createdByUserId: user.uid,
-        status: "active",
-        createdAt: serverTimestamp(),
+      const createFamily = httpsCallable(functions, "createFamily");
+      const result = await createFamily({
+        familyName: familyName.trim(),
+        leadName: leadName.trim(),
+        leadAge: leadAge.trim(),
+        leadGender,
+        members,
       });
-      const cleanedMembers = [
-        {
-          firstNameOrNickname: leadName.trim(),
-          userId: user.uid,
-          role: "adult",
-          age: leadAge.trim(),
-          gender: leadGender,
-          permission: "lead",
-          isLeadAdult: true,
-        },
-        ...members
-          .filter((member) => member.name.trim())
-          .map((member) => ({
-            firstNameOrNickname: member.name.trim(),
-            role: member.role,
-            age: member.age,
-            gender: member.gender,
-            permission: normalizeMemberPermission(member.role, member.permission),
-            isLeadAdult: false,
-          })),
-      ];
 
-      const savedMembers = await Promise.all(
-        cleanedMembers.map(async (member) => {
-          const memberDoc = await addDoc(collection(db, "familyMembers"), {
-            ...member,
-            familyId: familyDoc.id,
-            createdAt: serverTimestamp(),
-          });
-
-          return { id: memberDoc.id, ...member, familyId: familyDoc.id };
-        }),
-      );
-
-      onSaved({
-        id: familyDoc.id,
-        displayName: familyPayload.displayName,
-        leadAdultUserId: user.uid,
-        createdByUserId: user.uid,
-        memberUserIds: [user.uid],
-        ratingAdultUserIds: [user.uid],
-        inviteCode,
-        familyCode: inviteCode,
-        members: savedMembers,
-      });
-    } catch {
-      setSaveMessage("The family could not be saved yet. Please check Firebase permissions.");
+      onSaved(result.data);
+    } catch (error) {
+      setSaveMessage(error.message || "The family could not be created yet. Please try again.");
       setCreateStatus("idle");
     }
   }
