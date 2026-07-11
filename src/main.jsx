@@ -277,7 +277,7 @@ const featuredMovies = [
 
 const blankMember = {
   name: "",
-  age: "",
+  birthDate: "",
   gender: "",
   role: "child",
   permission: "guided",
@@ -310,17 +310,41 @@ function normalizeMemberPermission(role, permission) {
   return permission || "guided";
 }
 
+function getAgeFromBirthDate(birthDate, referenceDate = new Date()) {
+  if (!birthDate) return "";
+
+  const [yearValue, monthValue, dayValue] = String(birthDate).split("-").map(Number);
+
+  if (!yearValue || !monthValue || !dayValue) return "";
+
+  let age = referenceDate.getFullYear() - yearValue;
+  const hasHadBirthdayThisYear =
+    referenceDate.getMonth() + 1 > monthValue ||
+    (referenceDate.getMonth() + 1 === monthValue && referenceDate.getDate() >= dayValue);
+
+  if (!hasHadBirthdayThisYear) {
+    age -= 1;
+  }
+
+  return age >= 0 ? String(age) : "";
+}
+
 function buildFamilySnapshotForReview(familyProfile, user) {
-  const members = (familyProfile?.members || []).map((member) => ({
-    id: member.id || "",
-    hasAccount: Boolean(member.userId),
-    isReviewer: Boolean(member.userId && member.userId === user?.uid),
-    isLeadAdult: Boolean(member.isLeadAdult),
-    role: member.role || "member",
-    age: member.age || "",
-    gender: member.gender || "",
-    permission: member.permission || "member",
-  }));
+  const reviewDate = new Date();
+  const members = (familyProfile?.members || []).map((member) => {
+    const ageAtReview = getAgeFromBirthDate(member.birthDate, reviewDate) || member.age || "";
+
+    return {
+      id: member.id || "",
+      hasAccount: Boolean(member.userId),
+      isReviewer: Boolean(member.userId && member.userId === user?.uid),
+      isLeadAdult: Boolean(member.isLeadAdult),
+      role: member.role || "member",
+      age: ageAtReview,
+      gender: member.gender || "",
+      permission: member.permission || "member",
+    };
+  });
   const numericAges = members
     .map((member) => Number(member.age))
     .filter((age) => Number.isFinite(age));
@@ -423,6 +447,7 @@ function App() {
   const [authMode, setAuthMode] = useState("login");
   const [confirmingSignOut, setConfirmingSignOut] = useState(false);
   const [profilePhotos, setProfilePhotos] = useState(() => readStoredProfilePhotos());
+  const [userProfile, setUserProfile] = useState(null);
   const [familyProfile, setFamilyProfile] = useState(null);
   const [familyLoadStatus, setFamilyLoadStatus] = useState("idle");
   const [publicReviews, setPublicReviews] = useState([]);
@@ -443,12 +468,37 @@ function App() {
         setUser(currentUser);
 
         if (!currentUser) {
+          setUserProfile(null);
           setFamilyProfile(null);
           setFamilyLoadStatus("idle");
         }
       }),
     [],
   );
+
+  useEffect(() => {
+    let isCurrent = true;
+
+    async function loadUserProfile() {
+      if (!user) return;
+
+      try {
+        const profileSnapshot = await getDoc(doc(db, "userProfiles", user.uid));
+
+        if (!isCurrent) return;
+        setUserProfile(profileSnapshot.exists() ? profileSnapshot.data() : null);
+      } catch {
+        if (!isCurrent) return;
+        setUserProfile(null);
+      }
+    }
+
+    loadUserProfile();
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [user]);
 
   useEffect(() => {
     if (!pendingJoinCode) return;
@@ -713,7 +763,15 @@ function App() {
     }
   }
 
-  async function handleEmailAuth({ mode, email, password, displayName, photoURL }) {
+  async function handleEmailAuth({
+    mode,
+    email,
+    password,
+    displayName,
+    birthDate,
+    gender,
+    photoURL,
+  }) {
     setAuthMessage("");
 
     try {
@@ -731,7 +789,12 @@ function App() {
         const cleanDisplayName = displayName.trim();
 
         if (!cleanDisplayName) {
-          setAuthMessage("Please add your name so your profile can be created.");
+          setAuthMessage("Please add your first name so your profile can be created.");
+          return;
+        }
+
+        if (!birthDate || !gender) {
+          setAuthMessage("Please add your birthday and gender so your profile can be created.");
           return;
         }
 
@@ -742,6 +805,14 @@ function App() {
         await updateProfile(result.user, {
           displayName: cleanDisplayName,
           ...(uploadedPhotoURL ? { photoURL: uploadedPhotoURL } : {}),
+        });
+        await setDoc(doc(db, "userProfiles", result.user.uid), {
+          firstName: cleanDisplayName,
+          birthDate,
+          gender,
+          photoURL: uploadedPhotoURL || photoURL || "",
+          createdAt: serverTimestamp(),
+          updatedAt: serverTimestamp(),
         });
         if (photoURL) {
           setProfilePhotos((currentPhotos) => {
@@ -755,6 +826,12 @@ function App() {
           displayName: cleanDisplayName,
           email: result.user.email,
           photoURL: uploadedPhotoURL || photoURL,
+        });
+        setUserProfile({
+          firstName: cleanDisplayName,
+          birthDate,
+          gender,
+          photoURL: uploadedPhotoURL || photoURL || "",
         });
         if (pendingJoinCode) {
           setSettingsInitialSection("family");
@@ -981,7 +1058,7 @@ function App() {
           const memberPayload = {
             firstNameOrNickname: member.firstNameOrNickname.trim(),
             role: member.role || "child",
-            age: member.age || "",
+            birthDate: member.birthDate || "",
             gender: member.gender || "",
             permission: normalizeMemberPermission(member.role || "child", member.permission),
             updatedAt: serverTimestamp(),
@@ -1085,7 +1162,7 @@ function App() {
     return result.data;
   }
 
-  async function handleUpdateAccount({ displayName, photoURL }) {
+  async function handleUpdateAccount({ displayName, birthDate, gender, photoURL }) {
     if (!auth.currentUser) {
       throw new Error("Please sign in before updating your account.");
     }
@@ -1093,7 +1170,11 @@ function App() {
     const cleanDisplayName = displayName.trim();
 
     if (!cleanDisplayName) {
-      throw new Error("Display name cannot be empty.");
+      throw new Error("First name cannot be empty.");
+    }
+
+    if (!birthDate || !gender) {
+      throw new Error("Birthday and gender are required.");
     }
 
     const uploadedPhotoURL = photoURL
@@ -1106,6 +1187,17 @@ function App() {
       displayName: cleanDisplayName,
       ...(uploadedPhotoURL ? { photoURL: uploadedPhotoURL } : {}),
     });
+    await setDoc(
+      doc(db, "userProfiles", auth.currentUser.uid),
+      {
+        firstName: cleanDisplayName,
+        birthDate,
+        gender,
+        ...(nextPhotoURL ? { photoURL: nextPhotoURL } : {}),
+        updatedAt: serverTimestamp(),
+      },
+      { merge: true },
+    );
 
     if (nextPhotoURL) {
       setProfilePhotos((currentPhotos) => {
@@ -1120,6 +1212,13 @@ function App() {
       displayName: cleanDisplayName,
       photoURL: nextPhotoURL || auth.currentUser.photoURL,
     });
+    setUserProfile((profile) => ({
+      ...(profile || {}),
+      firstName: cleanDisplayName,
+      birthDate,
+      gender,
+      ...(nextPhotoURL ? { photoURL: nextPhotoURL } : {}),
+    }));
   }
 
   async function handlePasswordReset(email) {
@@ -1235,6 +1334,7 @@ function App() {
       {page === "family-setup" && (
         <FamilySetupPage
           user={user}
+          userProfile={userProfile}
           onSaved={(family) => {
             setFamilyProfile(family);
             setPage(familySetupReturnPage);
@@ -1254,6 +1354,7 @@ function App() {
       {page === "settings" && (
         <SettingsPage
           user={user}
+          userProfile={userProfile}
           profilePhoto={user ? profilePhotos[user.uid] : ""}
           familyProfile={familyProfile}
           initialSection={settingsInitialSection}
@@ -2212,6 +2313,8 @@ function SignInPage({
 }) {
   const [mode, setMode] = useState(initialMode);
   const [displayName, setDisplayName] = useState("");
+  const [birthDate, setBirthDate] = useState("");
+  const [gender, setGender] = useState("");
   const [profileImage, setProfileImage] = useState("");
   const [profileImageName, setProfileImageName] = useState("");
   const [profileImageError, setProfileImageError] = useState("");
@@ -2310,13 +2413,36 @@ function SignInPage({
         )}
         {isCreateMode && (
           <label className="field-label">
-            Your name
+            Your first name
             <input
               value={displayName}
               onChange={(event) => setDisplayName(event.target.value)}
               placeholder="Aidan"
             />
           </label>
+        )}
+        {isCreateMode && (
+          <div className="family-grid">
+            <label className="field-label">
+              Birthday
+              <input
+                value={birthDate}
+                onChange={(event) => setBirthDate(event.target.value)}
+                type="date"
+              />
+            </label>
+            <label className="field-label">
+              Gender
+              <select value={gender} onChange={(event) => setGender(event.target.value)}>
+                <option value="">Choose one</option>
+                <option value="female">Female</option>
+                <option value="male">Male</option>
+                <option value="nonbinary">Nonbinary</option>
+                <option value="self-described">Self-described</option>
+                <option value="prefer-not">Prefer not to say</option>
+              </select>
+            </label>
+          </div>
         )}
         <label className="field-label">
           Email
@@ -2347,6 +2473,8 @@ function SignInPage({
               email,
               password,
               displayName,
+              birthDate,
+              gender,
               photoURL: profileImage,
             })
           }
@@ -2396,14 +2524,14 @@ function FamilyPromptPage({ onSkip, onCreateFamily }) {
   );
 }
 
-function FamilySetupPage({ user, onSaved, onBack }) {
+function FamilySetupPage({ user, userProfile, onSaved, onBack }) {
   const [familyName, setFamilyName] = useState("");
-  const [leadName, setLeadName] = useState(user?.displayName || "");
-  const [leadAge, setLeadAge] = useState("");
-  const [leadGender, setLeadGender] = useState("");
   const [members, setMembers] = useState([{ ...blankMember }]);
   const [saveMessage, setSaveMessage] = useState("");
   const [createStatus, setCreateStatus] = useState("idle");
+  const leadFirstName = userProfile?.firstName || user?.displayName || "";
+  const leadBirthDate = userProfile?.birthDate || "";
+  const leadGender = userProfile?.gender || "";
 
   function updateMember(index, key, value) {
     setMembers((currentMembers) =>
@@ -2431,8 +2559,15 @@ function FamilySetupPage({ user, onSaved, onBack }) {
       return;
     }
 
-    if (!familyName.trim() || !leadName.trim() || !leadAge.trim() || !leadGender) {
-      setSaveMessage("Family name, your name, your age, and your gender are required.");
+    if (!familyName.trim()) {
+      setSaveMessage("Family display name is required.");
+      return;
+    }
+
+    if (!leadFirstName.trim() || !leadBirthDate || !leadGender) {
+      setSaveMessage(
+        "Add your first name, birthday, and gender in Account settings before creating a family.",
+      );
       return;
     }
 
@@ -2441,8 +2576,8 @@ function FamilySetupPage({ user, onSaved, onBack }) {
       const createFamily = httpsCallable(functions, "createFamily");
       const result = await createFamily({
         familyName: familyName.trim(),
-        leadName: leadName.trim(),
-        leadAge: leadAge.trim(),
+        leadName: leadFirstName.trim(),
+        leadBirthDate,
         leadGender,
         members,
       });
@@ -2464,15 +2599,11 @@ function FamilySetupPage({ user, onSaved, onBack }) {
           <p>
             Add every person who affects movie night here, including kids who will not have
             accounts. Later, share the family code or invite link with anyone who should sign in.
-            If their account name matches a profile you created, they can link to that profile and
-            keep the age, gender, role, and permissions you already set.
+            If their account first name matches a profile you created, they can link to that
+            profile and keep the birthday, gender, role, and permissions you already set.
           </p>
         </div>
         {saveMessage && <p className="form-error">{saveMessage}</p>}
-        <div className="section-heading family-members-heading">
-          <Users size={20} />
-          <h2>Your profile</h2>
-        </div>
         <div className="family-grid">
           <label className="field-label">
             Family display name
@@ -2481,34 +2612,6 @@ function FamilySetupPage({ user, onSaved, onBack }) {
               onChange={(event) => setFamilyName(event.target.value)}
               placeholder="The Ingram Family"
             />
-          </label>
-          <label className="field-label">
-            Your name
-            <input
-              value={leadName}
-              onChange={(event) => setLeadName(event.target.value)}
-              placeholder="Lead adult name"
-            />
-          </label>
-          <label className="field-label">
-            Your age
-            <input
-              value={leadAge}
-              onChange={(event) => setLeadAge(event.target.value)}
-              inputMode="numeric"
-              placeholder="Age"
-            />
-          </label>
-          <label className="field-label">
-            Your gender
-            <select value={leadGender} onChange={(event) => setLeadGender(event.target.value)}>
-              <option value="">Choose one</option>
-              <option value="female">Female</option>
-              <option value="male">Male</option>
-              <option value="nonbinary">Nonbinary</option>
-              <option value="self-described">Self-described</option>
-              <option value="prefer-not">Prefer not to say</option>
-            </select>
           </label>
         </div>
 
@@ -2521,18 +2624,18 @@ function FamilySetupPage({ user, onSaved, onBack }) {
           {members.map((member, index) => (
             <div className="family-member-row" key={index}>
               <label className="field-label">
-                Name
+                First name
                 <input
                   value={member.name}
                   onChange={(event) => updateMember(index, "name", event.target.value)}
                 />
               </label>
               <label className="field-label">
-                Age
+                Birthday
                 <input
-                  value={member.age}
-                  onChange={(event) => updateMember(index, "age", event.target.value)}
-                  inputMode="numeric"
+                  value={member.birthDate}
+                  onChange={(event) => updateMember(index, "birthDate", event.target.value)}
+                  type="date"
                 />
               </label>
               <label className="field-label">
@@ -2604,6 +2707,7 @@ function FamilySetupPage({ user, onSaved, onBack }) {
 
 function SettingsPage({
   user,
+  userProfile,
   profilePhoto,
   familyProfile,
   initialSection = "account",
@@ -2619,7 +2723,11 @@ function SettingsPage({
   onCreateFamily,
 }) {
   const [activeSection, setActiveSection] = useState(initialSection);
-  const [accountDisplayName, setAccountDisplayName] = useState(user?.displayName || "");
+  const [accountDisplayName, setAccountDisplayName] = useState(
+    userProfile?.firstName || user?.displayName || "",
+  );
+  const [accountBirthDate, setAccountBirthDate] = useState(userProfile?.birthDate || "");
+  const [accountGender, setAccountGender] = useState(userProfile?.gender || "");
   const [accountPhoto, setAccountPhoto] = useState("");
   const [accountPhotoName, setAccountPhotoName] = useState("");
   const [accountPhotoError, setAccountPhotoError] = useState("");
@@ -2654,7 +2762,9 @@ function SettingsPage({
   const canDeleteFamily = canDeleteFamilyProfile(familyProfile, user);
 
   useEffect(() => {
-    setAccountDisplayName(user?.displayName || "");
+    setAccountDisplayName(userProfile?.firstName || user?.displayName || "");
+    setAccountBirthDate(userProfile?.birthDate || "");
+    setAccountGender(userProfile?.gender || "");
     setAccountPhoto("");
     setAccountPhotoName("");
     setAccountPhotoError("");
@@ -2662,7 +2772,7 @@ function SettingsPage({
     setAccountMessage("");
     setAccountSaveStatus("idle");
     setJoinDisplayName(user?.displayName || "");
-  }, [user]);
+  }, [user, userProfile]);
 
   useEffect(() => {
     setFamilyName(familyProfile?.displayName || "");
@@ -2708,7 +2818,7 @@ function SettingsPage({
       {
         firstNameOrNickname: "",
         role: "child",
-        age: "",
+        birthDate: "",
         gender: "",
         permission: "guided",
         isLeadAdult: false,
@@ -2748,6 +2858,8 @@ function SettingsPage({
     try {
       await onUpdateAccount({
         displayName: accountDisplayName,
+        birthDate: accountBirthDate,
+        gender: accountGender,
         photoURL: accountPhoto,
       });
       setAccountSaveStatus("ready");
@@ -2810,7 +2922,7 @@ function SettingsPage({
 
     if (!joinDisplayName.trim()) {
       setJoinStatus("error");
-      setJoinMessage("Enter your name before joining a family.");
+      setJoinMessage("Enter your first name before joining a family.");
       return;
     }
 
@@ -2914,13 +3026,39 @@ function SettingsPage({
                 </div>
               </div>
               <label className="field-label">
-                Display name
+                First name
                 <input
                   value={accountDisplayName}
                   onChange={(event) => setAccountDisplayName(event.target.value)}
                   disabled={!user || accountSaveStatus === "saving"}
                 />
               </label>
+              <div className="family-grid">
+                <label className="field-label">
+                  Birthday
+                  <input
+                    value={accountBirthDate}
+                    onChange={(event) => setAccountBirthDate(event.target.value)}
+                    disabled={!user || accountSaveStatus === "saving"}
+                    type="date"
+                  />
+                </label>
+                <label className="field-label">
+                  Gender
+                  <select
+                    value={accountGender}
+                    onChange={(event) => setAccountGender(event.target.value)}
+                    disabled={!user || accountSaveStatus === "saving"}
+                  >
+                    <option value="">Choose one</option>
+                    <option value="female">Female</option>
+                    <option value="male">Male</option>
+                    <option value="nonbinary">Nonbinary</option>
+                    <option value="self-described">Self-described</option>
+                    <option value="prefer-not">Prefer not to say</option>
+                  </select>
+                </label>
+              </div>
               <div className="settings-panel account-photo-panel">
                 <ProfileAvatar user={user} photoURL={accountPhoto || profilePhoto} />
                 <div>
@@ -2946,7 +3084,12 @@ function SettingsPage({
                   className="primary-button"
                   type="button"
                   onClick={saveAccountSettings}
-                  disabled={accountSaveStatus === "saving" || !accountDisplayName.trim()}
+                  disabled={
+                    accountSaveStatus === "saving" ||
+                    !accountDisplayName.trim() ||
+                    !accountBirthDate ||
+                    !accountGender
+                  }
                 >
                   Save account settings
                 </button>
@@ -2980,11 +3123,11 @@ function SettingsPage({
                     if someone already created the group and invited you.
                   </p>
                   <label className="field-label">
-                    Your name
+                    Your first name
                     <input
                       value={joinDisplayName}
                       onChange={(event) => setJoinDisplayName(event.target.value)}
-                      placeholder="Name inside the family"
+                      placeholder="First name inside the family"
                       disabled={joinStatus === "joining"}
                     />
                   </label>
@@ -3003,14 +3146,19 @@ function SettingsPage({
                     <div className="member-match-panel">
                       <strong>Is this you?</strong>
                       <p>
-                        This family already has a profile with your name. Linking keeps the age,
-                        gender, role, and permissions that were already set for that person.
+                        This family already has a profile with your first name. Linking keeps the
+                        birthday, gender, role, and permissions that were already set for that
+                        person.
                       </p>
                       {pendingMemberMatch.matchedMembers.map((member) => (
                         <div className="member-match-row" key={member.id}>
                           <span>
                             {member.firstNameOrNickname} · {member.role || "member"}
-                            {member.age ? ` · age ${member.age}` : ""}
+                            {member.birthDate
+                              ? ` · age ${getAgeFromBirthDate(member.birthDate)}`
+                              : member.age
+                                ? ` · age ${member.age}`
+                                : ""}
                           </span>
                           <button
                             className="primary-button"
@@ -3074,7 +3222,7 @@ function SettingsPage({
                     <div className="settings-panel invite-code-panel">
                       <strong>Family code and invite link</strong>
                       <p>
-                        Share the code or link with someone who should sign in. If their name
+                        Share the code or link with someone who should sign in. If their first name
                         matches a profile you already created, they can link their account to that
                         profile.
                       </p>
@@ -3110,7 +3258,7 @@ function SettingsPage({
                     <p>
                       Add adults, teens, or kids here even when they do not need their own sign-in.
                       These profiles help family ratings and future recommendations understand who
-                      is watching. If someone later joins with the family code and their name
+                      is watching. If someone later joins with the family code and their first name
                       matches one of these profiles, they can link their account to it.
                     </p>
                     <div className="settings-member-list">
@@ -3120,7 +3268,7 @@ function SettingsPage({
                           key={`${member.firstNameOrNickname}-${index}`}
                         >
                           <label>
-                            Name
+                            First name
                             <input
                               value={member.firstNameOrNickname || ""}
                               onChange={(event) =>
@@ -3137,14 +3285,14 @@ function SettingsPage({
                           </label>
                           <div className="settings-member-controls">
                             <label>
-                              Age
+                              Birthday
                               <input
-                                value={member.age || ""}
+                                value={member.birthDate || ""}
                                 onChange={(event) =>
-                                  updateEditableMember(index, "age", event.target.value)
+                                  updateEditableMember(index, "birthDate", event.target.value)
                                 }
                                 disabled={familyFieldsDisabled}
-                                inputMode="numeric"
+                                type="date"
                               />
                             </label>
                             <label>

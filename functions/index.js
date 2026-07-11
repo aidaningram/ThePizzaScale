@@ -70,14 +70,14 @@ export const createFamily = onCall(
 
     const familyName = String(request.data?.familyName || "").trim().slice(0, 90);
     const leadName = String(request.data?.leadName || "").trim().slice(0, 80);
-    const leadAge = String(request.data?.leadAge || "").trim().slice(0, 3);
+    const leadBirthDate = String(request.data?.leadBirthDate || "").trim().slice(0, 10);
     const leadGender = String(request.data?.leadGender || "").trim().slice(0, 40);
     const rawMembers = Array.isArray(request.data?.members) ? request.data.members : [];
 
-    if (!familyName || !leadName || !leadAge || !leadGender) {
+    if (!familyName || !leadName || !leadBirthDate || !leadGender) {
       throw new HttpsError(
         "invalid-argument",
-        "Family name, your name, your age, and your gender are required.",
+        "Family name, your first name, your birthday, and your gender are required.",
       );
     }
 
@@ -99,7 +99,7 @@ export const createFamily = onCall(
         firstNameOrNickname: leadName,
         userId: request.auth.uid,
         role: "adult",
-        age: leadAge,
+        birthDate: leadBirthDate,
         gender: leadGender,
         permission: "lead",
         isLeadAdult: true,
@@ -171,7 +171,7 @@ export const joinFamilyByInvite = onCall(
     }
 
     if (!displayName) {
-      throw new HttpsError("invalid-argument", "Enter your name before joining a family.");
+      throw new HttpsError("invalid-argument", "Enter your first name before joining a family.");
     }
 
     const inviteRef = db.collection("familyInvites").doc(inviteCode);
@@ -258,18 +258,22 @@ export const joinFamilyByInvite = onCall(
             id: member.id,
             firstNameOrNickname: member.firstNameOrNickname,
             role: member.role || "member",
+            birthDate: member.birthDate || "",
             age: member.age || "",
             gender: member.gender || "",
           })),
         };
       } else {
+        const userProfileSnapshot = await db.collection("userProfiles").doc(userId).get();
+        const userProfile = userProfileSnapshot.exists ? userProfileSnapshot.data() : {};
+
         await db.collection("familyMembers").add({
           familyId: invite.familyId,
           firstNameOrNickname: displayName,
           userId,
           role: "adult",
-          age: "",
-          gender: "",
+          birthDate: userProfile.birthDate || "",
+          gender: userProfile.gender || "",
           permission: "member",
           isLeadAdult: false,
           joinedWithInviteCode: inviteCode,
@@ -377,7 +381,7 @@ function cleanFamilyMemberInput(member) {
       .trim()
       .slice(0, 80),
     role,
-    age: String(member?.age || "").trim().slice(0, 3),
+    birthDate: String(member?.birthDate || "").trim().slice(0, 10),
     gender: String(member?.gender || "").trim().slice(0, 40),
     permission: normalizeMemberPermission(role, member?.permission),
     isLeadAdult: false,
