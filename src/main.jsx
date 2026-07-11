@@ -2399,8 +2399,11 @@ function FamilyPromptPage({ onSkip, onCreateFamily }) {
 function FamilySetupPage({ user, onSaved, onBack }) {
   const [familyName, setFamilyName] = useState("");
   const [leadName, setLeadName] = useState(user?.displayName || "");
+  const [leadAge, setLeadAge] = useState("");
+  const [leadGender, setLeadGender] = useState("");
   const [members, setMembers] = useState([{ ...blankMember }]);
   const [saveMessage, setSaveMessage] = useState("");
+  const [createStatus, setCreateStatus] = useState("idle");
 
   function updateMember(index, key, value) {
     setMembers((currentMembers) =>
@@ -2419,30 +2422,35 @@ function FamilySetupPage({ user, onSaved, onBack }) {
   }
 
   async function saveFamily() {
+    if (createStatus === "saving") return;
+
+    setSaveMessage("");
+
     if (!user) {
       setSaveMessage("Please sign in before creating a family.");
       return;
     }
 
-    if (!familyName.trim() || !leadName.trim()) {
-      setSaveMessage("Family name and your name are required.");
+    if (!familyName.trim() || !leadName.trim() || !leadAge.trim() || !leadGender) {
+      setSaveMessage("Family name, your name, your age, and your gender are required.");
       return;
     }
 
-    const inviteCode = await createUniqueInviteCode();
-    const familyPayload = {
-      displayName: familyName.trim(),
-      leadAdultUserId: user.uid,
-      createdByUserId: user.uid,
-      memberUserIds: [user.uid],
-      ratingAdultUserIds: [user.uid],
-      inviteCode,
-      familyCode: inviteCode,
-      publicAgeDisplayMode: "ranges",
-      createdAt: serverTimestamp(),
-    };
-
     try {
+      setCreateStatus("saving");
+      const inviteCode = await createUniqueInviteCode();
+      const familyPayload = {
+        displayName: familyName.trim(),
+        leadAdultUserId: user.uid,
+        createdByUserId: user.uid,
+        memberUserIds: [user.uid],
+        ratingAdultUserIds: [user.uid],
+        inviteCode,
+        familyCode: inviteCode,
+        publicAgeDisplayMode: "ranges",
+        createdAt: serverTimestamp(),
+      };
+
       const familyDoc = await addDoc(collection(db, "families"), familyPayload);
       await setDoc(doc(db, "familyInvites", inviteCode), {
         code: inviteCode,
@@ -2458,8 +2466,8 @@ function FamilySetupPage({ user, onSaved, onBack }) {
           firstNameOrNickname: leadName.trim(),
           userId: user.uid,
           role: "adult",
-          age: "",
-          gender: "",
+          age: leadAge.trim(),
+          gender: leadGender,
           permission: "lead",
           isLeadAdult: true,
         },
@@ -2500,6 +2508,7 @@ function FamilySetupPage({ user, onSaved, onBack }) {
       });
     } catch {
       setSaveMessage("The family could not be saved yet. Please check Firebase permissions.");
+      setCreateStatus("idle");
     }
   }
 
@@ -2518,6 +2527,10 @@ function FamilySetupPage({ user, onSaved, onBack }) {
           </p>
         </div>
         {saveMessage && <p className="form-error">{saveMessage}</p>}
+        <div className="section-heading family-members-heading">
+          <Users size={20} />
+          <h2>Your profile</h2>
+        </div>
         <div className="family-grid">
           <label className="field-label">
             Family display name
@@ -2534,6 +2547,26 @@ function FamilySetupPage({ user, onSaved, onBack }) {
               onChange={(event) => setLeadName(event.target.value)}
               placeholder="Lead adult name"
             />
+          </label>
+          <label className="field-label">
+            Your age
+            <input
+              value={leadAge}
+              onChange={(event) => setLeadAge(event.target.value)}
+              inputMode="numeric"
+              placeholder="Age"
+            />
+          </label>
+          <label className="field-label">
+            Your gender
+            <select value={leadGender} onChange={(event) => setLeadGender(event.target.value)}>
+              <option value="">Choose one</option>
+              <option value="female">Female</option>
+              <option value="male">Male</option>
+              <option value="nonbinary">Nonbinary</option>
+              <option value="self-described">Self-described</option>
+              <option value="prefer-not">Prefer not to say</option>
+            </select>
           </label>
         </div>
 
@@ -2613,8 +2646,13 @@ function FamilySetupPage({ user, onSaved, onBack }) {
           <button className="secondary-button" type="button" onClick={onBack}>
             Back
           </button>
-          <button className="primary-button" type="button" onClick={saveFamily}>
-            Save family
+          <button
+            className="primary-button"
+            type="button"
+            onClick={saveFamily}
+            disabled={createStatus === "saving"}
+          >
+            {createStatus === "saving" ? "Creating..." : "Create family"}
           </button>
         </div>
       </div>
