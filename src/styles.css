@@ -1021,6 +1021,10 @@ p {
   font-size: 1.2rem;
 }
 
+.settings-panel p {
+  line-height: 1.45;
+}
+
 .danger-panel {
   border-color: rgba(239, 70, 62, 0.45);
   background: #fff1eb;
@@ -2139,6 +2143,45 @@ textarea {
   .settings-member-controls,
   .family-member-row {
     grid-template-columns: 1fr;
+  }
+
+  .settings-member-list {
+    gap: 12px;
+  }
+
+  .settings-panel p {
+    font-size: 0.98rem;
+  }
+
+  .settings-member-row {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 14px;
+    padding: 14px;
+  }
+
+  .settings-member-row > label,
+  .settings-member-controls,
+  .settings-member-controls label {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .settings-member-controls {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .settings-member-row input,
+  .settings-member-row select {
+    min-height: 48px;
+    font-size: 1rem;
+  }
+
+  .settings-member-row small {
+    align-self: start;
   }
 
   .calculated-score {
