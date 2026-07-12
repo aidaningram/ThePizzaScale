@@ -1409,7 +1409,6 @@ function App() {
           onDeleteFamily={handleDeleteFamily}
           onCreateInviteCode={handleCreateInviteCode}
           onJoinFamily={handleJoinFamily}
-          onPasswordReset={handlePasswordReset}
           onSignOut={requestSignOut}
           onBack={goHome}
           onCreateFamily={() => {
@@ -2862,7 +2861,6 @@ function SettingsPage({
   onDeleteFamily,
   onCreateInviteCode,
   onJoinFamily,
-  onPasswordReset,
   onSignOut,
   onBack,
   onCreateFamily,
@@ -2906,6 +2904,14 @@ function SettingsPage({
       ["lead", "colead", "co-lead", "manage"].includes(currentPermission));
   const familyFieldsDisabled = Boolean(familyProfile) && !canManageFamily;
   const canDeleteFamily = canDeleteFamilyProfile(familyProfile, user);
+  const savedAccountDisplayName = userProfile?.firstName || user?.displayName || "";
+  const savedAccountBirthDate = userProfile?.birthDate || "";
+  const savedAccountGender = userProfile?.gender || "";
+  const accountHasChanges =
+    accountDisplayName.trim() !== savedAccountDisplayName.trim() ||
+    accountBirthDate !== savedAccountBirthDate ||
+    accountGender !== savedAccountGender ||
+    Boolean(accountPhoto);
 
   useEffect(() => {
     setAccountDisplayName(userProfile?.firstName || user?.displayName || "");
@@ -3016,20 +3022,6 @@ function SettingsPage({
     } catch (error) {
       setAccountSaveStatus("error");
       setAccountMessage(error.message || "Account settings could not be saved.");
-    }
-  }
-
-  async function sendAccountPasswordReset() {
-    setAccountMessage("");
-    setAccountSaveStatus("sending");
-
-    try {
-      await onPasswordReset(user?.email || "");
-      setAccountSaveStatus("ready");
-      setAccountMessage("Password reset email sent.");
-    } catch (error) {
-      setAccountSaveStatus("error");
-      setAccountMessage(error.message || "Password reset email could not be sent.");
     }
   }
 
@@ -3248,26 +3240,18 @@ function SettingsPage({
               )}
               {user && (
                 <button
-                  className="primary-button"
+                  className="secondary-button account-save-button"
                   type="button"
                   onClick={saveAccountSettings}
                   disabled={
                     accountSaveStatus === "saving" ||
+                    !accountHasChanges ||
                     !accountDisplayName.trim() ||
                     !accountBirthDate ||
                     !accountGender
                   }
                 >
                   Save account settings
-                </button>
-              )}
-              {user?.email && (
-                <button
-                  className="secondary-button"
-                  type="button"
-                  onClick={sendAccountPasswordReset}
-                >
-                  Send password reset email
                 </button>
               )}
               {user && (

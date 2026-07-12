@@ -307,6 +307,14 @@ p {
   box-shadow: 0 7px 0 var(--line-strong);
 }
 
+.account-save-button:disabled {
+  background: #eee6dc;
+  color: var(--plum-soft);
+  border-color: var(--line);
+  box-shadow: 0 5px 0 #d9c8aa;
+  opacity: 1;
+}
+
 .danger-button {
   width: 100%;
   background: var(--plum-ink);
