@@ -1746,7 +1746,6 @@ function ProfilePhotoCropper({ source, fileName, onCancel, onApply }) {
         aria-labelledby="crop-photo-title"
         onMouseDown={(event) => event.stopPropagation()}
       >
-        <p className="eyebrow">Profile picture</p>
         <h2 id="crop-photo-title">Crop your photo</h2>
         <div className="crop-preview" aria-label="Profile picture crop preview">
           <img src={source} alt="" style={previewStyle} />
