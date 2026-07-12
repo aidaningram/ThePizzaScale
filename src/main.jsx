@@ -1,7 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
+  Check,
   ChevronLeft,
+  Copy,
   Eye,
   EyeOff,
   Film,
@@ -414,6 +416,25 @@ function buildFamilyInviteLink(inviteCode) {
   if (!inviteCode) return "";
 
   return `${window.location.origin}${window.location.pathname}?familyCode=${inviteCode}`;
+}
+
+async function copyTextToClipboard(text) {
+  if (!text) return;
+
+  if (navigator.clipboard?.writeText) {
+    await navigator.clipboard.writeText(text);
+    return;
+  }
+
+  const textArea = document.createElement("textarea");
+  textArea.value = text;
+  textArea.setAttribute("readonly", "");
+  textArea.style.position = "fixed";
+  textArea.style.opacity = "0";
+  document.body.appendChild(textArea);
+  textArea.select();
+  document.execCommand("copy");
+  document.body.removeChild(textArea);
 }
 
 async function createUniqueInviteCode() {
@@ -2748,6 +2769,7 @@ function SettingsPage({
   const [pendingMemberMatch, setPendingMemberMatch] = useState(null);
   const [inviteMessage, setInviteMessage] = useState("");
   const [inviteStatus, setInviteStatus] = useState("idle");
+  const [inviteCopyStatus, setInviteCopyStatus] = useState("idle");
   const currentMember = familyProfile?.members?.find(
     (member) =>
       member.userId === user?.uid ||
@@ -2784,6 +2806,7 @@ function SettingsPage({
     setDeleteMessage("");
     setInviteMessage("");
     setInviteStatus("idle");
+    setInviteCopyStatus("idle");
   }, [familyProfile]);
 
   useEffect(() => {
@@ -2963,6 +2986,7 @@ function SettingsPage({
   async function createNewInviteCode() {
     setInviteMessage("");
     setInviteStatus("saving");
+    setInviteCopyStatus("idle");
 
     try {
       const inviteCode = await onCreateInviteCode();
@@ -2971,6 +2995,25 @@ function SettingsPage({
     } catch (error) {
       setInviteStatus("error");
       setInviteMessage(error.message || "Invite code could not be created.");
+    }
+  }
+
+  async function copyInviteLink() {
+    const inviteCode = familyProfile?.familyCode || familyProfile?.inviteCode || "";
+    const inviteLink = buildFamilyInviteLink(inviteCode);
+
+    if (!inviteLink) return;
+
+    try {
+      await copyTextToClipboard(inviteLink);
+      setInviteCopyStatus("copied");
+      setInviteMessage("Invite link copied.");
+      setInviteStatus("ready");
+      window.setTimeout(() => setInviteCopyStatus("idle"), 1800);
+    } catch {
+      setInviteCopyStatus("idle");
+      setInviteMessage("The invite link could not be copied automatically.");
+      setInviteStatus("error");
     }
   }
 
@@ -3240,12 +3283,26 @@ function SettingsPage({
                       {(familyProfile.familyCode || familyProfile.inviteCode) && (
                         <label className="field-label">
                           Invite link
-                          <input
-                            value={buildFamilyInviteLink(
-                              familyProfile.familyCode || familyProfile.inviteCode,
-                            )}
-                            readOnly
-                          />
+                          <div className="invite-link-row">
+                            <input
+                              value={buildFamilyInviteLink(
+                                familyProfile.familyCode || familyProfile.inviteCode,
+                              )}
+                              readOnly
+                            />
+                            <button
+                              className="secondary-button copy-link-button"
+                              type="button"
+                              onClick={copyInviteLink}
+                            >
+                              {inviteCopyStatus === "copied" ? (
+                                <Check size={18} />
+                              ) : (
+                                <Copy size={18} />
+                              )}
+                              {inviteCopyStatus === "copied" ? "Copied" : "Copy link"}
+                            </button>
+                          </div>
                         </label>
                       )}
                       {inviteMessage && (

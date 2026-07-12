@@ -35,8 +35,10 @@ body {
 
 button,
 input,
+select,
 textarea {
   font: inherit;
+  min-width: 0;
 }
 
 button {
@@ -799,6 +801,7 @@ p {
   color: var(--plum-ink);
   font-family: "Baloo 2", "Nunito", system-ui, sans-serif;
   font-weight: 800;
+  min-width: 0;
 }
 
 .field-label input,
@@ -811,6 +814,7 @@ p {
   color: var(--plum-ink);
   padding: 0 12px;
   outline: 0;
+  min-width: 0;
 }
 
 .field-label select {
@@ -949,12 +953,14 @@ p {
 
 .settings-content {
   min-width: 0;
+  overflow: hidden;
 }
 
 .settings-card {
   padding: 24px;
   display: grid;
   gap: 16px;
+  min-width: 0;
 }
 
 .settings-card h2 {
@@ -998,6 +1004,7 @@ p {
 
 .settings-profile-row p {
   margin: 4px 0 0;
+  overflow-wrap: anywhere;
 }
 
 .settings-panel {
@@ -1058,8 +1065,23 @@ p {
   font-family: "Baloo 2", "Nunito", system-ui, sans-serif;
   font-size: 1.15rem;
   font-weight: 900;
+  min-width: 0;
+  overflow-wrap: anywhere;
   letter-spacing: 0.08em;
   text-align: center;
+}
+
+.invite-link-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  align-items: center;
+}
+
+.copy-link-button {
+  width: auto;
+  min-width: 132px;
+  white-space: nowrap;
 }
 
 .member-match-panel {
@@ -1097,6 +1119,15 @@ p {
   grid-template-columns: 64px minmax(0, 1fr);
   gap: 12px;
   align-items: center;
+  min-width: 0;
+}
+
+.account-photo-panel > div {
+  min-width: 0;
+}
+
+.account-photo-panel p {
+  overflow-wrap: anywhere;
 }
 
 .account-photo-panel .profile-avatar {
@@ -1138,6 +1169,7 @@ p {
   grid-template-columns: minmax(170px, 1fr) minmax(0, 3fr);
   gap: 10px;
   align-items: end;
+  min-width: 0;
 }
 
 .settings-member-row > label,
@@ -1158,6 +1190,7 @@ p {
   background: var(--cream-soft);
   color: var(--plum-ink);
   padding: 0 10px;
+  min-width: 0;
 }
 
 .settings-member-row small {
@@ -1169,9 +1202,10 @@ p {
 
 .settings-member-controls {
   display: grid;
-  grid-template-columns: 80px minmax(120px, 1fr) minmax(120px, 1fr) minmax(170px, 1.25fr);
+  grid-template-columns: minmax(120px, 0.9fr) minmax(120px, 1fr) minmax(120px, 1fr) minmax(170px, 1.25fr);
   gap: 10px;
   align-items: end;
+  min-width: 0;
 }
 
 .hero-band {
@@ -2088,8 +2122,29 @@ textarea {
   .account-card,
   .family-card,
   .settings-card {
-    padding: 18px;
+    padding: 16px;
     border-radius: 20px;
+  }
+
+  .settings-profile-row,
+  .account-photo-panel {
+    grid-template-columns: 1fr;
+    justify-items: start;
+  }
+
+  .settings-profile-row .profile-avatar,
+  .account-photo-panel .profile-avatar {
+    width: 74px;
+    height: 74px;
+  }
+
+  .invite-link-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .copy-link-button {
+    min-width: 104px;
+    padding-inline: 12px;
   }
 
   .movie-card {
@@ -2117,5 +2172,15 @@ textarea {
 
   .movie-copy h2 {
     font-size: 2.35rem;
+  }
+}
+
+@media (max-width: 420px) {
+  .invite-link-row {
+    grid-template-columns: 1fr;
+  }
+
+  .copy-link-button {
+    width: 100%;
   }
 }
