@@ -2289,11 +2289,10 @@ function MovieRatingPage({
         <div className="movie-detail compact">
           <PosterTile movie={selectedMovie} />
           <div className="movie-copy">
-            <p className="eyebrow">Family rating</p>
             <h2>Rate {selectedMovie.title}</h2>
             <p className="plot">
-              Add your family&apos;s parent and kids slice scores. Each family can submit one
-              Pizza Scale rating per movie.
+              Add your family&apos;s parent and kids slice scores. Your rating reflects your
+              entire family&apos;s opinions of the movie.
             </p>
           </div>
         </div>
