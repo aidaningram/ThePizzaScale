@@ -1044,6 +1044,38 @@ p {
   margin-top: 14px;
 }
 
+.family-join-action {
+  margin-top: 12px;
+}
+
+.choice-divider {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  gap: 12px;
+  align-items: center;
+  color: var(--plum-soft);
+  font-family: "Baloo 2", "Nunito", system-ui, sans-serif;
+  font-size: 1rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  margin: 10px 0;
+}
+
+.choice-divider::before,
+.choice-divider::after {
+  content: "";
+  height: 2px;
+  border-radius: 999px;
+  background: var(--line);
+}
+
+.choice-divider span {
+  border: 2px solid var(--line);
+  border-radius: 999px;
+  background: var(--cream-soft);
+  padding: 2px 12px;
+}
+
 .invite-code-panel {
   display: grid;
   gap: 10px;

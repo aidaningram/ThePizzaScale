@@ -3221,14 +3221,7 @@ function SettingsPage({
                       </button>
                     </div>
                   )}
-                  <div className="family-connect-actions">
-                    <button
-                      className="primary-button"
-                      type="button"
-                      onClick={startFamilyCreation}
-                    >
-                      Create family
-                    </button>
+                  <div className="family-join-action">
                     <button
                       className="secondary-button"
                       type="button"
@@ -3238,6 +3231,16 @@ function SettingsPage({
                       Join family
                     </button>
                   </div>
+                  <div className="choice-divider" aria-hidden="true">
+                    <span>OR</span>
+                  </div>
+                  <button
+                    className="primary-button"
+                    type="button"
+                    onClick={startFamilyCreation}
+                  >
+                    Create family
+                  </button>
                   {joinMessage && (
                     <p className={`form-status ${joinStatus}`}>{joinMessage}</p>
                   )}
