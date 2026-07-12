@@ -807,6 +807,7 @@ p {
 .field-label input,
 .field-label select {
   width: 100%;
+  max-width: 100%;
   min-height: 48px;
   border-radius: 14px;
   border: 2px solid var(--line);
@@ -819,6 +820,25 @@ p {
 
 .field-label select {
   appearance: auto;
+}
+
+input[type="date"] {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  min-inline-size: 0;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+input[type="date"]::-webkit-date-and-time-value {
+  min-width: 0;
+  text-align: left;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  flex-shrink: 0;
 }
 
 .form-error {
@@ -1220,6 +1240,7 @@ p {
 .settings-member-row input,
 .settings-member-row select {
   width: 100%;
+  max-width: 100%;
   min-height: 42px;
   border-radius: 12px;
   border: 2px solid var(--line);
