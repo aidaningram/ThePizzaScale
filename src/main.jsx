@@ -412,10 +412,16 @@ function getInitialJoinCode() {
   }
 }
 
-function buildFamilyInviteLink(inviteCode) {
+function buildFamilyInviteLink(inviteCode, inviterName = "") {
   if (!inviteCode) return "";
 
-  return `${window.location.origin}${window.location.pathname}?familyCode=${inviteCode}`;
+  const searchParams = new URLSearchParams({ code: inviteCode });
+
+  if (inviterName.trim()) {
+    searchParams.set("from", inviterName.trim());
+  }
+
+  return `https://us-central1-the-pizza-scale.cloudfunctions.net/familyInvite?${searchParams.toString()}`;
 }
 
 async function copyTextToClipboard(text) {
@@ -1157,6 +1163,7 @@ function App() {
       familyId: familyProfile.id,
       familyName: familyProfile.displayName,
       createdByUserId: user.uid,
+      createdByName: userProfile?.firstName || user.displayName || "Someone",
       status: "active",
       createdAt: serverTimestamp(),
     });
@@ -3115,7 +3122,10 @@ function SettingsPage({
 
   async function copyInviteLink() {
     const inviteCode = familyProfile?.familyCode || familyProfile?.inviteCode || "";
-    const inviteLink = buildFamilyInviteLink(inviteCode);
+    const inviteLink = buildFamilyInviteLink(
+      inviteCode,
+      userProfile?.firstName || user?.displayName || "",
+    );
 
     if (!inviteLink) return;
 
@@ -3397,6 +3407,7 @@ function SettingsPage({
                             <input
                               value={buildFamilyInviteLink(
                                 familyProfile.familyCode || familyProfile.inviteCode,
+                                userProfile?.firstName || user?.displayName || "",
                               )}
                               readOnly
                             />

@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase-admin/app";
 import { FieldValue, getFirestore } from "firebase-admin/firestore";
-import { HttpsError, onCall } from "firebase-functions/v2/https";
+import { HttpsError, onCall, onRequest } from "firebase-functions/v2/https";
 import { onDocumentWritten } from "firebase-functions/v2/firestore";
 
 initializeApp();
@@ -8,6 +8,67 @@ initializeApp();
 const db = getFirestore();
 const INVITE_CODE_LENGTH = 8;
 const INVITE_CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
+const SITE_URL = "https://thepizzascale.pizza";
+const INVITE_IMAGE_URL = `${SITE_URL}/PizzaLogo.png`;
+
+export const familyInvite = onRequest(
+  {
+    region: "us-central1",
+  },
+  async (request, response) => {
+    const inviteCode = normalizeInviteCode(request.query.code);
+    const siteInviteUrl = inviteCode ? `${SITE_URL}/?familyCode=${inviteCode}` : SITE_URL;
+    let senderName =
+      String(request.query.from || "")
+        .trim()
+        .slice(0, 80) || "Someone";
+
+    if (inviteCode) {
+      const inviteSnapshot = await db.collection("familyInvites").doc(inviteCode).get();
+
+      if (inviteSnapshot.exists && inviteSnapshot.data()?.status === "active") {
+        const invite = inviteSnapshot.data();
+        senderName =
+          String(invite.createdByName || invite.inviterName || "")
+            .trim()
+            .slice(0, 80) || senderName;
+      }
+    }
+
+    const title = `${senderName} has invited you to join their family`;
+    const description =
+      "Join their family group on The Pizza Scale to rate movies together and build better family recommendations.";
+
+    response
+      .status(200)
+      .set("Cache-Control", "public, max-age=300, s-maxage=300")
+      .type("html")
+      .send(`<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>${escapeHtml(title)}</title>
+    <meta name="description" content="${escapeHtml(description)}">
+    <meta property="og:site_name" content="The Pizza Scale">
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="${escapeHtml(title)}">
+    <meta property="og:description" content="${escapeHtml(description)}">
+    <meta property="og:url" content="${escapeHtml(siteInviteUrl)}">
+    <meta property="og:image" content="${INVITE_IMAGE_URL}">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="${escapeHtml(title)}">
+    <meta name="twitter:description" content="${escapeHtml(description)}">
+    <meta name="twitter:image" content="${INVITE_IMAGE_URL}">
+    <meta http-equiv="refresh" content="0; url=${escapeHtml(siteInviteUrl)}">
+  </head>
+  <body>
+    <p><a href="${escapeHtml(siteInviteUrl)}">${escapeHtml(title)}</a></p>
+    <script>window.location.replace(${JSON.stringify(siteInviteUrl)});</script>
+  </body>
+</html>`);
+  },
+);
 
 export const aggregateMovieRating = onDocumentWritten(
   {
@@ -132,6 +193,7 @@ export const createFamily = onCall(
       familyId: familyRef.id,
       familyName,
       createdByUserId: request.auth.uid,
+      createdByName: await getInviteSenderName(request.auth.uid),
       status: "active",
       createdAt: FieldValue.serverTimestamp(),
     });
@@ -407,6 +469,26 @@ function canMemberRate(member) {
     (member.role === "adult" || member.isLeadAdult) &&
     ["lead", "colead", "co-lead", "manage", "rate"].includes(member.permission || "")
   );
+}
+
+async function getInviteSenderName(userId) {
+  if (!userId) return "";
+
+  const userProfileSnapshot = await db.collection("userProfiles").doc(userId).get();
+  const userProfile = userProfileSnapshot.exists ? userProfileSnapshot.data() : {};
+
+  return String(userProfile.firstName || userProfile.displayName || "")
+    .trim()
+    .slice(0, 80);
+}
+
+function escapeHtml(value) {
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 async function createUniqueInviteCode() {
