@@ -916,8 +916,17 @@ function App() {
   function openMovieStats(movie, backPage = page) {
     setSelectedMovie(movie);
     setAuthMessage("");
+    setReviewMessage("");
+    setReviewSaveStatus("idle");
     setMovieBackPage(backPage === "movie" ? "home" : backPage);
     setPage("movie");
+  }
+
+  function openMovieRating() {
+    setAuthMessage("");
+    setReviewMessage("");
+    setReviewSaveStatus("idle");
+    setPage("rate-movie");
   }
 
   async function handleSaveReview() {
@@ -1050,6 +1059,7 @@ function App() {
 
       setReviewSaveStatus("ready");
       setReviewMessage("Rating saved. Pizza Score totals will update shortly.");
+      setPage("movie");
     } catch {
       setReviewSaveStatus("error");
       setReviewMessage("The rating could not be saved yet. Check Firebase rules and try again.");
@@ -1316,8 +1326,6 @@ function App() {
       {page === "movie" && (
         <MovieStatsPage
           selectedMovie={selectedMovie}
-          review={review}
-          setReview={setReview}
           user={user}
           familyProfile={familyProfile}
           familyMovieReview={familyMovieReview}
@@ -1325,9 +1333,25 @@ function App() {
           publicReviews={publicReviews}
           reviewMessage={reviewMessage}
           reviewSaveStatus={reviewSaveStatus}
+          onRateMovie={openMovieRating}
+          onBack={() => setPage(movieBackPage)}
+        />
+      )}
+
+      {page === "rate-movie" && (
+        <MovieRatingPage
+          selectedMovie={selectedMovie}
+          review={review}
+          setReview={setReview}
+          user={user}
+          familyProfile={familyProfile}
+          familyMovieReview={familyMovieReview}
+          canRateForFamily={canRateForFamilyProfile(familyProfile, user)}
+          reviewMessage={reviewMessage}
+          reviewSaveStatus={reviewSaveStatus}
           onSaveReview={handleSaveReview}
           onSignIn={() => openSignIn("login")}
-          onBack={() => setPage(movieBackPage)}
+          onBack={() => setPage("movie")}
         />
       )}
 
@@ -2059,8 +2083,6 @@ function HomePage({
 
 function MovieStatsPage({
   selectedMovie,
-  review,
-  setReview,
   user,
   familyProfile,
   familyMovieReview,
@@ -2068,13 +2090,17 @@ function MovieStatsPage({
   publicReviews,
   reviewMessage,
   reviewSaveStatus,
-  onSaveReview,
-  onSignIn,
+  onRateMovie,
   onBack,
 }) {
-  const overallScore = (Number(review.parentScore) + Number(review.kidScore)) / 2;
-  const selectedVisibility = review.visibility === "public" ? "public" : "aggregate";
   const savedFamilyScore = Number(familyMovieReview?.pizzaScore || 0);
+  const ratingUnavailableReason = getRatingUnavailableReason({
+    user,
+    familyProfile,
+    familyMovieReview,
+    canRateForFamily,
+  });
+  const canOpenRating = !ratingUnavailableReason;
 
   return (
     <section className="movie-stats-page" aria-label={`${selectedMovie.title} statistics`}>
@@ -2108,142 +2134,71 @@ function MovieStatsPage({
         </div>
 
         <div className="review-grid">
-          {familyMovieReview ? (
-            <section className="review-form family-rating-summary">
-              <div className="section-heading">
-                <Star size={20} />
-                <h2>Your family already rated this</h2>
-              </div>
-              <div className="calculated-score">
-                <div className="calculated-score-pizza">
-                  <PizzaFill value={savedFamilyScore} />
-                </div>
-                <div className="calculated-score-copy">
-                  <span>Family rating</span>
-                  <strong>{savedFamilyScore.toFixed(1)} / 8 slices</strong>
-                </div>
-              </div>
-              <div className="family-rating-breakdown">
-                <span>
-                  Parent score: {Number(familyMovieReview.parentScore || 0).toFixed(1)} / 8
-                </span>
-                <span>Kids score: {Number(familyMovieReview.kidScore || 0).toFixed(1)} / 8</span>
-                <span>
-                  Visibility:{" "}
-                  {familyMovieReview.visibility === "public"
-                    ? "Public family review"
-                    : "Anonymous aggregate"}
-                </span>
-              </div>
-              {familyMovieReview.writtenReview && (
-                <div className="settings-panel">
-                  <strong>Your written review</strong>
-                  <p>{familyMovieReview.writtenReview}</p>
-                </div>
-              )}
-              <p className="form-status ready">
-                Each family can submit one Pizza Scale rating per movie.
-              </p>
-            </section>
-          ) : (
-            <form className="review-form">
-              <div className="section-heading">
-                <Star size={20} />
-                <h2>Rate as Lead Adult</h2>
-              </div>
+          <section className="review-form family-rating-summary">
+            <div className="section-heading">
+              <Star size={20} />
+              <h2>{familyMovieReview ? "Your family rating" : "Rate this movie"}</h2>
+            </div>
 
-              {!canRateForFamily && user && familyProfile && (
-                <p className="form-status error">
-                  Only a parent/adult with rating permission can save family ratings.
+            {familyMovieReview ? (
+              <>
+                <div className="calculated-score">
+                  <div className="calculated-score-pizza">
+                    <PizzaFill value={savedFamilyScore} />
+                  </div>
+                  <div className="calculated-score-copy">
+                    <span>Family rating</span>
+                    <strong>{savedFamilyScore.toFixed(1)} / 8 slices</strong>
+                  </div>
+                </div>
+                <div className="family-rating-breakdown">
+                  <span>
+                    Parent score: {Number(familyMovieReview.parentScore || 0).toFixed(1)} / 8
+                  </span>
+                  <span>
+                    Kids score: {Number(familyMovieReview.kidScore || 0).toFixed(1)} / 8
+                  </span>
+                  <span>
+                    Visibility:{" "}
+                    {familyMovieReview.visibility === "public"
+                      ? "Public family review"
+                      : "Anonymous aggregate"}
+                  </span>
+                </div>
+                {familyMovieReview.writtenReview && (
+                  <div className="settings-panel">
+                    <strong>Your written review</strong>
+                    <p>{familyMovieReview.writtenReview}</p>
+                  </div>
+                )}
+                <p className="form-status ready">
+                  Each family can submit one Pizza Scale rating per movie.
                 </p>
-              )}
+              </>
+            ) : (
+              <>
+                <p className="rating-action-copy">
+                  Submit one family rating for this movie with separate parent and kids slice
+                  scores.
+                </p>
+                <button
+                  className="primary-button"
+                  type="button"
+                  onClick={onRateMovie}
+                  disabled={!canOpenRating}
+                >
+                  Rate this movie
+                </button>
+              </>
+            )}
 
-              <SliceInput
-                label="Parent slice score"
-                value={review.parentScore}
-                onChange={(parentScore) => setReview({ ...review, parentScore })}
-              />
-              <SliceInput
-                label="Kids slice score"
-                value={review.kidScore}
-                onChange={(kidScore) => setReview({ ...review, kidScore })}
-              />
-
-              <div className="calculated-score">
-                <div className="calculated-score-pizza">
-                  <PizzaFill value={overallScore} />
-                </div>
-                <div className="calculated-score-copy">
-                  <span>Calculated overall</span>
-                  <strong>{overallScore.toFixed(1)} / 8 slices</strong>
-                </div>
-              </div>
-
-              <label className="text-area-label">
-                Optional public review
-                <textarea
-                  value={review.writtenReview}
-                  onChange={(event) => setReview({ ...review, writtenReview: event.target.value })}
-                  placeholder="What should another family know before movie night?"
-                />
-              </label>
-
-              <fieldset className="visibility-group">
-                <legend>Review visibility</legend>
-                <VisibilityChoice
-                  icon={<ShieldCheck size={18} />}
-                  label="Anonymous aggregate"
-                  value="aggregate"
-                  selected={selectedVisibility}
-                  onChange={(visibility) => setReview({ ...review, visibility })}
-                  description={
-                    "Your slice scores help shape Pizza Scale totals, but your family name and written review will not be shown publicly."
-                  }
-                />
-                <VisibilityChoice
-                  icon={<Eye size={18} />}
-                  label="Public family review"
-                  value="public"
-                  selected={selectedVisibility}
-                  onChange={(visibility) => setReview({ ...review, visibility })}
-                  description={
-                    "Your family name, slice score, and optional written review can appear for other families."
-                  }
-                />
-              </fieldset>
-
-              {selectedVisibility === "public" && (
-                <label className="checkbox-row">
-                  <input
-                    type="checkbox"
-                    checked={review.showAgeShape}
-                    onChange={(event) =>
-                      setReview({ ...review, showAgeShape: event.target.checked })
-                    }
-                  />
-                  <span>Allow public review to show broad child age range</span>
-                </label>
-              )}
-
-              {reviewMessage && (
-                <p className={`form-status ${reviewSaveStatus}`}>{reviewMessage}</p>
-              )}
-              <button
-                className="primary-button"
-                type="button"
-                onClick={user ? onSaveReview : onSignIn}
-                disabled={
-                  reviewSaveStatus === "saving" || (user && familyProfile && !canRateForFamily)
-                }
-              >
-                {!user
-                  ? "Sign in to Save Rating"
-                  : familyProfile
-                    ? "Save Rating"
-                    : "Create a Family to Save"}
-              </button>
-            </form>
-          )}
+            {!familyMovieReview && ratingUnavailableReason && (
+              <p className="form-status error">{ratingUnavailableReason}</p>
+            )}
+            {reviewMessage && (
+              <p className={`form-status ${reviewSaveStatus}`}>{reviewMessage}</p>
+            )}
+          </section>
 
           <aside className="public-reviews">
             <div className="section-heading">
@@ -2283,6 +2238,159 @@ function MovieStatsPage({
       </section>
     </section>
   );
+}
+
+function MovieRatingPage({
+  selectedMovie,
+  review,
+  setReview,
+  user,
+  familyProfile,
+  familyMovieReview,
+  canRateForFamily,
+  reviewMessage,
+  reviewSaveStatus,
+  onSaveReview,
+  onSignIn,
+  onBack,
+}) {
+  const overallScore = (Number(review.parentScore) + Number(review.kidScore)) / 2;
+  const selectedVisibility = review.visibility === "public" ? "public" : "aggregate";
+  const ratingUnavailableReason = getRatingUnavailableReason({
+    user,
+    familyProfile,
+    familyMovieReview,
+    canRateForFamily,
+  });
+
+  return (
+    <section className="movie-stats-page" aria-label={`Rate ${selectedMovie.title}`}>
+      <button className="back-button visible" type="button" onClick={onBack}>
+        <ChevronLeft size={18} />
+        Back to movie
+      </button>
+
+      <section className="detail-panel rating-page-panel">
+        <div className="movie-detail compact">
+          <PosterTile movie={selectedMovie} />
+          <div className="movie-copy">
+            <p className="eyebrow">Family rating</p>
+            <h2>Rate {selectedMovie.title}</h2>
+            <p className="plot">
+              Add your family&apos;s parent and kids slice scores. Each family can submit one
+              Pizza Scale rating per movie.
+            </p>
+          </div>
+        </div>
+
+        <form className="review-form rating-page-form">
+          <div className="section-heading">
+            <Star size={20} />
+            <h2>Family slice score</h2>
+          </div>
+
+          {ratingUnavailableReason && (
+            <p className="form-status error">{ratingUnavailableReason}</p>
+          )}
+
+          <SliceInput
+            label="Parent slice score"
+            value={review.parentScore}
+            onChange={(parentScore) => setReview({ ...review, parentScore })}
+          />
+          <SliceInput
+            label="Kids slice score"
+            value={review.kidScore}
+            onChange={(kidScore) => setReview({ ...review, kidScore })}
+          />
+
+          <div className="calculated-score">
+            <div className="calculated-score-pizza">
+              <PizzaFill value={overallScore} />
+            </div>
+            <div className="calculated-score-copy">
+              <span>Calculated overall</span>
+              <strong>{overallScore.toFixed(1)} / 8 slices</strong>
+            </div>
+          </div>
+
+          <label className="text-area-label">
+            Optional public review
+            <textarea
+              value={review.writtenReview}
+              onChange={(event) => setReview({ ...review, writtenReview: event.target.value })}
+              placeholder="What should another family know before movie night?"
+            />
+          </label>
+
+          <fieldset className="visibility-group">
+            <legend>Review visibility</legend>
+            <VisibilityChoice
+              icon={<ShieldCheck size={18} />}
+              label="Anonymous aggregate"
+              value="aggregate"
+              selected={selectedVisibility}
+              onChange={(visibility) => setReview({ ...review, visibility })}
+              description={
+                "Your slice scores help shape Pizza Scale totals, but your family name and written review will not be shown publicly."
+              }
+            />
+            <VisibilityChoice
+              icon={<Eye size={18} />}
+              label="Public family review"
+              value="public"
+              selected={selectedVisibility}
+              onChange={(visibility) => setReview({ ...review, visibility })}
+              description={
+                "Your family name, slice score, and optional written review can appear for other families."
+              }
+            />
+          </fieldset>
+
+          {selectedVisibility === "public" && (
+            <label className="checkbox-row">
+              <input
+                type="checkbox"
+                checked={review.showAgeShape}
+                onChange={(event) => setReview({ ...review, showAgeShape: event.target.checked })}
+              />
+              <span>Allow public review to show broad child age range</span>
+            </label>
+          )}
+
+          {reviewMessage && <p className={`form-status ${reviewSaveStatus}`}>{reviewMessage}</p>}
+          <button
+            className="primary-button"
+            type="button"
+            onClick={user ? onSaveReview : onSignIn}
+            disabled={reviewSaveStatus === "saving" || Boolean(ratingUnavailableReason)}
+          >
+            {reviewSaveStatus === "saving" ? "Saving..." : "Save Rating"}
+          </button>
+        </form>
+      </section>
+    </section>
+  );
+}
+
+function getRatingUnavailableReason({ user, familyProfile, familyMovieReview, canRateForFamily }) {
+  if (familyMovieReview) {
+    return "Your family has already rated this movie. Each family can submit one Pizza Scale rating per movie.";
+  }
+
+  if (!user) {
+    return "Sign in and join or create a family group before rating movies.";
+  }
+
+  if (!familyProfile) {
+    return "Create or join a family group before rating movies.";
+  }
+
+  if (!canRateForFamily) {
+    return "Only a parent/adult with rating permission can save family ratings.";
+  }
+
+  return "";
 }
 
 function MovieCategoryRow({ category, selectedMovie, onSelectMovie }) {

@@ -274,6 +274,13 @@ p {
   box-shadow: 0 7px 0 #bd2d2b;
 }
 
+.review-form .primary-button:disabled {
+  background: var(--dough-card);
+  color: var(--plum-soft);
+  box-shadow: 0 5px 0 var(--line);
+  opacity: 1;
+}
+
 .secondary-button {
   width: 100%;
   background: var(--white);
@@ -1637,6 +1644,11 @@ textarea::placeholder {
   align-items: start;
 }
 
+.movie-detail.compact {
+  grid-template-columns: 132px minmax(0, 1fr);
+  align-items: center;
+}
+
 .movie-detail > .poster-tile {
   width: 100%;
   aspect-ratio: 2 / 3;
@@ -1822,6 +1834,20 @@ textarea::placeholder {
 
 .family-rating-summary {
   align-content: start;
+}
+
+.rating-action-copy {
+  margin-bottom: 0;
+  line-height: 1.45;
+}
+
+.rating-page-panel {
+  display: grid;
+  gap: 20px;
+}
+
+.rating-page-form {
+  box-shadow: none;
 }
 
 .family-rating-breakdown {
