@@ -406,7 +406,9 @@ function getRatingAdultUserIds(members, leadAdultUserId) {
 function getInitialJoinCode() {
   try {
     const searchParams = new URLSearchParams(window.location.search);
-    return normalizeInviteCode(searchParams.get("familyCode") || searchParams.get("invite") || "");
+    return normalizeInviteCode(
+      searchParams.get("familyCode") || searchParams.get("invite") || searchParams.get("code") || "",
+    );
   } catch {
     return "";
   }
@@ -415,13 +417,13 @@ function getInitialJoinCode() {
 function buildFamilyInviteLink(inviteCode, inviterName = "") {
   if (!inviteCode) return "";
 
-  const searchParams = new URLSearchParams({ code: inviteCode });
+  const searchParams = new URLSearchParams({ familyCode: inviteCode });
 
   if (inviterName.trim()) {
     searchParams.set("from", inviterName.trim());
   }
 
-  return `${window.location.origin}/invite?${searchParams.toString()}`;
+  return `${window.location.origin}${window.location.pathname}?${searchParams.toString()}`;
 }
 
 async function copyTextToClipboard(text) {
