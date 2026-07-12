@@ -1705,6 +1705,27 @@ function ProfilePhotoCropper({ source, fileName, onCancel, onApply }) {
     transform: `translate(${offsetX / 2}%, ${offsetY / 2}%) scale(${zoom})`,
   };
 
+  useEffect(() => {
+    const previousOverflow = document.body.style.overflow;
+    const previousPosition = document.body.style.position;
+    const previousTop = document.body.style.top;
+    const previousWidth = document.body.style.width;
+    const scrollY = window.scrollY;
+
+    document.body.style.overflow = "hidden";
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = "100%";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.body.style.position = previousPosition;
+      document.body.style.top = previousTop;
+      document.body.style.width = previousWidth;
+      window.scrollTo(0, scrollY);
+    };
+  }, []);
+
   async function applyCrop() {
     setIsProcessing(true);
 
@@ -1763,10 +1784,6 @@ function ProfilePhotoCropper({ source, fileName, onCancel, onApply }) {
             />
           </label>
         </div>
-        <p>
-          We will save this as a compressed square avatar so normal phone photos work without
-          slowing down the site.
-        </p>
         <div className="dialog-actions">
           <button className="secondary-button" type="button" onClick={onCancel}>
             Cancel
