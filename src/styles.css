@@ -315,6 +315,21 @@ p {
   opacity: 1;
 }
 
+.settings-sign-out-button {
+  width: fit-content;
+  min-height: 34px;
+  justify-self: center;
+  background: transparent;
+  color: var(--sauce-red);
+  font-family: "Baloo 2", "Nunito", system-ui, sans-serif;
+  font-size: 0.95rem;
+  font-weight: 900;
+  padding: 0;
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 4px;
+}
+
 .danger-button {
   width: 100%;
   background: var(--plum-ink);

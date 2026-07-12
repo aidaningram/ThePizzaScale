@@ -3240,7 +3240,7 @@ function SettingsPage({
               )}
               {user && (
                 <button
-                  className="secondary-button account-save-button"
+                  className="primary-button account-save-button"
                   type="button"
                   onClick={saveAccountSettings}
                   disabled={
@@ -3255,7 +3255,7 @@ function SettingsPage({
                 </button>
               )}
               {user && (
-                <button className="primary-button" type="button" onClick={onSignOut}>
+                <button className="settings-sign-out-button" type="button" onClick={onSignOut}>
                   Sign out
                 </button>
               )}
