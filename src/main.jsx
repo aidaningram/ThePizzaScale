@@ -421,7 +421,7 @@ function buildFamilyInviteLink(inviteCode, inviterName = "") {
     searchParams.set("from", inviterName.trim());
   }
 
-  return `https://us-central1-the-pizza-scale.cloudfunctions.net/familyInvite?${searchParams.toString()}`;
+  return `${window.location.origin}/invite?${searchParams.toString()}`;
 }
 
 async function copyTextToClipboard(text) {
