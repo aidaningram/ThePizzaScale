@@ -1155,6 +1155,10 @@ function App() {
       throw new Error("Only a family leader or co-leader can create invite codes.");
     }
 
+    if (familyProfile?.familyCode || familyProfile?.inviteCode) {
+      throw new Error("This family already has a permanent join code.");
+    }
+
     const inviteCode = await createUniqueInviteCode();
 
     await setDoc(doc(db, "familyInvites", inviteCode), {
@@ -3110,6 +3114,12 @@ function SettingsPage({
     setInviteStatus("saving");
     setInviteCopyStatus("idle");
 
+    if (familyProfile?.familyCode || familyProfile?.inviteCode) {
+      setInviteStatus("ready");
+      setInviteMessage("This family code is permanent.");
+      return;
+    }
+
     try {
       const inviteCode = await onCreateInviteCode();
       setInviteStatus("ready");
@@ -3391,14 +3401,16 @@ function SettingsPage({
                       </p>
                       <div className="invite-code-row">
                         <code>{familyProfile.familyCode || familyProfile.inviteCode || "No code yet"}</code>
-                        <button
-                          className="secondary-button"
-                          type="button"
-                          onClick={createNewInviteCode}
-                          disabled={inviteStatus === "saving"}
-                        >
-                          {familyProfile.inviteCode ? "New code" : "Create code"}
-                        </button>
+                        {!(familyProfile.familyCode || familyProfile.inviteCode) && (
+                          <button
+                            className="secondary-button"
+                            type="button"
+                            onClick={createNewInviteCode}
+                            disabled={inviteStatus === "saving"}
+                          >
+                            Create code
+                          </button>
+                        )}
                       </div>
                       {(familyProfile.familyCode || familyProfile.inviteCode) && (
                         <label className="field-label">
