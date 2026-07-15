@@ -1,0 +1,38 @@
+{
+  "projectId": "the-pizza-scale",
+  "familyId": "pizza-movie-night",
+  "familyName": "The Ingram Family",
+  "familyCode": "dogcatpig3",
+  "pizzaMovieNightJoinCode": "dogcatpig3",
+  "leadAdultEmail": "",
+  "coLeaderEmails": [],
+  "ratingAdultEmails": [],
+  "members": [
+    {
+      "firstNameOrNickname": "",
+      "email": "",
+      "role": "adult",
+      "birthDate": "",
+      "gender": "",
+      "permission": "lead",
+      "canRate": true
+    }
+  ],
+  "accountExportPath": "",
+  "pizzaMovieNightState": {
+    "round": 1,
+    "movies": [],
+    "roundPicks": {},
+    "spinReady": {},
+    "spinState": null,
+    "movieList": [],
+    "history": []
+  },
+  "notes": [
+    "Fill this file before running the migration writer.",
+    "birthDate should use YYYY-MM-DD.",
+    "Use the same emails that exist in the imported Pizza Scale Firebase Auth users.",
+    "Kids without accounts should leave email blank.",
+    "Only parents/adults should have canRate true."
+  ]
+}

@@ -7,7 +7,9 @@
     "node": "22"
   },
   "scripts": {
-    "lint": "node --check index.js"
+    "lint": "node --check index.js && node --check scripts/migrate-pizza-movie-night-family.mjs",
+    "migrate:pizza-movie-night:check": "node scripts/migrate-pizza-movie-night-family.mjs",
+    "migrate:pizza-movie-night": "node scripts/migrate-pizza-movie-night-family.mjs --write"
   },
   "dependencies": {
     "firebase-admin": "^13.0.0",
