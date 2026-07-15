@@ -130,6 +130,13 @@ export const getWatchProviders = onCall(
     const imdbId = String(request.data?.imdbId || request.data?.movieId || "")
       .trim()
       .slice(0, 24);
+    const movieTitle = String(request.data?.title || "")
+      .trim()
+      .slice(0, 140);
+    const movieYear = String(request.data?.year || "")
+      .trim()
+      .replace(/[^0-9]/g, "")
+      .slice(0, 4);
     const region = normalizeWatchRegion(request.data?.region);
 
     if (!/^tt\d{5,12}$/.test(imdbId)) {
@@ -150,18 +157,22 @@ export const getWatchProviders = onCall(
     if (!apiKey) {
       return {
         status: "unavailable",
+        reason: "missing-key",
         region,
         providers: emptyWatchProviderGroups(),
-        message: "Watch availability is unavailable right now.",
+        message: "Watch availability needs backend setup.",
       };
     }
 
     try {
-      const watchmodeTitle = await findWatchmodeTitleByImdbId({ apiKey, imdbId });
+      const watchmodeTitle =
+        (await findWatchmodeTitleByImdbId({ apiKey, imdbId })) ||
+        (await findWatchmodeTitleByName({ apiKey, movieTitle, movieYear }));
 
       if (!watchmodeTitle?.id) {
         const unavailablePayload = {
           status: "unavailable",
+          reason: "not-found",
           imdbId,
           region,
           providers: emptyWatchProviderGroups(),
@@ -177,12 +188,13 @@ export const getWatchProviders = onCall(
         watchmodeId: watchmodeTitle.id,
         region,
       });
+      const sourceCatalog = await fetchWatchmodeSourceCatalog({ apiKey, region });
       const payload = {
         status: "ready",
         imdbId,
         region,
         watchmodeId: watchmodeTitle.id,
-        providers: groupWatchProviders(sources),
+        providers: groupWatchProviders(sources, sourceCatalog),
         checkedAt: FieldValue.serverTimestamp(),
       };
 
@@ -197,6 +209,7 @@ export const getWatchProviders = onCall(
 
       return {
         status: "unavailable",
+        reason: error?.watchProviderReason || "request-failed",
         region,
         providers: emptyWatchProviderGroups(),
         message: "Watch availability is unavailable right now.",
@@ -623,6 +636,30 @@ async function findWatchmodeTitleByImdbId({ apiKey, imdbId }) {
   return titleResults.find((title) => title?.imdb_id === imdbId) || titleResults[0] || null;
 }
 
+async function findWatchmodeTitleByName({ apiKey, movieTitle, movieYear }) {
+  if (!movieTitle) return null;
+
+  const url = new URL("https://api.watchmode.com/v1/search/");
+  url.searchParams.set("apiKey", apiKey);
+  url.searchParams.set("search_field", "name");
+  url.searchParams.set("search_value", movieTitle);
+  url.searchParams.set("types", "movie");
+
+  const response = await fetchJson(url);
+  const titleResults = Array.isArray(response?.title_results) ? response.title_results : [];
+  const movieResults = titleResults.filter((title) => title?.type === "movie");
+
+  if (movieYear) {
+    const exactYearMatch = movieResults.find(
+      (title) => String(title.year || "") === movieYear,
+    );
+
+    if (exactYearMatch) return exactYearMatch;
+  }
+
+  return movieResults[0] || titleResults[0] || null;
+}
+
 async function fetchWatchmodeSources({ apiKey, watchmodeId, region }) {
   const url = new URL(`https://api.watchmode.com/v1/title/${watchmodeId}/sources/`);
   url.searchParams.set("apiKey", apiKey);
@@ -633,17 +670,56 @@ async function fetchWatchmodeSources({ apiKey, watchmodeId, region }) {
   return Array.isArray(response) ? response : [];
 }
 
+async function fetchWatchmodeSourceCatalog({ apiKey, region }) {
+  const url = new URL("https://api.watchmode.com/v1/sources/");
+  url.searchParams.set("apiKey", apiKey);
+  url.searchParams.set("regions", region);
+
+  try {
+    const response = await fetchJson(url);
+    const sources = Array.isArray(response) ? response : [];
+
+    return new Map(
+      sources.flatMap((source) => {
+        const provider = normalizeWatchProvider(source);
+        const keys = [
+          source.source_id,
+          source.id,
+          provider.id,
+          provider.name,
+          provider.name.toLowerCase(),
+        ]
+          .map((key) => String(key || "").trim())
+          .filter(Boolean);
+
+        return keys.map((key) => [key, provider]);
+      }),
+    );
+  } catch (error) {
+    console.error("Watchmode source catalog lookup failed", {
+      region,
+      message: error?.message,
+    });
+
+    return new Map();
+  }
+}
+
 async function fetchJson(url) {
   const response = await fetch(url);
 
   if (!response.ok) {
-    throw new Error(`Watchmode responded with ${response.status}`);
+    const error = new Error(`Watchmode responded with ${response.status}`);
+    error.watchProviderReason = [401, 402, 403, 429].includes(response.status)
+      ? "quota-or-key"
+      : "request-failed";
+    throw error;
   }
 
   return response.json();
 }
 
-function groupWatchProviders(sources) {
+function groupWatchProviders(sources, sourceCatalog = new Map()) {
   const groups = emptyWatchProviderGroups();
   const seen = new Set();
 
@@ -652,7 +728,7 @@ function groupWatchProviders(sources) {
 
     if (!groupKey) continue;
 
-    const provider = normalizeWatchProvider(source);
+    const provider = enrichWatchProvider(normalizeWatchProvider(source), sourceCatalog, source);
     const dedupeKey = `${groupKey}:${provider.id || provider.name}`;
 
     if (!provider.name || seen.has(dedupeKey)) continue;
@@ -669,6 +745,24 @@ function groupWatchProviders(sources) {
         .slice(0, 12),
     ]),
   );
+}
+
+function enrichWatchProvider(provider, sourceCatalog, source) {
+  const catalogProvider =
+    sourceCatalog.get(String(source?.source_id || "").trim()) ||
+    sourceCatalog.get(String(source?.id || "").trim()) ||
+    sourceCatalog.get(provider.id) ||
+    sourceCatalog.get(provider.name) ||
+    sourceCatalog.get(provider.name.toLowerCase());
+
+  if (!catalogProvider) return provider;
+
+  return {
+    ...provider,
+    id: provider.id || catalogProvider.id,
+    logoUrl: provider.logoUrl || catalogProvider.logoUrl,
+    webUrl: provider.webUrl || catalogProvider.webUrl,
+  };
 }
 
 function getWatchProviderGroup(type) {

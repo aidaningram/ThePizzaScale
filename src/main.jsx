@@ -1744,6 +1744,34 @@ function getWatchProviderSummary(watchState) {
   return `${getProviderCount(watchState.providers)} watch options available`;
 }
 
+function getWatchProviderMessage(data) {
+  if (data?.reason === "missing-key") {
+    return "Watch availability needs backend setup.";
+  }
+
+  if (data?.reason === "quota-or-key") {
+    return "Watch availability is unavailable right now.";
+  }
+
+  return data?.message || "";
+}
+
+function getWatchProviderErrorMessage(error) {
+  if (error?.code === "functions/not-found") {
+    return "Watch availability will appear after the backend function is deployed.";
+  }
+
+  if (error?.code === "functions/unauthenticated" || error?.code === "functions/permission-denied") {
+    return "Watch availability is unavailable right now.";
+  }
+
+  if (error?.code === "functions/unavailable" || error?.code === "functions/deadline-exceeded") {
+    return "Watch availability is temporarily unavailable.";
+  }
+
+  return "Watch availability is unavailable right now.";
+}
+
 function canManageFamilyProfile(familyProfile, user) {
   if (!familyProfile || !user) return false;
   if (familyProfile.leadAdultUserId === user.uid) return true;
@@ -2552,7 +2580,12 @@ function WhereToWatch({ movie }) {
 
       try {
         const getWatchProviders = httpsCallable(functions, "getWatchProviders");
-        const result = await getWatchProviders({ imdbId, region: "US" });
+        const result = await getWatchProviders({
+          imdbId,
+          title: movie.title,
+          year: movie.year,
+          region: "US",
+        });
         const providers = normalizeWatchProviderGroups(result.data?.providers);
         const hasProviders = getProviderCount(providers) > 0;
 
@@ -2562,18 +2595,18 @@ function WhereToWatch({ movie }) {
           status: result.data?.status === "ready" && hasProviders ? "ready" : "unavailable",
           providers,
           message:
-            result.data?.message ||
+            getWatchProviderMessage(result.data) ||
             (hasProviders
               ? ""
               : "Watch availability is unavailable for this movie right now."),
         });
-      } catch {
+      } catch (error) {
         if (!isCurrent) return;
 
         setWatchState({
           status: "unavailable",
           providers: emptyWatchProviderGroups(),
-          message: "Watch availability is unavailable right now.",
+          message: getWatchProviderErrorMessage(error),
         });
       }
     }
