@@ -2629,8 +2629,6 @@ function ConcernDetailPage({ selectedMovie, concernKey, onBack }) {
           </div>
         )}
 
-        <GuideList title="Related watch-outs" items={guide?.watchOutFor} variant="watch" />
-        <GuideList title="May not fit" items={guide?.mayNotFit} variant="caution" />
       </section>
     </section>
   );
