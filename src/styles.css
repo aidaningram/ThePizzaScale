@@ -1715,22 +1715,28 @@ textarea::placeholder {
 
 .pizza-guide-panel {
   margin-top: 20px;
-  padding: 18px;
+  padding: 20px;
   display: grid;
-  gap: 14px;
+  gap: 16px;
+  background:
+    linear-gradient(135deg, rgba(255, 201, 77, 0.22), transparent 42%),
+    linear-gradient(180deg, var(--white), var(--cream-soft));
 }
 
 .guide-status-row,
-.guide-concerns,
-.guide-list > div {
+.guide-concerns {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
 
+.guide-list > div {
+  display: grid;
+  gap: 8px;
+}
+
 .guide-status-row span,
-.guide-concerns span,
-.guide-list span {
+.guide-concerns span {
   border: 2px solid var(--line);
   border-radius: 999px;
   background: var(--cream-soft);
@@ -1745,9 +1751,33 @@ textarea::placeholder {
   border-color: var(--plum-ink);
 }
 
+.guide-concerns span:nth-child(1) {
+  background: rgba(255, 139, 77, 0.14);
+  border-color: rgba(255, 139, 77, 0.48);
+}
+
+.guide-concerns span:nth-child(2) {
+  background: rgba(239, 70, 62, 0.1);
+  border-color: rgba(239, 70, 62, 0.36);
+}
+
+.guide-concerns span:nth-child(3) {
+  background: rgba(52, 23, 53, 0.06);
+}
+
+.guide-concerns span:nth-child(4),
+.guide-concerns span:nth-child(5) {
+  background: rgba(255, 201, 77, 0.16);
+  border-color: rgba(223, 191, 141, 0.9);
+}
+
 .guide-summary {
   max-width: 860px;
   margin-bottom: 0;
+  border-left: 6px solid var(--crust-orange);
+  border-radius: 12px;
+  background: rgba(255, 201, 77, 0.13);
+  padding: 12px 14px;
   line-height: 1.5;
 }
 
@@ -1761,16 +1791,33 @@ textarea::placeholder {
 .guide-score-card {
   border: 2px solid var(--line);
   border-radius: 16px;
-  background: var(--dough-card);
+  background: var(--white);
   padding: 12px;
   display: grid;
-  gap: 4px;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 8px 12px;
+  min-height: 112px;
 }
 
-.guide-score-card span,
+.guide-score-card > span,
 .guide-list strong {
   color: var(--plum-soft);
   font-weight: 900;
+}
+
+.guide-score-card > span,
+.guide-score-card strong,
+.guide-score-card small {
+  grid-column: 2;
+}
+
+.guide-score-card .pizza-fill,
+.guide-score-placeholder {
+  grid-column: 1;
+  grid-row: 1 / span 3;
+  width: 58px;
+  height: 58px;
 }
 
 .guide-score-card strong {
@@ -1780,9 +1827,54 @@ textarea::placeholder {
   line-height: 1;
 }
 
+.guide-score-card small {
+  color: var(--plum-soft);
+  line-height: 1.25;
+}
+
+.guide-score-card.locked {
+  background: rgba(247, 232, 201, 0.5);
+}
+
+.guide-score-placeholder {
+  border: 3px dashed var(--line);
+  border-radius: 999px;
+  background: rgba(255, 253, 248, 0.62);
+}
+
 .guide-list {
+  border: 2px solid rgba(234, 212, 175, 0.88);
+  border-radius: 18px;
+  background: rgba(255, 253, 248, 0.72);
+  padding: 12px;
   display: grid;
   gap: 8px;
+}
+
+.guide-list span {
+  border-left: 5px solid var(--line-strong);
+  border-radius: 12px;
+  background: var(--white);
+  color: var(--plum-soft);
+  padding: 10px 12px;
+  font-weight: 900;
+  line-height: 1.25;
+}
+
+.guide-list.good span {
+  border-left-color: var(--cheese-gold);
+}
+
+.guide-list.caution span {
+  border-left-color: var(--sauce-red);
+}
+
+.guide-list.watch span {
+  border-left-color: var(--crust-orange);
+}
+
+.guide-list.conversation span {
+  border-left-color: var(--plum-soft);
 }
 
 .preference-checkbox {

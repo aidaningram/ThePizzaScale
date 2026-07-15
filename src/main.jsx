@@ -2282,7 +2282,11 @@ function MovieStatsPage({
           </div>
         </div>
 
-        <PizzaGuidePanel guide={selectedMovie.familyGuide} movieTitle={selectedMovie.title} />
+        <PizzaGuidePanel
+          guide={selectedMovie.familyGuide}
+          movieTitle={selectedMovie.title}
+          canShowFamilyFit={Boolean(familyProfile?.id && familyProfile?.members?.length)}
+        />
 
         <div className="review-grid">
           <section className="review-form family-rating-summary">
@@ -2523,7 +2527,7 @@ function MovieRatingPage({
   );
 }
 
-function PizzaGuidePanel({ guide, movieTitle }) {
+function PizzaGuidePanel({ guide, movieTitle, canShowFamilyFit = false }) {
   if (!guide) {
     return (
       <section className="pizza-guide-panel">
@@ -2559,7 +2563,12 @@ function PizzaGuidePanel({ guide, movieTitle }) {
       </div>
       {guide.summary && <p className="guide-summary">{guide.summary}</p>}
       <div className="guide-score-grid">
-        <GuideScore label="Family night fit" value={guide.familyNightFit} />
+        <GuideScore
+          label="Family night fit"
+          value={guide.familyNightFit}
+          isLocked={!canShowFamilyFit}
+          lockedText="Join or create a family to calculate this."
+        />
         <GuideScore label="Parent appeal" value={guide.parentAppeal} />
         <GuideScore label="Kid appeal" value={guide.kidAppeal} />
         <GuideScore label="Teen appeal" value={guide.teenAppeal} />
@@ -2573,28 +2582,40 @@ function PizzaGuidePanel({ guide, movieTitle }) {
           ))}
         </div>
       )}
-      <GuideList title="Good for families who like" items={guide.goodFor} />
-      <GuideList title="May not fit families who are avoiding" items={guide.mayNotFit} />
-      <GuideList title="Watch out for" items={guide.watchOutFor} />
-      <GuideList title="Conversation starters" items={guide.conversationTopics} />
+      <GuideList title="Good for families who like" items={guide.goodFor} variant="good" />
+      <GuideList
+        title="May not fit families who are avoiding"
+        items={guide.mayNotFit}
+        variant="caution"
+      />
+      <GuideList title="Watch out for" items={guide.watchOutFor} variant="watch" />
+      <GuideList
+        title="Conversation starters"
+        items={guide.conversationTopics}
+        variant="conversation"
+      />
     </section>
   );
 }
 
-function GuideScore({ label, value }) {
+function GuideScore({ label, value, isLocked = false, lockedText = "" }) {
+  const hasValue = Number.isFinite(value) && !isLocked;
+
   return (
-    <div className="guide-score-card">
+    <div className={`guide-score-card ${isLocked ? "locked" : ""}`}>
       <span>{label}</span>
-      <strong>{Number.isFinite(value) ? `${Number(value).toFixed(1)} / 8` : "Pending"}</strong>
+      {hasValue ? <PizzaFill value={value} /> : <div className="guide-score-placeholder" />}
+      <strong>{hasValue ? `${Number(value).toFixed(1)} / 8` : "Not ready yet"}</strong>
+      {isLocked && <small>{lockedText}</small>}
     </div>
   );
 }
 
-function GuideList({ title, items }) {
+function GuideList({ title, items, variant = "" }) {
   if (!items?.length) return null;
 
   return (
-    <div className="guide-list">
+    <div className={`guide-list ${variant}`}>
       <strong>{title}</strong>
       <div>
         {items.map((item) => (
