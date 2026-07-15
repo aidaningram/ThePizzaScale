@@ -2610,7 +2610,7 @@ function PizzaGuidePanel({ guide, movieTitle, canShowFamilyFit = false }) {
       )}
       <GuideList title="Good for" items={guide.goodFor} variant="good" />
       <GuideList
-        title="May not fit families who are avoiding"
+        title="May not fit"
         items={guide.mayNotFit}
         variant="caution"
       />
