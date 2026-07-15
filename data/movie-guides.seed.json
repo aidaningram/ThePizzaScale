@@ -37,6 +37,33 @@
     ],
     "conversationTopics": ["kindness", "found family", "looking for the good in people"],
     "matchSignals": ["strong parent appeal", "strong kid appeal", "low language", "positive family themes"],
+    "concernDetails": {
+      "scare": [
+        "Paddington is framed for a theft and sent to prison, which may feel sad or unfair for sensitive kids.",
+        "The prison setting includes stern adults, locked cells, and moments where Paddington seems lonely or unsafe.",
+        "The ending includes train and water peril, including a tense rescue sequence.",
+        "The villain creates suspense through disguises, pursuit, and deception, but the tone stays comic rather than frightening."
+      ],
+      "violence": [
+        "Most conflict is slapstick: falls, crashes, chases, and comic accidents.",
+        "The prison and train sequences include pushing, pursuit, and physical danger without graphic injury.",
+        "The villain's actions put characters in danger, especially near the end.",
+        "No realistic blood or graphic violence is a major part of the movie."
+      ],
+      "language": [
+        "Language is very mild, mostly limited to rude or impatient remarks.",
+        "Some characters insult or dismiss Paddington, but the movie frames that behavior negatively.",
+        "No frequent profanity is central to the movie."
+      ],
+      "romanceNudity": [
+        "A married couple shows mild affection.",
+        "There are a few playful adult jokes or flirtatious moments, but nothing explicit.",
+        "No nudity or sexual content is central to the movie."
+      ],
+      "substances": [
+        "No meaningful drinking, smoking, or drug content is noted in this guide."
+      ]
+    },
     "seedNotes": "Checked against Common Sense Media's Paddington 2 guide, which lists age 6+ and notes prison sadness, near-drowning peril, slapstick action, little romance, and no meaningful language/substances."
   },
   {
@@ -77,6 +104,34 @@
     ],
     "conversationTopics": ["identity", "mentors", "courage", "family expectations"],
     "matchSignals": ["teen appeal", "parent appeal", "superhero action", "emotional growth"],
+    "concernDetails": {
+      "scare": [
+        "A major version of Spider-Man dies early in the story, and Miles witnesses the aftermath.",
+        "Miles' uncle is revealed as the Prowler, creating a tense chase and emotional reveal.",
+        "The collider scenes are loud, visually chaotic, and may overwhelm kids sensitive to intense animation.",
+        "Kingpin is physically imposing and threatening, especially in fight scenes."
+      ],
+      "violence": [
+        "There are frequent superhero fights with punching, kicking, throwing, explosions, and city destruction.",
+        "Spider-Man is killed by Kingpin after being badly injured in a battle.",
+        "Miles' uncle is shot, and his death is emotionally significant though not graphic.",
+        "Weapons, vehicles, and sci-fi machinery create repeated peril.",
+        "The violence is stylized and comic-book-like, but the stakes are real."
+      ],
+      "language": [
+        "Language is mild to moderate for an animated PG superhero movie.",
+        "Characters use insults, sarcasm, and occasional mild profanity.",
+        "Some humor includes rude comments or teasing."
+      ],
+      "romanceNudity": [
+        "Miles has light romantic feelings toward Gwen, mostly shown through awkward teen behavior.",
+        "Peter B. Parker's failed marriage is mentioned as part of his backstory.",
+        "There is no nudity or sexual content."
+      ],
+      "substances": [
+        "No meaningful drinking, smoking, or drug content is noted in this guide."
+      ]
+    },
     "seedNotes": "Checked against Common Sense Media's Spider-Verse guide, which lists age 9+, intense action violence, mild language, and light flirting."
   },
   {
@@ -117,6 +172,30 @@
     ],
     "conversationTopics": ["creativity", "honesty", "confidence", "teamwork"],
     "matchSignals": ["teen appeal", "music", "comedy", "some language"],
+    "concernDetails": {
+      "scare": [
+        "No scary content is a major concern.",
+        "The tension mostly comes from lying, being caught, and adults arguing."
+      ],
+      "violence": [
+        "Physical content is limited to very mild comic moments and stage/classroom chaos.",
+        "No serious fighting or graphic injury is part of the movie."
+      ],
+      "language": [
+        "The movie includes stronger PG-13 language than many family comedies.",
+        "Characters use insults and profanity, especially around Dewey's immature behavior.",
+        "Some jokes and lines have a rude or rebellious tone."
+      ],
+      "romanceNudity": [
+        "There are occasional mild adult references and suggestive jokes.",
+        "No nudity or explicit sexual content is part of the movie."
+      ],
+      "substances": [
+        "Adults are shown in music or nightlife settings where beer, cigarettes, or smoking may appear.",
+        "Dewey behaves irresponsibly in ways that may need parent context.",
+        "Substance content is not the focus of the story, but it is more present than in younger-kid picks."
+      ]
+    },
     "seedNotes": "Checked against Common Sense Media's School of Rock guide, which lists age 10+ and flags profanity, beer/cigarette presence, and very mild physical comedy."
   },
   {
@@ -157,6 +236,34 @@
     ],
     "conversationTopics": ["promises", "family responsibility", "identity", "cleverness"],
     "matchSignals": ["parent appeal", "quirky humor", "moderate peril", "older-kid fit"],
+    "concernDetails": {
+      "scare": [
+        "The farmers aggressively hunt the animals, which can feel tense despite the stylized animation.",
+        "Characters are trapped underground and face hunger, danger, and being discovered.",
+        "The tone is dry and quirky, but some younger kids may find the farmers' anger unsettling."
+      ],
+      "violence": [
+        "Farmers use guns, digging machines, and explosives against the animals.",
+        "Mr. Fox's tail is shot off; the injury is not graphic but is a memorable consequence.",
+        "Animals steal, flee, and fight in comic adventure sequences.",
+        "The violence is stylized, but the threat to the animal families is clear."
+      ],
+      "language": [
+        "The movie repeatedly uses the word cuss as a substitute for swearing.",
+        "Characters insult, argue, and speak sharply to each other.",
+        "Traditional profanity is limited, but the repeated cuss joke is noticeable."
+      ],
+      "romanceNudity": [
+        "Mr. and Mrs. Fox are married and show mild affection.",
+        "There is no nudity or explicit sexual content.",
+        "Some adult relationship tension centers on Mr. Fox lying to his wife."
+      ],
+      "substances": [
+        "Adult characters drink cider, wine, or champagne in some scenes.",
+        "A villain is associated with smoking in parent-guide descriptions.",
+        "Substance use is not glamorized as a main theme, but it is present in the adult world."
+      ]
+    },
     "seedNotes": "Checked against Common Sense Media's Fantastic Mr. Fox guide and Wired's parent notes; both point to witty adult appeal, farmer violence/peril, cider or alcohol references, and the repeated cuss-word joke."
   },
   {
@@ -197,6 +304,34 @@
     ],
     "conversationTopics": ["jealousy", "friendship", "humility", "teamwork"],
     "matchSignals": ["classic Pixar", "strong kid appeal", "parent nostalgia", "mild scare moments"],
+    "concernDetails": {
+      "scare": [
+        "Sid's room includes damaged and rebuilt toys that can look creepy to young children.",
+        "Buzz and Woody are trapped in Sid's house and face being destroyed by fireworks.",
+        "A large dog chases and threatens the toys.",
+        "The toys stage a spooky reveal to scare Sid, which may startle sensitive kids."
+      ],
+      "violence": [
+        "Most violence is toy-scale slapstick: falls, crashes, being knocked around, and chase scenes.",
+        "Sid burns, breaks, and combines toys, though the movie treats toys as living characters.",
+        "Buzz loses an arm and later is repaired; the moment may upset some children.",
+        "No human blood or graphic injury is shown."
+      ],
+      "language": [
+        "Language is very mild, mostly insults and name-calling between toys.",
+        "Characters tease, argue, and use words like stupid or similar mild put-downs.",
+        "No strong profanity is central to the movie."
+      ],
+      "romanceNudity": [
+        "Bo Peep lightly flirts with Woody.",
+        "Toy affection is playful and innocent.",
+        "No nudity or sexual content is part of the movie."
+      ],
+      "substances": [
+        "Beer cans appear briefly in an adult setting.",
+        "Substance use is not a story focus and is not shown as behavior for kids to copy."
+      ]
+    },
     "seedNotes": "Checked against Common Sense Media's Toy Story guide, which lists age 5+, tense toy peril, a dog chase, Sid's toy scenes, very little language, and brief beer cans."
   },
   {
@@ -237,6 +372,31 @@
     ],
     "conversationTopics": ["trust", "overprotection", "disability", "bravery"],
     "matchSignals": ["strong kid appeal", "parent-child story", "low language", "some scary moments"],
+    "concernDetails": {
+      "scare": [
+        "The opening implies that Nemo's mother and siblings are killed by a predator.",
+        "Nemo is captured by a diver and separated from his father for most of the movie.",
+        "Sharks, an anglerfish, jellyfish, and other sea creatures create several intense moments.",
+        "The dentist office scenes include fish trying to escape and the threat of a rough child handling Nemo.",
+        "Marlin's panic and fear may feel intense for kids sensitive to parent-child separation."
+      ],
+      "violence": [
+        "Predator attacks and chase scenes happen throughout, though they are not graphic.",
+        "Fish are shocked by jellyfish, chased by sharks, and swallowed or nearly swallowed by larger creatures.",
+        "A pelican chase and fishing-net sequence create physical danger.",
+        "No graphic injury or blood is central to the movie."
+      ],
+      "language": [
+        "No meaningful language concern is noted in this guide.",
+        "There may be mild teasing or frustrated remarks, but no notable profanity."
+      ],
+      "romanceNudity": [
+        "No meaningful romance, nudity, or sexual content is noted in this guide."
+      ],
+      "substances": [
+        "No meaningful drinking, smoking, or drug content is noted in this guide."
+      ]
+    },
     "seedNotes": "Checked against Common Sense Media's Finding Nemo guide, which lists age 5+ but highlights very scary moments, the opening loss, creatures with sharp teeth, and no language/substances."
   },
   {
@@ -277,6 +437,36 @@
     ],
     "conversationTopics": ["family teamwork", "using your gifts", "honesty", "identity"],
     "matchSignals": ["parent appeal", "older-kid action", "family teamwork", "moderate violence"],
+    "concernDetails": {
+      "scare": [
+        "The superhero action is frequent and sometimes intense for younger viewers.",
+        "Family members, including children, are in life-threatening danger.",
+        "Syndrome's island, robots, missiles, and capture scenes create sustained suspense.",
+        "The movie includes implied deaths and serious villain threats, even though the style is animated."
+      ],
+      "violence": [
+        "There are repeated superhero fights, explosions, missiles, crashes, and robot attacks.",
+        "Characters are shot at, thrown, crushed, captured, and chased.",
+        "Several heroes are implied to have died before the main story or as part of Syndrome's plan.",
+        "The final city battle includes large-scale destruction and danger to bystanders.",
+        "Violence is mostly non-bloody, but it is more sustained than many animated family movies."
+      ],
+      "language": [
+        "Language is mild, with occasional insults and frustrated remarks.",
+        "Some dialogue includes adult sarcasm or brief rude wording.",
+        "No frequent strong profanity is central to the movie."
+      ],
+      "romanceNudity": [
+        "Bob and Helen's marriage includes mild romantic tension and jealousy.",
+        "There are a few suggestive or adult-leaning jokes, including the superhero suit/family-life humor.",
+        "No explicit sexual content or nudity is shown."
+      ],
+      "substances": [
+        "Adults are briefly shown with drinks in social or dinner settings.",
+        "A few background moments may include smoking or adult atmosphere.",
+        "Substance use is not a major story element."
+      ]
+    },
     "seedNotes": "Checked against Common Sense Media's Incredibles guide, which lists age 8+ and notes sustained non-bloody violence, weapons, explosions, deaths, mild references, and some drinks/smoking."
   },
   {
@@ -317,6 +507,36 @@
     ],
     "conversationTopics": ["talent", "integrity", "family loyalty", "giving credit"],
     "matchSignals": ["parent appeal", "food themes", "mild language", "some animated peril"],
+    "concernDetails": {
+      "scare": [
+        "Remy and the rat colony are discovered and chased out of a house by an angry woman with a gun.",
+        "Sewer and kitchen sequences put Remy in danger of being trapped, drowned, or killed.",
+        "Humans repeatedly react to rats with fear and aggression, which can be tense for kids who like animal characters.",
+        "Skinner's pursuit and capture of Remy create suspense near the end."
+      ],
+      "violence": [
+        "An elderly woman fires a shotgun at rats, causing destruction but no graphic injuries.",
+        "Remy is chased with knives, traps, and kitchen tools in several scenes.",
+        "A group of dead rats is shown as a warning about humans.",
+        "Skinner captures Remy, and other characters are tied up and gagged in a pantry.",
+        "Physical danger is frequent but stylized and non-graphic."
+      ],
+      "language": [
+        "Language is very mild, mostly insults and impatient kitchen dialogue.",
+        "Characters shout at each other in stressful restaurant scenes.",
+        "No strong profanity is central to the movie."
+      ],
+      "romanceNudity": [
+        "Linguini and Colette develop a mild romance and kiss.",
+        "There is no nudity or explicit sexual content.",
+        "Romance is secondary to the cooking and identity story."
+      ],
+      "substances": [
+        "Wine appears in restaurant settings and adult meals.",
+        "A planned real-world marketing tie-in involved wine, but within the movie alcohol is mainly background restaurant culture.",
+        "No drunkenness or drug content is central to the story."
+      ]
+    },
     "seedNotes": "Checked against Common Sense Media's Ratatouille guide, which lists age 6+, moderate rat peril, gun and knife moments, very mild language, light romance, and wine presence."
   },
   {
@@ -357,6 +577,32 @@
     ],
     "conversationTopics": ["stewardship", "loneliness", "consumerism", "care for others"],
     "matchSignals": ["low language", "thoughtful tone", "parent appeal", "environmental themes"],
+    "concernDetails": {
+      "scare": [
+        "The abandoned Earth setting may feel lonely or unsettling to some younger kids.",
+        "WALL-E and EVE are put in danger by machines, space hazards, and the ship's autopilot.",
+        "Human characters face brief peril when the ship tilts and systems fail.",
+        "The environmental premise may prompt questions about waste, isolation, and what happened to Earth."
+      ],
+      "violence": [
+        "Robots are hit, blasted, crushed, shocked, and damaged in several scenes.",
+        "Laser fire, explosions, and malfunctioning machines create action peril.",
+        "WALL-E is badly damaged near the end, though he is later repaired.",
+        "Violence is mechanical and non-bloody."
+      ],
+      "language": [
+        "No meaningful language concern is noted in this guide.",
+        "Dialogue is sparse for much of the movie, and profanity is not a feature."
+      ],
+      "romanceNudity": [
+        "WALL-E and EVE have a sweet robot romance shown through hand-holding, devotion, and longing.",
+        "Human body shapes and inactivity are part of the movie's satire, but not sexualized.",
+        "No nudity or explicit sexual content is present."
+      ],
+      "substances": [
+        "No meaningful drinking, smoking, or drug content is noted in this guide."
+      ]
+    },
     "seedNotes": "Checked against Common Sense Media's WALL-E guide, which lists age 5+, robot/human fights, lasers, explosions, no language/substances, and concern about its body-size messaging."
   },
   {
@@ -397,6 +643,35 @@
     ],
     "conversationTopics": ["family memory", "tradition", "forgiveness", "following dreams"],
     "matchSignals": ["strong family themes", "music", "emotional ending", "some scare imagery"],
+    "concernDetails": {
+      "scare": [
+        "The Land of the Dead is filled with skeleton characters, though most are friendly and colorful.",
+        "Miguel faces the possibility of being trapped away from his living family.",
+        "Characters begin to fade when they are forgotten, which may be emotionally intense.",
+        "The story includes death, grief, and memory as central themes.",
+        "The ending can be very emotional for families sensitive to aging, memory loss, or loss of relatives."
+      ],
+      "violence": [
+        "A character's death by poisoning is revealed as part of the backstory.",
+        "Characters fall, are chased, and face fantasy peril in the Land of the Dead.",
+        "Skeleton bodies come apart in comic ways.",
+        "Violence is mostly mild and stylized, but the murder reveal may be serious for younger viewers."
+      ],
+      "language": [
+        "Language is mild, with some insults, frustration, and family arguments.",
+        "No frequent strong profanity is central to the movie."
+      ],
+      "romanceNudity": [
+        "Family marriage and past romance are part of the backstory.",
+        "There is no nudity or explicit sexual content.",
+        "Romantic material is mild and not a major concern."
+      ],
+      "substances": [
+        "Adults are seen drinking at parties or in musical/social settings.",
+        "Poisoning is revealed as part of a murder backstory.",
+        "No drug use is central to the movie."
+      ]
+    },
     "seedNotes": "Checked against Common Sense Media's Coco guide, which lists age 7+ and notes skeleton imagery, life-or-death peril, emotional grief, adult drinking, and mild language."
   },
   {
@@ -437,6 +712,31 @@
     ],
     "conversationTopics": ["creativity", "following instructions", "teamwork", "play"],
     "matchSignals": ["high kid appeal", "fast comedy", "creativity", "mild language"],
+    "concernDetails": {
+      "scare": [
+        "The movie is fast, loud, and chaotic, which may overwhelm kids who are sensitive to busy visuals.",
+        "Characters are captured, threatened with being frozen by glue, or placed in action peril.",
+        "A main character appears to sacrifice himself before the live-action framing resolves the danger."
+      ],
+      "violence": [
+        "There is frequent Lego-style action: explosions, crashes, laser blasts, falls, and pieces popping apart.",
+        "Vitruvius is killed in a stylized way, though the scene remains comic and toy-like.",
+        "Characters build weapons and vehicles to fight Lord Business' forces.",
+        "The violence is plastic/toy-based and non-graphic."
+      ],
+      "language": [
+        "Language is very mild, mostly insults, teasing, and comic frustration.",
+        "Some jokes use rude or exaggerated wording, but strong profanity is not a feature."
+      ],
+      "romanceNudity": [
+        "Wyldstyle/Lucy and Emmet have a light romantic thread.",
+        "Batman is comically presented as Lucy's boyfriend for part of the story.",
+        "No nudity or explicit sexual content is present."
+      ],
+      "substances": [
+        "No meaningful drinking, smoking, or drug content is noted in this guide."
+      ]
+    },
     "seedNotes": "Checked against Common Sense Media's Lego Movie guide, which lists age 6+, Lego action/peril, frequent brand/tie-in presence, very mild language, and no substances."
   },
   {
@@ -477,6 +777,36 @@
     ],
     "conversationTopics": ["true love", "revenge", "honor", "storytelling"],
     "matchSignals": ["teen appeal", "parent nostalgia", "fantasy adventure", "moderate violence"],
+    "concernDetails": {
+      "scare": [
+        "The fire swamp includes quicksand, flame bursts, and large rodent-like creatures.",
+        "Westley is tortured in a machine and later appears dead or mostly dead.",
+        "The villain Count Rugen is cold and threatening, especially in scenes with Inigo and Westley.",
+        "Some younger kids may find the mix of comedy and serious danger confusing."
+      ],
+      "violence": [
+        "There are sword fights, wrestling, punching, and fantasy-adventure combat.",
+        "Characters are cut or wounded, and some blood is visible.",
+        "A torture machine causes severe pain and drains life from a character.",
+        "Poisoning is used in a battle of wits.",
+        "A revenge storyline ends with a villain being killed."
+      ],
+      "language": [
+        "Language includes some insults, mild profanity, and older PG-era wording.",
+        "A few lines may feel sharper than expected for a nostalgic family movie.",
+        "Name-calling and threats are part of the adventure-comedy tone."
+      ],
+      "romanceNudity": [
+        "The central story is built around romance and true love.",
+        "There is kissing and some mild suggestive banter.",
+        "No nudity or explicit sexual content is shown."
+      ],
+      "substances": [
+        "Characters drink wine or other beverages in social or royal settings.",
+        "Poison is a key part of one scene.",
+        "Substance use is not glamorized, but poison and drinking are noticeable."
+      ]
+    },
     "seedNotes": "Checked against Common Sense Media's Princess Bride guide, which lists age 9+ and flags violence, torture, sword fights, poisoning, language, drinking, kissing, and suggestive references."
   },
   {
@@ -517,6 +847,36 @@
     ],
     "conversationTopics": ["friendship", "empathy", "trust", "letting go"],
     "matchSignals": ["parent nostalgia", "emotional intensity", "some language", "classic sci-fi"],
+    "concernDetails": {
+      "scare": [
+        "E.T. is strange-looking at first and may scare younger kids before he becomes familiar.",
+        "Government agents pursue the children and create a strong sense of danger.",
+        "The medical quarantine scenes are intense, with E.T. and Elliott very ill.",
+        "E.T. appears to die, which can be emotionally upsetting even though the story resolves.",
+        "The farewell ending may be very sad for sensitive kids."
+      ],
+      "violence": [
+        "There is little traditional fighting, but the pursuit scenes create real peril.",
+        "In the theatrical version, agents with guns are part of the threat; some later versions altered this.",
+        "Bike chases, roadblocks, and medical interventions create physical danger.",
+        "No graphic injury is central to the movie."
+      ],
+      "language": [
+        "The movie includes stronger language than many modern PG family films.",
+        "Children and adults use insults and occasional profanity.",
+        "Families avoiding older PG language may want to preview this one."
+      ],
+      "romanceNudity": [
+        "Elliott reacts to E.T.'s experience with TV romance in a comic school scene.",
+        "There is mild kissing or romantic imitation, but nothing explicit.",
+        "No nudity or sexual content is central to the movie."
+      ],
+      "substances": [
+        "E.T. drinks beer at home and becomes tipsy in a comic sequence.",
+        "The scene is played for humor but may be worth discussing with kids.",
+        "No drug use is central to the movie."
+      ]
+    },
     "seedNotes": "Checked against Common Sense Media's E.T. guide, which lists age 7+, emotional peril/apparent death, government pursuit, stronger language, guns in the theatrical version, and E.T. drinking beer."
   },
   {
@@ -557,6 +917,31 @@
     ],
     "conversationTopics": ["independence", "self-doubt", "helpfulness", "friendship"],
     "matchSignals": ["low concern levels", "gentle tone", "strong parent appeal", "younger-kid fit"],
+    "concernDetails": {
+      "scare": [
+        "Kiki has a few uncertain flying moments as she learns to live independently.",
+        "The climax includes an airship accident and Tombo dangling high above the city.",
+        "Kiki becomes discouraged and loses confidence, which may feel emotionally tense for some kids.",
+        "There are no major villains or horror-style scares."
+      ],
+      "violence": [
+        "Physical danger is mild and mostly related to flying, falling, and the airship rescue.",
+        "No fighting, weapons, or graphic injury are central to the movie.",
+        "The main action concern is height peril near the end."
+      ],
+      "language": [
+        "Language is very mild, with occasional name-calling or frustrated remarks.",
+        "No strong profanity is central to the movie."
+      ],
+      "romanceNudity": [
+        "Tombo shows friendly interest in Kiki, and there is light flirting.",
+        "Kiki navigates social awkwardness and independence rather than romance.",
+        "No nudity or explicit sexual content is present."
+      ],
+      "substances": [
+        "No meaningful drinking, smoking, or drug content is noted in this guide."
+      ]
+    },
     "seedNotes": "Checked against Common Sense Media's Kiki guide, which lists age 5+, very little violence/scariness, very little language, no substances, and mild flirting."
   }
 ]

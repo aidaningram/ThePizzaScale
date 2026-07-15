@@ -519,6 +519,7 @@ function App() {
   const [familyMovieReview, setFamilyMovieReview] = useState(null);
   const [reviewMessage, setReviewMessage] = useState("");
   const [reviewSaveStatus, setReviewSaveStatus] = useState("idle");
+  const [selectedConcernKey, setSelectedConcernKey] = useState("scare");
   const [review, setReview] = useState({
     parentScore: 7,
     kidScore: 8,
@@ -988,6 +989,12 @@ function App() {
     setPage("rate-movie");
   }
 
+  function openConcernDetail(concernKey) {
+    setSelectedConcernKey(concernKey);
+    setAuthMessage("");
+    setPage("concern-detail");
+  }
+
   async function handleSaveReview() {
     setReviewMessage("");
 
@@ -1407,7 +1414,16 @@ function App() {
           reviewMessage={reviewMessage}
           reviewSaveStatus={reviewSaveStatus}
           onRateMovie={openMovieRating}
+          onOpenConcern={openConcernDetail}
           onBack={() => setPage(movieBackPage)}
+        />
+      )}
+
+      {page === "concern-detail" && (
+        <ConcernDetailPage
+          selectedMovie={selectedMovie}
+          concernKey={selectedConcernKey}
+          onBack={() => setPage("movie")}
         />
       )}
 
@@ -1616,6 +1632,7 @@ function normalizeMovieGuide(guide) {
     conversationTopics: normalizeStringList(guide.conversationTopics),
     watchOutFor: normalizeStringList(guide.watchOutFor),
     matchSignals: normalizeStringList(guide.matchSignals),
+    concernDetails: normalizeConcernDetails(guide.concernDetails),
     reviewedAt: guide.reviewedAt || null,
   };
 }
@@ -1640,6 +1657,17 @@ function normalizeStringList(value) {
   return Array.isArray(value)
     ? value.map((item) => String(item || "").trim()).filter(Boolean).slice(0, 8)
     : [];
+}
+
+function normalizeConcernDetails(value) {
+  if (!value || typeof value !== "object") return {};
+
+  return Object.fromEntries(
+    Object.keys(guideConcernLabels).map((key) => [
+      key,
+      normalizeStringList(value[key]).slice(0, 6),
+    ]),
+  );
 }
 
 function canManageFamilyProfile(familyProfile, user) {
@@ -2266,6 +2294,7 @@ function MovieStatsPage({
   reviewMessage,
   reviewSaveStatus,
   onRateMovie,
+  onOpenConcern,
   onBack,
 }) {
   const savedFamilyScore = Number(familyMovieReview?.pizzaScore || 0);
@@ -2312,6 +2341,7 @@ function MovieStatsPage({
           guide={selectedMovie.familyGuide}
           movieTitle={selectedMovie.title}
           canShowFamilyFit={Boolean(familyProfile?.id && familyProfile?.members?.length)}
+          onOpenConcern={onOpenConcern}
         />
 
         <div className="review-grid">
@@ -2553,7 +2583,95 @@ function MovieRatingPage({
   );
 }
 
-function PizzaGuidePanel({ guide, movieTitle, canShowFamilyFit = false }) {
+function ConcernDetailPage({ selectedMovie, concernKey, onBack }) {
+  const guide = selectedMovie.familyGuide;
+  const concernLabel = guideConcernLabels[concernKey] || "Concern";
+  const concernValue = guide?.concernLevels?.[concernKey];
+  const details = getConcernDetailItems(guide, concernKey);
+  const hasSceneDetails = Boolean(guide?.concernDetails?.[concernKey]?.length);
+
+  return (
+    <section className="movie-stats-page" aria-label={`${concernLabel} details`}>
+      <button className="back-button visible" type="button" onClick={onBack}>
+        <ChevronLeft size={18} />
+        Back to movie
+      </button>
+      <section className="detail-panel concern-detail-panel">
+        <div className="movie-detail compact">
+          <PosterTile movie={selectedMovie} compact />
+          <div className="movie-copy">
+            <p className="eyebrow">{selectedMovie.title}</p>
+            <h2>{concernLabel}</h2>
+            <div className="guide-status-row">
+              <span>{formatConcernLevel(concernValue)}</span>
+              {guide?.bestAgeRange && <span>Best for {guide.bestAgeRange}</span>}
+            </div>
+            <p className="plot">
+              {hasSceneDetails
+                ? `These notes explain the kinds of ${concernLabel.toLowerCase()} moments families may want to know about before watching.`
+                : "This guide has a basic concern rating, but a full scene-by-scene breakdown has not been written yet."}
+            </p>
+          </div>
+        </div>
+
+        <div className="concern-detail-card">
+          <strong>What families should know</strong>
+          <div className="concern-detail-list">
+            {details.map((item) => (
+              <span key={item}>{item}</span>
+            ))}
+          </div>
+        </div>
+
+        {!hasSceneDetails && (
+          <div className="empty-state">
+            <strong>More detail still needed</strong>
+            <p>
+              This page is ready for deeper Pizza Scale notes. For now, it shows the movie&apos;s
+              guide-level watch-outs instead of exact timestamps or exhaustive scene descriptions.
+            </p>
+          </div>
+        )}
+
+        <GuideList title="Related watch-outs" items={guide?.watchOutFor} variant="watch" />
+        <GuideList title="May not fit" items={guide?.mayNotFit} variant="caution" />
+      </section>
+    </section>
+  );
+}
+
+function getConcernDetailItems(guide, concernKey) {
+  const concernDetails = guide?.concernDetails?.[concernKey] || [];
+
+  if (concernDetails.length) return concernDetails;
+
+  const level = guide?.concernLevels?.[concernKey];
+  const label = (guideConcernLabels[concernKey] || "This concern").toLowerCase();
+  const levelText = formatConcernLevel(level).toLowerCase();
+  const watchOuts = guide?.watchOutFor || [];
+
+  if (!Number.isFinite(level) || level <= 0) {
+    return [`The current guide does not note meaningful ${label} concerns for this movie.`];
+  }
+
+  if (watchOuts.length) {
+    return [
+      `The current guide marks ${label} as ${levelText}.`,
+      ...watchOuts.slice(0, 4),
+    ];
+  }
+
+  return [
+    `The current guide marks ${label} as ${levelText}, but detailed moment notes have not been added yet.`,
+  ];
+}
+
+function PizzaGuidePanel({
+  guide,
+  movieTitle,
+  canShowFamilyFit = false,
+  onOpenConcern = () => {},
+}) {
   if (!guide) {
     return (
       <section className="pizza-guide-panel">
@@ -2602,9 +2720,14 @@ function PizzaGuidePanel({ guide, movieTitle, canShowFamilyFit = false }) {
       {concernEntries.length > 0 && (
         <div className="guide-concerns">
           {concernEntries.map(([key, value]) => (
-            <span key={key}>
+            <button
+              className="guide-concern-chip"
+              key={key}
+              type="button"
+              onClick={() => onOpenConcern(key)}
+            >
               {guideConcernLabels[key] || key}: {formatConcernLevel(value)}
-            </span>
+            </button>
           ))}
         </div>
       )}
@@ -2666,6 +2789,7 @@ function formatGuideStatus(status) {
 }
 
 function formatConcernLevel(value) {
+  if (!Number.isFinite(value)) return "Not noted";
   if (value <= 0) return "None noted";
   if (value === 1) return "Very mild";
   if (value === 2) return "Mild";

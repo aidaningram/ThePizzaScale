@@ -89,6 +89,7 @@ function validateGuide(guide, index) {
     watchOutFor: cleanList(guide.watchOutFor),
     conversationTopics: cleanList(guide.conversationTopics),
     matchSignals: cleanList(guide.matchSignals),
+    concernDetails: normalizeConcernDetails(guide.concernDetails),
   };
 }
 
@@ -98,6 +99,18 @@ function cleanString(value) {
 
 function cleanList(value) {
   return Array.isArray(value) ? value.map(cleanString).filter(Boolean).slice(0, 12) : [];
+}
+
+function normalizeConcernDetails(value) {
+  if (!value || typeof value !== "object") return {};
+
+  return {
+    scare: cleanList(value.scare),
+    violence: cleanList(value.violence),
+    language: cleanList(value.language),
+    romanceNudity: cleanList(value.romanceNudity),
+    substances: cleanList(value.substances),
+  };
 }
 
 function normalizeStatus(value) {
