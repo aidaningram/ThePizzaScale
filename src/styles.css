@@ -1319,6 +1319,7 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 .home-hero-copy,
 .movie-column,
 .detail-panel,
+.pizza-guide-panel,
 .review-form,
 .public-reviews {
   border: 2px solid var(--line);
@@ -1710,6 +1711,82 @@ textarea::placeholder {
   flex-wrap: wrap;
   gap: 12px;
   margin: 18px 0;
+}
+
+.pizza-guide-panel {
+  margin-top: 20px;
+  padding: 18px;
+  display: grid;
+  gap: 14px;
+}
+
+.guide-status-row,
+.guide-concerns,
+.guide-list > div {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.guide-status-row span,
+.guide-concerns span,
+.guide-list span {
+  border: 2px solid var(--line);
+  border-radius: 999px;
+  background: var(--cream-soft);
+  color: var(--plum-soft);
+  padding: 7px 10px;
+  font-weight: 900;
+}
+
+.guide-status-row span:first-child {
+  background: var(--plum-ink);
+  color: var(--cheese-gold);
+  border-color: var(--plum-ink);
+}
+
+.guide-summary {
+  max-width: 860px;
+  margin-bottom: 0;
+  line-height: 1.5;
+}
+
+.guide-score-grid,
+.preference-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.guide-score-card {
+  border: 2px solid var(--line);
+  border-radius: 16px;
+  background: var(--dough-card);
+  padding: 12px;
+  display: grid;
+  gap: 4px;
+}
+
+.guide-score-card span,
+.guide-list strong {
+  color: var(--plum-soft);
+  font-weight: 900;
+}
+
+.guide-score-card strong {
+  color: var(--plum-ink);
+  font-family: "Baloo 2", "Nunito", system-ui, sans-serif;
+  font-size: 1.25rem;
+  line-height: 1;
+}
+
+.guide-list {
+  display: grid;
+  gap: 8px;
+}
+
+.preference-checkbox {
+  margin-top: 4px;
 }
 
 .pizza-score,
@@ -2114,6 +2191,8 @@ textarea {
   .content-grid,
   .review-grid,
   .family-grid,
+  .guide-score-grid,
+  .preference-grid,
   .settings-layout,
   .search-results-grid {
     grid-template-columns: 1fr;

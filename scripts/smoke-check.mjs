@@ -10,6 +10,9 @@ const requiredFiles = [
   "firebase.json",
   "functions/index.js",
   "functions/package.json",
+  "data/movie-guides.seed.json",
+  "data/movie-guide.schema.example.json",
+  "scripts/seed-movie-guides.mjs",
 ];
 
 const requiredMainSnippets = [
@@ -17,6 +20,8 @@ const requiredMainSnippets = [
   "handleUpdateFamily",
   "loadFamilyProfile",
   "hydrateMoviesWithStats",
+  "PizzaGuidePanel",
+  "familyPreferences",
   "SearchPage",
   "SettingsPage",
 ];
@@ -42,7 +47,11 @@ if (missingSnippet) {
 
 const firestoreRules = await readFile("firestore.rules", "utf8");
 
-if (!firestoreRules.includes("canManageFamily") || !firestoreRules.includes("match /reviews")) {
+if (
+  !firestoreRules.includes("canManageFamily") ||
+  !firestoreRules.includes("match /reviews") ||
+  !firestoreRules.includes("match /movieGuides")
+) {
   throw new Error("Firestore rules are missing family management or review rules.");
 }
 

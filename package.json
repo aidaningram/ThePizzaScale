@@ -7,7 +7,9 @@
     "dev": "vite --host 127.0.0.1",
     "check": "node scripts/smoke-check.mjs && vite build",
     "build": "vite build",
-    "preview": "vite preview --host 127.0.0.1"
+    "preview": "vite preview --host 127.0.0.1",
+    "seed:guides:check": "node scripts/seed-movie-guides.mjs",
+    "seed:guides": "node scripts/seed-movie-guides.mjs --write"
   },
   "dependencies": {
     "@vitejs/plugin-react": "latest",

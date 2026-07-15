@@ -1,0 +1,29 @@
+{
+  "id": "tt0000000",
+  "imdbId": "tt0000000",
+  "title": "Example Movie",
+  "year": "2026",
+  "status": "draft",
+  "guideVersion": "pizza-guide-v1",
+  "sourceType": "ai-assisted",
+  "bestAgeRange": "8-14",
+  "summary": "Short family-centered overview of why this movie may or may not work for movie night.",
+  "parentAppeal": 7,
+  "kidAppeal": 7,
+  "teenAppeal": 6,
+  "familyNightFit": 7,
+  "concernLevels": {
+    "scare": 1,
+    "violence": 1,
+    "language": 1,
+    "romanceNudity": 0,
+    "substances": 0
+  },
+  "toneTags": ["warm", "funny", "adventurous"],
+  "goodFor": ["families wanting an easy all-ages pick"],
+  "mayNotFit": ["families avoiding any tense scenes"],
+  "watchOutFor": ["brief mild peril"],
+  "conversationTopics": ["kindness", "courage", "family"],
+  "matchSignals": ["gentle pacing", "parent appeal", "low language"],
+  "seedNotes": "Local-only notes for guide reviewers. The seed script does not write this field."
+}

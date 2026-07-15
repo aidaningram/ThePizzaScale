@@ -32,3 +32,29 @@ npm install
 cd ..
 firebase deploy --only firestore:rules,storage,functions
 ```
+
+## Pizza Scale Guides
+
+Pizza Scale Guides are the editorial/seeded family guidance layer. They are separate from real
+family reviews and live in `movieGuides/{movieId}`. The app reads those documents publicly, but
+browser writes are blocked by Firestore rules.
+
+Guide seed files live in `data/`:
+
+- `data/movie-guides.seed.json` is the seed list. It is intentionally empty until guide content is created.
+- `data/movie-guide.schema.example.json` shows the expected guide shape.
+
+Validate the seed file without writing anything:
+
+```bash
+npm run seed:guides:check
+```
+
+When guide records are ready, seed them with Firebase Admin credentials available:
+
+```bash
+npm run seed:guides
+```
+
+Family movie preferences are stored on the family document as `preferences`. They are designed to
+power future match explanations alongside Pizza Scale Guides and real family ratings.

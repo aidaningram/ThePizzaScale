@@ -68,6 +68,11 @@ service cloud.firestore {
       allow write: if false;
     }
 
+    match /movieGuides/{movieId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     match /userProfiles/{userId} {
       allow read, create, update: if isSignedIn() && userId == request.auth.uid;
       allow delete: if false;

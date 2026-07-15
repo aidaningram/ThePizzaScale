@@ -49,6 +49,29 @@ const MAX_PROFILE_PHOTO_SOURCE_BYTES = 15 * 1024 * 1024;
 const PROFILE_PHOTO_OUTPUT_SIZE = 512;
 const PROFILE_PHOTO_OUTPUT_QUALITY = 0.82;
 const INVITE_CODE_LENGTH = 8;
+const defaultFamilyPreferences = {
+  scareTolerance: "moderate",
+  violenceTolerance: "moderate",
+  languageTolerance: "moderate",
+  romanceNudityTolerance: "low",
+  preferredEnergy: "balanced",
+  preferredRuntime: "flexible",
+  wantsParentAppeal: true,
+};
+
+const toleranceOptions = [
+  { value: "low", label: "Keep it low" },
+  { value: "moderate", label: "Some is okay" },
+  { value: "high", label: "Flexible" },
+];
+
+const guideConcernLabels = {
+  scare: "Scary moments",
+  violence: "Violence",
+  language: "Language",
+  romanceNudity: "Romance/nudity",
+  substances: "Substances",
+};
 
 const featuredMovies = [
   {
@@ -1087,6 +1110,10 @@ function App() {
     await updateDoc(doc(db, "families", nextFamilyProfile.id), {
       displayName: nextFamilyProfile.displayName,
       ratingAdultUserIds,
+      preferences: {
+        ...defaultFamilyPreferences,
+        ...(nextFamilyProfile.preferences || {}),
+      },
       updatedAt: serverTimestamp(),
     });
 
@@ -1128,6 +1155,10 @@ function App() {
     setFamilyProfile({
       ...nextFamilyProfile,
       ratingAdultUserIds,
+      preferences: {
+        ...defaultFamilyPreferences,
+        ...(nextFamilyProfile.preferences || {}),
+      },
       members: savedMembers,
     });
   }
@@ -1472,11 +1503,21 @@ async function hydrateMoviesWithStats(movies) {
   return Promise.all(
     movies.map(async (movie) => {
       try {
-        const movieSnapshot = await getDoc(doc(db, "movies", movie.id));
+        const [movieSnapshot, guideSnapshot] = await Promise.all([
+          getDoc(doc(db, "movies", movie.id)),
+          getDoc(doc(db, "movieGuides", movie.id)),
+        ]);
+        let hydratedMovie = movie;
 
-        if (!movieSnapshot.exists()) return movie;
+        if (movieSnapshot.exists()) {
+          hydratedMovie = mergeMovieStats(hydratedMovie, movieSnapshot.data());
+        }
 
-        return mergeMovieStats(movie, movieSnapshot.data());
+        if (guideSnapshot.exists()) {
+          hydratedMovie = mergeMovieGuide(hydratedMovie, guideSnapshot.data());
+        }
+
+        return hydratedMovie;
       } catch {
         return movie;
       }
@@ -1500,6 +1541,74 @@ function mergeMovieStats(movie, stats) {
     reviewCount,
     ageFit: reviewCount > 0 ? "Family reviewed" : movie.ageFit,
   };
+}
+
+function mergeMovieGuide(movie, guide) {
+  const normalizedGuide = normalizeMovieGuide(guide);
+
+  if (!normalizedGuide) return movie;
+
+  return {
+    ...movie,
+    familyGuide: normalizedGuide,
+    guideStatus: normalizedGuide.status,
+    ageFit:
+      movie.reviewCount > 0
+        ? movie.ageFit
+        : normalizedGuide.bestAgeRange || movie.ageFit || "Guide pending",
+  };
+}
+
+function normalizeMovieGuide(guide) {
+  if (!guide || guide.status === "empty") return null;
+
+  return {
+    status: guide.status || "draft",
+    guideVersion: guide.guideVersion || "pizza-guide-v1",
+    sourceType: guide.sourceType || "pizza-scale-guide",
+    summary: String(guide.summary || "").trim(),
+    bestAgeRange: String(guide.bestAgeRange || "").trim(),
+    parentAppeal: normalizeGuideScore(guide.parentAppeal),
+    kidAppeal: normalizeGuideScore(guide.kidAppeal),
+    teenAppeal: normalizeGuideScore(guide.teenAppeal),
+    familyNightFit: normalizeGuideScore(guide.familyNightFit),
+    concernLevels: {
+      scare: normalizeConcernLevel(guide.concernLevels?.scare),
+      violence: normalizeConcernLevel(guide.concernLevels?.violence),
+      language: normalizeConcernLevel(guide.concernLevels?.language),
+      romanceNudity: normalizeConcernLevel(guide.concernLevels?.romanceNudity),
+      substances: normalizeConcernLevel(guide.concernLevels?.substances),
+    },
+    toneTags: normalizeStringList(guide.toneTags),
+    goodFor: normalizeStringList(guide.goodFor),
+    mayNotFit: normalizeStringList(guide.mayNotFit),
+    conversationTopics: normalizeStringList(guide.conversationTopics),
+    watchOutFor: normalizeStringList(guide.watchOutFor),
+    matchSignals: normalizeStringList(guide.matchSignals),
+    reviewedAt: guide.reviewedAt || null,
+  };
+}
+
+function normalizeGuideScore(value) {
+  const score = Number(value);
+
+  if (!Number.isFinite(score)) return null;
+
+  return Math.max(1, Math.min(8, score));
+}
+
+function normalizeConcernLevel(value) {
+  const level = Number(value);
+
+  if (!Number.isFinite(level)) return null;
+
+  return Math.max(0, Math.min(4, level));
+}
+
+function normalizeStringList(value) {
+  return Array.isArray(value)
+    ? value.map((item) => String(item || "").trim()).filter(Boolean).slice(0, 8)
+    : [];
 }
 
 function canManageFamilyProfile(familyProfile, user) {
@@ -1903,11 +2012,11 @@ function RecommendationsPage({ user, onSignIn }) {
           </div>
         ) : (
           <div className="recommendation-empty-state">
-            <strong>Not enough data yet</strong>
+            <strong>Guide-powered recommendations are being prepared</strong>
             <p>
-              We do not have enough family ratings to make reliable tailored recommendations yet.
-              Once more families rate movies, this page will surface matches based on household
-              makeup and shared preferences.
+              Family ratings will make recommendations smarter over time, but Pizza Scale Guides
+              and your household preferences will also help recommend movies before the site has
+              thousands of reviews.
             </p>
           </div>
         )}
@@ -1921,7 +2030,12 @@ function AboutPage({ onSearch }) {
     {
       title: "Find a movie",
       body:
-        "Search for a movie from OMDb, open its statistics page, and see whether any Pizza Scale ratings exist yet.",
+        "Search for a movie from OMDb, open its statistics page, and see whether a Pizza Scale Guide or family ratings exist yet.",
+    },
+    {
+      title: "Read the guide",
+      body:
+        "Pizza Scale Guides are family-centered movie profiles with age fit, appeal, content concerns, and conversation notes. They stay separate from real family ratings.",
     },
     {
       title: "Rate as a family",
@@ -1936,7 +2050,7 @@ function AboutPage({ onSearch }) {
     {
       title: "Build better matches",
       body:
-        "As more real families rate movies, The Pizza Scale can start showing stronger family match and recommendation signals.",
+        "Your family preferences and future ratings will help The Pizza Scale explain which movies fit your household.",
     },
   ];
 
@@ -1968,11 +2082,11 @@ function AboutPage({ onSearch }) {
           </p>
         </div>
         <div className="settings-panel">
-          <strong>Why some pages look empty right now</strong>
+          <strong>Guides first, ratings over time</strong>
           <p>
-            The site is new, so many movies will honestly show no Pizza Scale data yet. Scores,
-            public family reviews, and recommendations will become useful as real families add
-            ratings.
+            The site can become useful before thousands of families have rated movies by adding
+            clearly marked Pizza Scale Guides. Real family ratings will still remain separate and
+            will make scores and recommendations stronger over time.
           </p>
         </div>
         <button className="primary-button" type="button" onClick={onSearch}>
@@ -2160,6 +2274,8 @@ function MovieStatsPage({
             </div>
           </div>
         </div>
+
+        <PizzaGuidePanel guide={selectedMovie.familyGuide} movieTitle={selectedMovie.title} />
 
         <div className="review-grid">
           <section className="review-form family-rating-summary">
@@ -2398,6 +2514,108 @@ function MovieRatingPage({
       </section>
     </section>
   );
+}
+
+function PizzaGuidePanel({ guide, movieTitle }) {
+  if (!guide) {
+    return (
+      <section className="pizza-guide-panel">
+        <div className="section-heading">
+          <Film size={20} />
+          <h2>Pizza Scale Guide</h2>
+        </div>
+        <div className="empty-state">
+          <strong>Family guide not created yet</strong>
+          <p>
+            This space will hold Pizza Scale&apos;s family-centered movie guide for {movieTitle}.
+            Guides will be separate from real family ratings and marked clearly when they are
+            AI-assisted or reviewed.
+          </p>
+        </div>
+      </section>
+    );
+  }
+
+  const concernEntries = Object.entries(guide.concernLevels || {}).filter(([, value]) =>
+    Number.isFinite(value),
+  );
+
+  return (
+    <section className="pizza-guide-panel">
+      <div className="section-heading">
+        <Film size={20} />
+        <h2>Pizza Scale Guide</h2>
+      </div>
+      <div className="guide-status-row">
+        <span>{formatGuideStatus(guide.status)}</span>
+        {guide.bestAgeRange && <span>Best for {guide.bestAgeRange}</span>}
+      </div>
+      {guide.summary && <p className="guide-summary">{guide.summary}</p>}
+      <div className="guide-score-grid">
+        <GuideScore label="Family night fit" value={guide.familyNightFit} />
+        <GuideScore label="Parent appeal" value={guide.parentAppeal} />
+        <GuideScore label="Kid appeal" value={guide.kidAppeal} />
+        <GuideScore label="Teen appeal" value={guide.teenAppeal} />
+      </div>
+      {concernEntries.length > 0 && (
+        <div className="guide-concerns">
+          {concernEntries.map(([key, value]) => (
+            <span key={key}>
+              {guideConcernLabels[key] || key}: {formatConcernLevel(value)}
+            </span>
+          ))}
+        </div>
+      )}
+      <GuideList title="Good for families who like" items={guide.goodFor} />
+      <GuideList title="Watch out for" items={guide.watchOutFor} />
+      <GuideList title="Conversation starters" items={guide.conversationTopics} />
+    </section>
+  );
+}
+
+function GuideScore({ label, value }) {
+  return (
+    <div className="guide-score-card">
+      <span>{label}</span>
+      <strong>{Number.isFinite(value) ? `${Number(value).toFixed(1)} / 8` : "Pending"}</strong>
+    </div>
+  );
+}
+
+function GuideList({ title, items }) {
+  if (!items?.length) return null;
+
+  return (
+    <div className="guide-list">
+      <strong>{title}</strong>
+      <div>
+        {items.map((item) => (
+          <span key={item}>{item}</span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function formatGuideStatus(status) {
+  switch (status) {
+    case "verified":
+      return "Verified family guide";
+    case "ai-assisted":
+      return "AI-assisted guide";
+    case "draft":
+      return "Draft guide";
+    default:
+      return "Pizza Scale guide";
+  }
+}
+
+function formatConcernLevel(value) {
+  if (value <= 0) return "None noted";
+  if (value === 1) return "Very mild";
+  if (value === 2) return "Mild";
+  if (value === 3) return "Moderate";
+  return "High";
 }
 
 function getRatingUnavailableReason({ user, familyProfile, familyMovieReview, canRateForFamily }) {
@@ -2891,6 +3109,10 @@ function SettingsPage({
   const [accountSaveStatus, setAccountSaveStatus] = useState("idle");
   const [familyName, setFamilyName] = useState(familyProfile?.displayName || "");
   const [editableMembers, setEditableMembers] = useState(familyProfile?.members || []);
+  const [familyPreferences, setFamilyPreferences] = useState({
+    ...defaultFamilyPreferences,
+    ...(familyProfile?.preferences || {}),
+  });
   const [settingsMessage, setSettingsMessage] = useState("");
   const [settingsSaveStatus, setSettingsSaveStatus] = useState("idle");
   const [deleteConfirmStep, setDeleteConfirmStep] = useState(0);
@@ -2941,6 +3163,10 @@ function SettingsPage({
   useEffect(() => {
     setFamilyName(familyProfile?.displayName || "");
     setEditableMembers(familyProfile?.members || []);
+    setFamilyPreferences({
+      ...defaultFamilyPreferences,
+      ...(familyProfile?.preferences || {}),
+    });
     setSettingsMessage("");
     setSettingsSaveStatus("idle");
     setDeleteConfirmStep(0);
@@ -2989,6 +3215,13 @@ function SettingsPage({
         isLeadAdult: false,
       },
     ]);
+  }
+
+  function updateFamilyPreference(key, value) {
+    setFamilyPreferences((preferences) => ({
+      ...preferences,
+      [key]: value,
+    }));
   }
 
   async function handleAccountPhotoChange(event) {
@@ -3046,6 +3279,7 @@ function SettingsPage({
         ...familyProfile,
         displayName: familyName.trim(),
         members: editableMembers,
+        preferences: familyPreferences,
       });
       setSettingsSaveStatus("ready");
       setSettingsMessage("Family settings saved.");
@@ -3562,6 +3796,118 @@ function SettingsPage({
                       Permission controls will let leaders decide who can browse, suggest movies,
                       rate movies, and help manage the family.
                     </p>
+                  </div>
+                  <div className="settings-panel">
+                    <strong>Movie preferences</strong>
+                    <p>
+                      These settings will help future Pizza Scale Guides explain which movies fit
+                      your family and which content concerns might get in the way.
+                    </p>
+                    <div className="preference-grid">
+                      <label className="field-label">
+                        Scary moments
+                        <select
+                          value={familyPreferences.scareTolerance}
+                          onChange={(event) =>
+                            updateFamilyPreference("scareTolerance", event.target.value)
+                          }
+                          disabled={familyFieldsDisabled}
+                        >
+                          {toleranceOptions.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="field-label">
+                        Violence
+                        <select
+                          value={familyPreferences.violenceTolerance}
+                          onChange={(event) =>
+                            updateFamilyPreference("violenceTolerance", event.target.value)
+                          }
+                          disabled={familyFieldsDisabled}
+                        >
+                          {toleranceOptions.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="field-label">
+                        Language
+                        <select
+                          value={familyPreferences.languageTolerance}
+                          onChange={(event) =>
+                            updateFamilyPreference("languageTolerance", event.target.value)
+                          }
+                          disabled={familyFieldsDisabled}
+                        >
+                          {toleranceOptions.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="field-label">
+                        Romance/nudity
+                        <select
+                          value={familyPreferences.romanceNudityTolerance}
+                          onChange={(event) =>
+                            updateFamilyPreference("romanceNudityTolerance", event.target.value)
+                          }
+                          disabled={familyFieldsDisabled}
+                        >
+                          {toleranceOptions.map((option) => (
+                            <option key={option.value} value={option.value}>
+                              {option.label}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
+                      <label className="field-label">
+                        Movie energy
+                        <select
+                          value={familyPreferences.preferredEnergy}
+                          onChange={(event) =>
+                            updateFamilyPreference("preferredEnergy", event.target.value)
+                          }
+                          disabled={familyFieldsDisabled}
+                        >
+                          <option value="gentle">Gentle and calm</option>
+                          <option value="balanced">Balanced</option>
+                          <option value="high-energy">High energy</option>
+                        </select>
+                      </label>
+                      <label className="field-label">
+                        Runtime
+                        <select
+                          value={familyPreferences.preferredRuntime}
+                          onChange={(event) =>
+                            updateFamilyPreference("preferredRuntime", event.target.value)
+                          }
+                          disabled={familyFieldsDisabled}
+                        >
+                          <option value="short">Usually under 95 minutes</option>
+                          <option value="flexible">Flexible</option>
+                          <option value="long">Long movies are okay</option>
+                        </select>
+                      </label>
+                    </div>
+                    <label className="checkbox-row preference-checkbox">
+                      <input
+                        type="checkbox"
+                        checked={familyPreferences.wantsParentAppeal}
+                        onChange={(event) =>
+                          updateFamilyPreference("wantsParentAppeal", event.target.checked)
+                        }
+                        disabled={familyFieldsDisabled}
+                      />
+                      <span>Prioritize movies adults can enjoy too</span>
+                    </label>
                   </div>
                   {canDeleteFamily && (
                     <div className="settings-panel danger-panel">
