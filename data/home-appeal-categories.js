@@ -963,6 +963,30 @@ export const homeAppealCategories = [
         mayNotFit: ["kids currently afraid of monsters", "viewers startled by loud chase scenes"],
         watchOutFor: ["monsters intentionally scare children at first", "Boo is briefly in danger"],
         conversationTopics: ["fear", "friendship", "workplace ethics", "protecting kids"],
+        concernDetails: {
+          scare: [
+            "The movie opens with the idea that monsters enter children's rooms to scare them.",
+            "Boo is separated from home and briefly in danger while Sulley and Mike try to protect her.",
+            "Randall can be frightening because he turns invisible and stalks characters.",
+            "The door-vault chase is fast and suspenseful, but the movie stays warm and comic.",
+          ],
+          violence: [
+            "Physical content is mild cartoon action: chases, falls, slams, and monster slapstick.",
+            "Randall fights Sulley and Mike, but the violence is not graphic.",
+            "Characters are threatened by machines and doors, though injuries are not shown realistically.",
+          ],
+          language: [
+            "No meaningful language concern is noted in this guide.",
+            "There is teasing, shouting, and workplace frustration, but not strong profanity.",
+          ],
+          romanceNudity: [
+            "Mike has a mild romantic relationship with Celia, shown through dates and affection.",
+            "No nudity or sexual content is present.",
+          ],
+          substances: [
+            "No meaningful drinking, smoking, or drug content is noted in this guide.",
+          ],
+        },
       }),
       laughPick({
         id: "tt0126029",
@@ -983,6 +1007,30 @@ export const homeAppealCategories = [
         mayNotFit: ["families avoiding crude jokes or innuendo", "younger kids scared by fantasy peril"],
         watchOutFor: ["bathroom humor and suggestive jokes", "fantasy fights and a dragon"],
         conversationTopics: ["judging appearances", "friendship", "self-acceptance", "fairy tales"],
+        concernDetails: {
+          scare: [
+            "The dragon sequence, castle rescue, and angry villagers may scare younger kids.",
+            "Fairy-tale creatures are threatened with removal from their homes.",
+            "Fiona's transformation and the darker castle scenes can feel intense before the comedy takes over.",
+          ],
+          violence: [
+            "There are fantasy fights, wrestling, guards being knocked around, and dragon peril.",
+            "Shrek and Donkey are chased, threatened, and attacked in comic action scenes.",
+            "Violence is mostly slapstick and fairy-tale action, not graphic.",
+          ],
+          language: [
+            "Language includes mild insults, rude comments, and some adult-leaning jokes.",
+            "The humor is more sarcastic and crude than many gentler animated movies.",
+          ],
+          romanceNudity: [
+            "There are kisses, romantic longing, and a few suggestive jokes.",
+            "Some body humor and innuendo are part of the comedy.",
+            "No explicit sexual content is shown.",
+          ],
+          substances: [
+            "There are brief tavern or adult-world jokes and references, but substance content is not a major focus.",
+          ],
+        },
       }),
       laughPick({
         id: "tt0844471",
@@ -1003,6 +1051,28 @@ export const homeAppealCategories = [
         mayNotFit: ["families bothered by frantic pacing", "kids sensitive to disaster imagery"],
         watchOutFor: ["food-weather destruction", "mild rude humor and slapstick"],
         conversationTopics: ["invention", "listening", "parent-child communication", "moderation"],
+        concernDetails: {
+          scare: [
+            "Food storms grow dangerous, with giant food threatening the town.",
+            "The movie includes disaster-style imagery such as destruction, panic, and people fleeing.",
+            "The pace is loud and frantic, which may overwhelm kids who prefer calmer comedies.",
+          ],
+          violence: [
+            "Physical content is cartoon chaos: falling food, crashes, explosions, and slapstick accidents.",
+            "Characters are hit, trapped, or chased by giant food, but injuries are comic.",
+          ],
+          language: [
+            "Language is mild, mostly insults, shouting, and rude jokes.",
+            "Some humor includes gross-out wording or body-related jokes.",
+          ],
+          romanceNudity: [
+            "Flint and Sam have a mild romantic thread with awkward flirting.",
+            "No nudity or explicit sexual content is present.",
+          ],
+          substances: [
+            "No meaningful drinking, smoking, or drug content is noted in this guide.",
+          ],
+        },
       }),
       laughPick({
         id: "tt1323594",
@@ -1023,6 +1093,29 @@ export const homeAppealCategories = [
         mayNotFit: ["families avoiding cartoon weapons", "kids sensitive to orphanage/adoption themes"],
         watchOutFor: ["ray guns, explosions, and slapstick violence", "mild rude humor"],
         conversationTopics: ["family", "change", "responsibility", "kindness"],
+        concernDetails: {
+          scare: [
+            "The girls live in an orphanage before Gru adopts them, which may bring up sadness or abandonment concerns.",
+            "Gru and Vector are villains, so the movie includes threats, gadgets, and comic danger.",
+            "The girls are briefly used as part of a scheme and placed in peril.",
+          ],
+          violence: [
+            "There are ray guns, freeze rays, explosions, missiles, and slapstick fights.",
+            "Minions are hit, blown up, squashed, or used in comic experiments.",
+            "The violence is cartoonish and non-graphic.",
+          ],
+          language: [
+            "Language is mild, mostly insults, rude comments, and villain banter.",
+            "Some jokes include bathroom or body humor.",
+          ],
+          romanceNudity: [
+            "There is no meaningful romance or sexual content.",
+            "A few jokes may involve body humor, but not nudity.",
+          ],
+          substances: [
+            "No meaningful drinking, smoking, or drug content is noted in this guide.",
+          ],
+        },
       }),
       laughPick({
         id: "tt0120917",
@@ -1043,6 +1136,30 @@ export const homeAppealCategories = [
         mayNotFit: ["families wanting sincere musical Disney", "very young kids bothered by villain threats"],
         watchOutFor: ["comic murder plots played for laughs", "brief mild flirtation and potion gags"],
         conversationTopics: ["selfishness", "humility", "friendship", "power"],
+        concernDetails: {
+          scare: [
+            "Yzma and Kronk plot to kill Kuzco, though the plan is played as absurd comedy.",
+            "Kuzco is transformed into a llama and chased through unfamiliar places.",
+            "There are cliff, jungle, and lab scenes with mild peril.",
+          ],
+          violence: [
+            "Violence is cartoon slapstick: falls, hits, chases, and animal attacks.",
+            "The murder plot is comic rather than realistic, but it is still repeatedly discussed.",
+            "Characters use potions that transform people into animals.",
+          ],
+          language: [
+            "No meaningful language concern is noted in this guide.",
+            "There are insults, sarcasm, and selfish/rude comments.",
+          ],
+          romanceNudity: [
+            "There is brief mild flirtation and comic attention to looks.",
+            "No nudity or explicit sexual content is present.",
+          ],
+          substances: [
+            "Magic potions are used to transform characters.",
+            "No real-world drug or alcohol use is a major concern.",
+          ],
+        },
       }),
       laughPick({
         id: "tt1001526",
@@ -1063,6 +1180,30 @@ export const homeAppealCategories = [
         mayNotFit: ["younger kids scared by superhero destruction", "families avoiding romantic comedy elements"],
         watchOutFor: ["comic superhero battles and explosions", "mild flirtation and villain threats"],
         conversationTopics: ["identity", "choice", "power", "loneliness"],
+        concernDetails: {
+          scare: [
+            "Metro Man appears to die early in the story, though the situation is later complicated.",
+            "Tighten becomes threatening and destructive after gaining powers.",
+            "Roxanne is kidnapped or used as bait in villain schemes.",
+            "Large superhero battles and city destruction may scare younger kids.",
+          ],
+          violence: [
+            "There are superhero fights, explosions, lasers, giant robots, and city destruction.",
+            "Characters are thrown, blasted, captured, and threatened.",
+            "The violence is stylized and comic, but the stakes become more serious near the end.",
+          ],
+          language: [
+            "Language is mild, with insults, villain banter, and rude remarks.",
+            "No frequent strong profanity is central to the movie.",
+          ],
+          romanceNudity: [
+            "Megamind and Roxanne have a romantic-comedy storyline involving flirting and deception.",
+            "There are kisses and romantic interest, but nothing explicit.",
+          ],
+          substances: [
+            "No meaningful drinking, smoking, or drug content is noted in this guide.",
+          ],
+        },
       }),
       laughPick({
         id: "tt7979580",
@@ -1083,6 +1224,29 @@ export const homeAppealCategories = [
         mayNotFit: ["kids overwhelmed by fast visuals", "families wanting a quiet movie"],
         watchOutFor: ["robot apocalypse action", "mild language and rude humor"],
         conversationTopics: ["technology", "family communication", "creativity", "acceptance"],
+        concernDetails: {
+          scare: [
+            "The robot uprising creates a repeated sense that the family and the world are in danger.",
+            "The visuals are fast, loud, and glitchy, which can overwhelm sensitive viewers.",
+            "PAL and the robots threaten capture and destruction, but the tone remains funny.",
+          ],
+          violence: [
+            "There are robot fights, explosions, laser blasts, car crashes, and large-scale action scenes.",
+            "Characters are chased, captured, thrown, and attacked by machines.",
+            "The violence is stylized and mostly comic, not graphic.",
+          ],
+          language: [
+            "Language is mild, with insults, frustrated family comments, and some rude humor.",
+            "Internet-style jokes and sarcasm are frequent.",
+          ],
+          romanceNudity: [
+            "There is light teen crush/identity material and family affection.",
+            "No nudity or explicit sexual content is present.",
+          ],
+          substances: [
+            "No meaningful drinking, smoking, or drug content is noted in this guide.",
+          ],
+        },
       }),
       laughPick({
         id: "tt0477347",
@@ -1103,6 +1267,29 @@ export const homeAppealCategories = [
         mayNotFit: ["kids scared by skeletons or things coming alive", "families avoiding mild insults"],
         watchOutFor: ["museum chaos, chases, and slapstick fights", "brief creepy mummy/dinosaur moments"],
         conversationTopics: ["history", "confidence", "fatherhood", "curiosity"],
+        concernDetails: {
+          scare: [
+            "Museum exhibits come alive at night, including a dinosaur skeleton and a mummy.",
+            "Larry is chased and surprised by animals, historical figures, and moving displays.",
+            "Some scenes are dark or chaotic, but the movie is mostly playful.",
+          ],
+          violence: [
+            "Physical content includes slapstick fights, chases, arrows, swords, and museum chaos.",
+            "Characters are shoved, chased, knocked down, or threatened by exhibits.",
+            "No graphic injury is central to the movie.",
+          ],
+          language: [
+            "Language is mild, with insults, teasing, and some frustrated remarks.",
+            "No strong profanity is a major feature.",
+          ],
+          romanceNudity: [
+            "Larry has mild romantic interest in Rebecca.",
+            "No nudity or explicit sexual content is present.",
+          ],
+          substances: [
+            "No meaningful drinking, smoking, or drug content is noted in this guide.",
+          ],
+        },
       }),
       laughPick({
         id: "tt0319343",
@@ -1123,6 +1310,31 @@ export const homeAppealCategories = [
         mayNotFit: ["families avoiding Santa mythology complications", "kids bothered by adult sarcasm"],
         watchOutFor: ["mild language and rude humor", "a few adult workplace jokes"],
         conversationTopics: ["belonging", "joy", "family", "honesty"],
+        concernDetails: {
+          scare: [
+            "No major scary content is central to the movie.",
+            "Buddy is briefly overwhelmed by New York, adult rejection, and family disappointment.",
+            "The sleigh/crash sequence near the end creates mild holiday peril.",
+          ],
+          violence: [
+            "Physical comedy includes falls, crashes, snowball throwing, and Buddy getting into scrapes.",
+            "A fight with a department-store Santa is played for comedy.",
+            "No graphic injury is central to the movie.",
+          ],
+          language: [
+            "Language includes mild profanity, rude comments, and adult sarcasm.",
+            "There are jokes about toilets, burping, and other broad comedy moments.",
+          ],
+          romanceNudity: [
+            "Buddy and Jovie have a mild romantic storyline.",
+            "There is brief comic awkwardness around Jovie singing in the shower, but no nudity is shown.",
+            "No explicit sexual content is present.",
+          ],
+          substances: [
+            "Some adult workplace or city scenes include brief alcohol references or background drinking.",
+            "Substance content is not a major focus.",
+          ],
+        },
       }),
       laughPick({
         id: "tt0117008",
@@ -1143,6 +1355,30 @@ export const homeAppealCategories = [
         mayNotFit: ["kids sensitive to mean adults", "families avoiding dark comedy"],
         watchOutFor: ["children are threatened and mistreated by adults", "comic peril and insults"],
         conversationTopics: ["courage", "reading", "justice", "chosen family"],
+        concernDetails: {
+          scare: [
+            "Miss Trunchbull is a threatening adult who frightens and punishes children.",
+            "Children are locked in the Chokey, a cramped punishment closet with spikes or sharp-looking objects.",
+            "Matilda's parents neglect and insult her, which may upset sensitive kids.",
+            "The tone is darkly comic, but adult cruelty is central.",
+          ],
+          violence: [
+            "Trunchbull throws, grabs, and terrorizes children in exaggerated comic scenes.",
+            "There is slapstick damage, falling objects, and magical revenge against cruel adults.",
+            "No graphic injury is central, but the mistreatment of children is intense for a family comedy.",
+          ],
+          language: [
+            "Language is mild, mostly insults, name-calling, and harsh adult speech.",
+            "Children are called hurtful names by adults.",
+          ],
+          romanceNudity: [
+            "No meaningful romance, nudity, or sexual content is noted in this guide.",
+          ],
+          substances: [
+            "Adults are associated with unhealthy or irresponsible behavior, but substances are not a major focus.",
+            "Some background adult habits may appear briefly.",
+          ],
+        },
       }),
       laughPick({
         id: "tt0120783",
@@ -1163,6 +1399,29 @@ export const homeAppealCategories = [
         mayNotFit: ["kids sensitive to divorce or parent separation", "families bothered by elaborate lying"],
         watchOutFor: ["camp pranks and mild slapstick", "dating/remarriage tension"],
         conversationTopics: ["divorce", "honesty", "siblings", "family wishes"],
+        concernDetails: {
+          scare: [
+            "The emotional concern is parent separation, divorce, and the twins wanting their family back together.",
+            "There is little physical scariness, though some prank and outdoor scenes create mild tension.",
+          ],
+          violence: [
+            "Physical content is mostly camp pranks, falls, fencing practice, and mild slapstick.",
+            "No serious fighting or graphic injury is central to the movie.",
+          ],
+          language: [
+            "Language is mild, with teasing, sarcasm, and some frustrated remarks.",
+            "No strong profanity is a major feature.",
+          ],
+          romanceNudity: [
+            "Dating, engagement, remarriage tension, and rekindled romance are central to the story.",
+            "There is kissing and mild romantic affection.",
+            "No nudity or explicit sexual content is present.",
+          ],
+          substances: [
+            "Adults drink wine or cocktails in social settings.",
+            "Substance content is background and not a major focus.",
+          ],
+        },
       }),
       laughPick({
         id: "tt0107614",
@@ -1183,6 +1442,29 @@ export const homeAppealCategories = [
         mayNotFit: ["younger kids confused by divorce and disguise deception", "families avoiding PG-13 language or innuendo"],
         watchOutFor: ["divorce conflict", "some suggestive humor and language", "drinking references"],
         conversationTopics: ["divorce", "honesty", "parenting", "accountability"],
+        concernDetails: {
+          scare: [
+            "The emotional tension centers on divorce, custody, and children missing time with their father.",
+            "Some younger kids may be confused or upset by Daniel's deception and family conflict.",
+          ],
+          violence: [
+            "Physical content is mild comedy: falls, food mishaps, and frantic disguise-related chaos.",
+            "No serious fighting or graphic injury is central to the movie.",
+          ],
+          language: [
+            "The movie includes PG-13 language and insults.",
+            "There are adult jokes, sarcasm, and some language that is stronger than most younger-family comedies.",
+          ],
+          romanceNudity: [
+            "There are suggestive jokes and adult relationship references.",
+            "Divorce, dating, and jealousy around a new romantic partner are central story elements.",
+            "No explicit nudity is central, but the humor is older-kid/adult oriented.",
+          ],
+          substances: [
+            "Adults drink in some social or restaurant settings.",
+            "Substance content is not central, but it is more present than in little-kid comedies.",
+          ],
+        },
       }),
       laughPick({
         id: "tt1204342",
@@ -1203,6 +1485,27 @@ export const homeAppealCategories = [
         mayNotFit: ["kids who do not connect with Muppet humor", "families wanting a non-musical"],
         watchOutFor: ["mild rude humor", "comic villain threats"],
         conversationTopics: ["nostalgia", "friendship", "performance", "belonging"],
+        concernDetails: {
+          scare: [
+            "The villain wants to destroy or take over the Muppet theater for oil, creating mild suspense.",
+            "Some scenes include chase or performance-pressure tension, but the tone stays cheerful.",
+          ],
+          violence: [
+            "Physical content is mild Muppet slapstick, crashes, pratfalls, and comic threats.",
+            "No graphic injury or realistic violence is central to the movie.",
+          ],
+          language: [
+            "Language is mild, with rude jokes, insults, and comic frustration.",
+            "No strong profanity is central to the movie.",
+          ],
+          romanceNudity: [
+            "Kermit and Miss Piggy have mild romantic tension and affection.",
+            "There is no nudity or explicit sexual content.",
+          ],
+          substances: [
+            "No meaningful drinking, smoking, or drug content is noted in this guide.",
+          ],
+        },
       }),
       laughPick({
         id: "tt0120630",
@@ -1223,6 +1526,29 @@ export const homeAppealCategories = [
         mayNotFit: ["kids upset by animals being turned into food", "families avoiding tense escape plots"],
         watchOutFor: ["threat of chickens being killed for pies", "machine peril and chase scenes"],
         conversationTopics: ["freedom", "teamwork", "courage", "leadership"],
+        concernDetails: {
+          scare: [
+            "The chickens face the threat of being killed and made into pies.",
+            "The pie machine sequence is tense and may frighten kids sensitive to animal peril.",
+            "Mrs. Tweedy is a stern villain who threatens the flock repeatedly.",
+          ],
+          violence: [
+            "There are escape attempts, chases, explosions, machine peril, and comic impacts.",
+            "The threat of slaughter is central, though graphic violence is avoided.",
+            "Characters are trapped, chased, or nearly crushed in machinery.",
+          ],
+          language: [
+            "No meaningful language concern is noted in this guide.",
+            "There is comic name-calling and frustration, but not notable profanity.",
+          ],
+          romanceNudity: [
+            "Rocky and Ginger have a mild romantic spark.",
+            "No nudity or explicit sexual content is present.",
+          ],
+          substances: [
+            "No meaningful drinking, smoking, or drug content is noted in this guide.",
+          ],
+        },
       }),
       laughPick({
         id: "tt0481499",
@@ -1243,6 +1569,29 @@ export const homeAppealCategories = [
         mayNotFit: ["kids scared by creature attacks", "families wanting quieter humor"],
         watchOutFor: ["chases, falls, and animal attacks", "family conflict and mild rude humor"],
         conversationTopics: ["change", "fear", "family rules", "curiosity"],
+        concernDetails: {
+          scare: [
+            "The family faces earthquakes, collapsing caves, predators, and unfamiliar creatures.",
+            "Several scenes involve running from danger or nearly falling from heights.",
+            "The action is colorful and comic, but frequent peril may be a lot for younger kids.",
+          ],
+          violence: [
+            "Physical content includes creature attacks, falls, crashes, and slapstick fights.",
+            "Characters are chased, grabbed, thrown, or nearly eaten.",
+            "Violence is cartoonish and non-graphic.",
+          ],
+          language: [
+            "Language is mild, with insults, rude humor, and family arguing.",
+            "No strong profanity is central to the movie.",
+          ],
+          romanceNudity: [
+            "Eep and Guy have a mild teen crush/romantic interest.",
+            "The family wears prehistoric-style clothing, but there is no nudity or sexual content.",
+          ],
+          substances: [
+            "No meaningful drinking, smoking, or drug content is noted in this guide.",
+          ],
+        },
       }),
       laughPick({
         id: "tt0837562",
@@ -1263,6 +1612,28 @@ export const homeAppealCategories = [
         mayNotFit: ["kids afraid of monsters", "families avoiding frenetic cartoon comedy"],
         watchOutFor: ["monster imagery and mild scares", "cartoon peril and rude jokes"],
         conversationTopics: ["overprotection", "fear of outsiders", "growing up", "trust"],
+        concernDetails: {
+          scare: [
+            "The movie includes vampires, werewolves, mummies, Frankenstein-style creatures, and other monster imagery.",
+            "Most monsters are friendly or silly, but younger kids afraid of classic monsters may still be uneasy.",
+            "There are chase scenes and overprotective-parent panic around humans.",
+          ],
+          violence: [
+            "Physical content is cartoon slapstick, monster chaos, falls, and chase action.",
+            "Characters are scared, grabbed, or knocked around, but injury is not graphic.",
+          ],
+          language: [
+            "Language is mild, mostly rude humor, insults, and monster-comedy jokes.",
+            "No strong profanity is central to the movie.",
+          ],
+          romanceNudity: [
+            "Mavis and Jonathan have a mild romantic storyline with flirting and affection.",
+            "No nudity or explicit sexual content is present.",
+          ],
+          substances: [
+            "No meaningful drinking, smoking, or drug content is noted in this guide.",
+          ],
+        },
       }),
       laughPick({
         id: "tt3874544",
@@ -1283,6 +1654,27 @@ export const homeAppealCategories = [
         mayNotFit: ["families avoiding diaper/baby humor", "older kids wanting smarter comedy"],
         watchOutFor: ["mild rude humor", "cartoon chases and sibling jealousy"],
         conversationTopics: ["new siblings", "jealousy", "family love", "sharing attention"],
+        concernDetails: {
+          scare: [
+            "The main emotional tension is a child feeling replaced by a new baby.",
+            "The secret-agent plot includes chases, a villain scheme, and mild baby-related peril.",
+          ],
+          violence: [
+            "Physical content is cartoon action, chases, falls, gadgets, and slapstick.",
+            "Characters are knocked around or placed in comic danger, but injuries are not graphic.",
+          ],
+          language: [
+            "Language is mild, with rude jokes, insults, and baby/body humor.",
+            "No strong profanity is central to the movie.",
+          ],
+          romanceNudity: [
+            "No meaningful romance or sexual content is noted.",
+            "There are diaper and baby-body jokes, but not nudity in a sexual context.",
+          ],
+          substances: [
+            "No meaningful drinking, smoking, or drug content is noted in this guide.",
+          ],
+        },
       }),
       laughPick({
         id: "tt4624424",
@@ -1303,6 +1695,28 @@ export const homeAppealCategories = [
         mayNotFit: ["families wanting grounded adoption/family discussions", "kids overwhelmed by chaos"],
         watchOutFor: ["mild peril around a baby", "fast slapstick and rude jokes"],
         conversationTopics: ["belonging", "family", "responsibility", "teamwork"],
+        concernDetails: {
+          scare: [
+            "A baby is accidentally created and must be delivered safely, which creates mild peril.",
+            "Characters are chased by wolves and face fast-moving action scenes.",
+            "The family-longing and orphan themes may prompt questions.",
+          ],
+          violence: [
+            "Physical content includes slapstick, crashes, falls, wolf chases, and machinery chaos.",
+            "The baby is placed in comic danger but is protected by the heroes.",
+          ],
+          language: [
+            "Language is mild, with rude jokes, teasing, and comic frustration.",
+            "No strong profanity is central to the movie.",
+          ],
+          romanceNudity: [
+            "The baby-delivery premise may prompt questions about where babies come from, but the movie uses fantasy logic.",
+            "No nudity or explicit sexual content is present.",
+          ],
+          substances: [
+            "No meaningful drinking, smoking, or drug content is noted in this guide.",
+          ],
+        },
       }),
       laughPick({
         id: "tt8115900",
@@ -1323,6 +1737,28 @@ export const homeAppealCategories = [
         mayNotFit: ["families avoiding crime-as-comedy setups", "kids who copy sneaky behavior"],
         watchOutFor: ["heists, chases, and cartoon violence", "mild rude humor and insults"],
         conversationTopics: ["reputation", "change", "trust", "choices"],
+        concernDetails: {
+          scare: [
+            "The characters are criminals at the start, so the movie includes heists, police chases, and capture threats.",
+            "Some kids may find the shark, snake, or chase scenes tense even though they are comedic.",
+          ],
+          violence: [
+            "There are chases, crashes, fights, explosions, and cartoon peril.",
+            "Characters steal, escape, and use gadgets during heists.",
+            "Violence is stylized and non-graphic, but crime action is frequent.",
+          ],
+          language: [
+            "Language is mild, with insults, rude humor, and criminal banter.",
+            "No strong profanity is central to the movie.",
+          ],
+          romanceNudity: [
+            "There is mild flirting and charm between adult animal characters.",
+            "No nudity or explicit sexual content is present.",
+          ],
+          substances: [
+            "No meaningful drinking, smoking, or drug content is noted in this guide.",
+          ],
+        },
       }),
       laughPick({
         id: "tt3915174",
@@ -1343,6 +1779,31 @@ export const homeAppealCategories = [
         mayNotFit: ["younger kids scared by the wolf", "families avoiding death themes"],
         watchOutFor: ["an intense wolf/death figure", "sword fights and fantasy violence"],
         conversationTopics: ["mortality", "gratitude", "fear", "friendship"],
+        concernDetails: {
+          scare: [
+            "The wolf bounty hunter is intentionally intense and represents death, with a whistle and threatening presence.",
+            "Puss has panic attacks and fears dying after using up most of his lives.",
+            "The movie repeatedly discusses mortality, fear, and what it means to have one life left.",
+            "Some scenes may be too intense for younger kids despite the comedy.",
+          ],
+          violence: [
+            "There are sword fights, magical battles, chases, falls, and fantasy combat.",
+            "Puss is injured or killed in stylized ways during the nine-lives setup.",
+            "Characters threaten each other with blades and weapons, but violence is animated and not graphic.",
+          ],
+          language: [
+            "Language is mild, with insults, rude jokes, and some sharp banter.",
+            "No strong profanity is central to the movie.",
+          ],
+          romanceNudity: [
+            "Puss and Kitty Softpaws have a mild romantic history and flirtatious tension.",
+            "No nudity or explicit sexual content is present.",
+          ],
+          substances: [
+            "There are brief tavern/fantasy-world adult atmosphere moments.",
+            "Substance use is not a major focus.",
+          ],
+        },
       }),
     ],
   },
