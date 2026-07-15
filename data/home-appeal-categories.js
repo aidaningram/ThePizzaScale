@@ -1831,6 +1831,27 @@ export const homeAppealCategories = [
         mayNotFit: ["kids scared by monsters or storms", "families wanting a very quiet musical"],
         watchOutFor: ["lava monster and giant crab scenes", "storm and ocean peril"],
         conversationTopics: ["calling", "leadership", "listening to elders", "courage"],
+        concernDetails: {
+          scare: [
+            "The lava monster Te Ka is large, angry, and visually intense during the ocean journey.",
+            "Tamatoa the giant crab has a creepy, threatening scene with dark lighting and pursuit.",
+            "Storms, ocean danger, and moments where Moana is stranded or nearly overwhelmed may worry younger kids.",
+          ],
+          violence: [
+            "Action is mostly fantasy adventure: boat crashes, monster attacks, spear threats, and rough ocean peril.",
+            "Characters are chased or knocked around, but injuries are not graphic.",
+          ],
+          language: [
+            "No meaningful language concern is noted in this guide.",
+            "There is some teasing and frustrated banter, but not strong profanity.",
+          ],
+          romanceNudity: [
+            "No meaningful romance, nudity, or sexual content is central to the movie.",
+          ],
+          substances: [
+            "No meaningful drinking, smoking, or drug content is noted in this guide.",
+          ],
+        },
       }),
       adventurePick({
         id: "tt0892769",
@@ -1851,6 +1872,29 @@ export const homeAppealCategories = [
         mayNotFit: ["kids scared by dragons or battle scenes", "families avoiding weapon combat"],
         watchOutFor: ["dragon fights, fire, and battle peril", "an injury with lasting consequences"],
         conversationTopics: ["empathy", "tradition", "courage", "friendship"],
+        concernDetails: {
+          scare: [
+            "Dragons attack the Viking village with fire, loud noises, and nighttime chaos.",
+            "The final battle with the giant dragon is large-scale and intense.",
+            "Hiccup and Toothless are both injured or placed in serious danger, which can feel heavier than ordinary cartoon peril.",
+          ],
+          violence: [
+            "There are weapons, dragon combat, fire blasts, explosions, and training-arena fights.",
+            "The Vikings prepare kids to fight dragons, and dragons are trapped or attacked.",
+            "The violence is animated and mostly bloodless, but the combat is frequent.",
+          ],
+          language: [
+            "Language is mild, with teasing, insults, and frustrated Viking banter.",
+            "No strong profanity is central to the movie.",
+          ],
+          romanceNudity: [
+            "Hiccup and Astrid have mild romantic tension and a brief kiss.",
+            "No nudity or explicit sexual content is present.",
+          ],
+          substances: [
+            "No meaningful drinking, smoking, or drug content is noted in this guide.",
+          ],
+        },
       }),
       adventurePick({
         id: "tt0129167",
@@ -1871,6 +1915,30 @@ export const homeAppealCategories = [
         mayNotFit: ["kids frightened by military pursuit", "families avoiding death/sacrifice themes"],
         watchOutFor: ["guns, missiles, and military escalation", "an emotionally intense sacrifice"],
         conversationTopics: ["choice", "fear", "sacrifice", "friendship"],
+        concernDetails: {
+          scare: [
+            "The Giant is mysterious at first, and several scenes build suspense around whether he is dangerous.",
+            "Government agents and the military pursue Hogarth and the Giant, creating tense chase and hiding scenes.",
+            "The ending includes a major sacrifice that can be emotionally intense for kids.",
+          ],
+          violence: [
+            "There are guns, tanks, missiles, explosions, and military escalation.",
+            "The Giant reacts defensively when attacked, and the threat of a nuclear missile is central near the end.",
+            "Violence is not graphic, but the weapons feel more realistic than in many animated adventures.",
+          ],
+          language: [
+            "Language is mild, with insults, name-calling, and tense adult dialogue.",
+            "No frequent strong profanity is central to the movie.",
+          ],
+          romanceNudity: [
+            "There is mild adult flirtation around Hogarth's mother and Dean.",
+            "No nudity or explicit sexual content is present.",
+          ],
+          substances: [
+            "Adults are briefly shown in diner or adult social settings.",
+            "Substance content is not a major focus.",
+          ],
+        },
       }),
       adventurePick({
         id: "tt2245084",
@@ -1891,6 +1959,28 @@ export const homeAppealCategories = [
         mayNotFit: ["kids sensitive to sibling death", "families avoiding superhero combat"],
         watchOutFor: ["death of a loved one", "superhero action and revenge temptation"],
         conversationTopics: ["grief", "science", "anger", "healing"],
+        concernDetails: {
+          scare: [
+            "Hiro's older brother dies in a fire early in the story, and grief drives much of the movie.",
+            "The masked villain can feel threatening, especially during dark chase scenes.",
+            "Hiro is tempted by revenge, which gives a few scenes a sharper emotional edge.",
+          ],
+          violence: [
+            "Superhero action includes robot swarms, flying danger, explosions, crashes, and hand-to-hand fighting.",
+            "Characters are chased, trapped, and threatened by the villain's microbots.",
+            "The action is animated and not bloody, but it is frequent in the second half.",
+          ],
+          language: [
+            "Language is mild, mostly insults, teasing, and frustrated comments.",
+            "No strong profanity is central to the movie.",
+          ],
+          romanceNudity: [
+            "No meaningful romance, nudity, or sexual content is central to the movie.",
+          ],
+          substances: [
+            "No meaningful drinking, smoking, or drug content is noted in this guide.",
+          ],
+        },
       }),
       adventurePick({
         id: "tt2948356",
@@ -1911,6 +2001,29 @@ export const homeAppealCategories = [
         mayNotFit: ["younger kids scared by savage-animal scenes", "families avoiding police/crime plots"],
         watchOutFor: ["animal attack scenes", "bullying, bias, and fear-based politics"],
         conversationTopics: ["prejudice", "stereotypes", "fear", "integrity"],
+        concernDetails: {
+          scare: [
+            "Several animals become savage, growling and attacking in ways that may scare younger viewers.",
+            "Judy investigates missing-person cases, dark labs, and a larger conspiracy.",
+            "The movie uses fear and predator-prey panic as plot elements, which can feel tense.",
+          ],
+          violence: [
+            "There are chase scenes, animal attacks, a train crash, and police-action peril.",
+            "Characters are threatened, clawed at, or cornered, but injuries are not graphic.",
+          ],
+          language: [
+            "Language is mild, with teasing, insults, and rude comments.",
+            "Some jokes and social commentary may land more with older kids and adults.",
+          ],
+          romanceNudity: [
+            "There is mild flirting and nightclub-style animal imagery.",
+            "No explicit sexual content is present.",
+          ],
+          substances: [
+            "The mystery involves a plant-based substance that causes animals to become savage.",
+            "It functions as a fictional plot device rather than real-world drug use.",
+          ],
+        },
       }),
       adventurePick({
         id: "tt1049413",
@@ -1931,6 +2044,29 @@ export const homeAppealCategories = [
         mayNotFit: ["kids sensitive to death or grief", "families avoiding dog/animal peril"],
         watchOutFor: ["spouse death and infertility implied in montage", "airship and animal peril"],
         conversationTopics: ["grief", "adventure", "promises", "found family"],
+        concernDetails: {
+          scare: [
+            "The opening montage includes miscarriage/infertility implications and Ellie's death, which may be very emotional.",
+            "Carl, Russell, and the animals face falls, heights, storms, and airship danger.",
+            "Muntz becomes threatening and obsessive, especially near the climax.",
+          ],
+          violence: [
+            "Action includes dog chases, falls, airship peril, fire, and characters fighting or being hit.",
+            "Muntz uses a weapon and threatens the heroes.",
+            "Violence is not graphic, but the danger can feel urgent.",
+          ],
+          language: [
+            "Language is mild, with grumpy remarks, insults, and shouting.",
+            "No strong profanity is central to the movie.",
+          ],
+          romanceNudity: [
+            "Carl and Ellie's marriage is shown warmly through memories.",
+            "No nudity or sexual content is present.",
+          ],
+          substances: [
+            "No meaningful drinking, smoking, or drug content is noted in this guide.",
+          ],
+        },
       }),
       adventurePick({
         id: "tt7146812",
@@ -1951,6 +2087,27 @@ export const homeAppealCategories = [
         mayNotFit: ["kids sensitive to dead-parent stories", "families avoiding fantasy combat"],
         watchOutFor: ["father has died before the story begins", "fantasy peril and monster battle"],
         conversationTopics: ["siblings", "grief", "courage", "what family gives us"],
+        concernDetails: {
+          scare: [
+            "The entire quest is built around the brothers wanting one more day with their late father.",
+            "Fantasy creatures, cursed objects, and a large final monster create moderate adventure tension.",
+            "The emotional ending may be tender but sad for kids with parent-loss sensitivities.",
+          ],
+          violence: [
+            "There are fantasy battles, chases, crashes, traps, and a dragon-like stone monster.",
+            "Characters are threatened by magic and action set pieces, but injuries are not graphic.",
+          ],
+          language: [
+            "Language is mild, with insults, frustration, and fantasy-comedy banter.",
+            "No strong profanity is central to the movie.",
+          ],
+          romanceNudity: [
+            "No meaningful romance, nudity, or sexual content is central to the story.",
+          ],
+          substances: [
+            "No meaningful drinking, smoking, or drug content is noted in this guide.",
+          ],
+        },
       }),
       adventurePick({
         id: "tt0398286",
@@ -1971,6 +2128,29 @@ export const homeAppealCategories = [
         mayNotFit: ["kids sensitive to manipulative parent figures", "families avoiding romantic adventure"],
         watchOutFor: ["emotional abuse/control by Mother Gothel", "brief stabbing and peril near the end"],
         conversationTopics: ["independence", "truth", "manipulation", "dreams"],
+        concernDetails: {
+          scare: [
+            "Mother Gothel manipulates Rapunzel, isolates her, and uses fear to control her.",
+            "Rapunzel and Flynn face guards, thugs, flooding, heights, and chase scenes.",
+            "The climax includes a stabbing and a moment where Flynn appears to die.",
+          ],
+          violence: [
+            "There are sword threats, frying-pan hits, horse chases, falls, and brief stabbing.",
+            "Most violence is comedic, but the ending has a more serious emotional threat.",
+          ],
+          language: [
+            "No meaningful language concern is noted in this guide.",
+            "There is mild teasing, sarcasm, and comic arguing.",
+          ],
+          romanceNudity: [
+            "Rapunzel and Flynn develop a romantic relationship, with flirting and a kiss.",
+            "No nudity or explicit sexual content is present.",
+          ],
+          substances: [
+            "The tavern setting includes rough-looking patrons and pub atmosphere.",
+            "Substance content is not a major focus.",
+          ],
+        },
       }),
       adventurePick({
         id: "tt2294629",
@@ -1991,6 +2171,28 @@ export const homeAppealCategories = [
         mayNotFit: ["kids scared by ice monster scenes", "families avoiding death of parents in backstory"],
         watchOutFor: ["parents die offscreen", "snow monster and freezing peril"],
         conversationTopics: ["siblings", "fear", "love", "self-control"],
+        concernDetails: {
+          scare: [
+            "Anna and Elsa's parents die offscreen in a shipwreck.",
+            "Elsa's powers create accidental danger, including freezing, storms, and an intimidating snow monster.",
+            "Anna is slowly frozen, and the betrayal by Hans may upset younger viewers.",
+          ],
+          violence: [
+            "Action includes wolves, ice hazards, guards with weapons, snow-monster attacks, and a near sword strike.",
+            "Characters fall, crash, and face freezing peril, but violence is not graphic.",
+          ],
+          language: [
+            "No meaningful language concern is noted in this guide.",
+            "There is mild teasing and frustrated dialogue.",
+          ],
+          romanceNudity: [
+            "Romance is central to Anna's storyline, including engagement talk, flirting, and kisses.",
+            "No nudity or explicit sexual content is present.",
+          ],
+          substances: [
+            "No meaningful drinking, smoking, or drug content is noted in this guide.",
+          ],
+        },
       }),
       adventurePick({
         id: "tt5109280",
@@ -2011,6 +2213,28 @@ export const homeAppealCategories = [
         mayNotFit: ["kids bothered by stone-transformation peril", "families avoiding weapon fights"],
         watchOutFor: ["sword/staff fighting and chase scenes", "family separation and sacrifice themes"],
         conversationTopics: ["trust", "division", "leadership", "forgiveness"],
+        concernDetails: {
+          scare: [
+            "The Druun turn people into stone, including family members and communities.",
+            "Raya's father is lost to the stone curse early in the story.",
+            "The divided-world stakes, betrayal, and sacrifice themes can feel intense.",
+          ],
+          violence: [
+            "There are sword fights, staff combat, chases, traps, explosions, and hand-to-hand battles.",
+            "Characters are threatened by weapons and the Druun's spreading force.",
+            "The violence is non-graphic but more action-heavy than gentler Disney movies.",
+          ],
+          language: [
+            "Language is mild, with insults, tense dialogue, and sarcastic banter.",
+            "No strong profanity is central to the movie.",
+          ],
+          romanceNudity: [
+            "No meaningful romance, nudity, or sexual content is central to the movie.",
+          ],
+          substances: [
+            "No meaningful drinking, smoking, or drug content is noted in this guide.",
+          ],
+        },
       }),
       adventurePick({
         id: "tt2953050",
@@ -2031,6 +2255,28 @@ export const homeAppealCategories = [
         mayNotFit: ["families currently raw around family conflict", "kids scared by a collapsing house"],
         watchOutFor: ["family pressure and exclusion", "brief peril as the casita collapses"],
         conversationTopics: ["family roles", "pressure", "gifts", "healing"],
+        concernDetails: {
+          scare: [
+            "The family's magical house cracks and later collapses, creating brief peril.",
+            "Mirabel feels excluded and rejected, which may be emotionally intense for kids sensitive to family tension.",
+            "Bruno's reputation is treated as mysterious and scary before the movie reveals more nuance.",
+          ],
+          violence: [
+            "There is very little physical violence.",
+            "The main peril is the house falling apart and characters rushing to safety.",
+          ],
+          language: [
+            "No meaningful language concern is noted in this guide.",
+            "There are tense family comments and criticism, but not strong profanity.",
+          ],
+          romanceNudity: [
+            "There are family-marriage references and mild affection between adult couples.",
+            "No nudity or sexual content is present.",
+          ],
+          substances: [
+            "No meaningful drinking, smoking, or drug content is noted in this guide.",
+          ],
+        },
       }),
       adventurePick({
         id: "tt0275847",
@@ -2051,6 +2297,29 @@ export const homeAppealCategories = [
         mayNotFit: ["kids sensitive to family separation", "families avoiding alien weapon chaos"],
         watchOutFor: ["dead parents in backstory", "social services may separate sisters", "sci-fi violence"],
         conversationTopics: ["ohana", "grief", "belonging", "anger"],
+        concernDetails: {
+          scare: [
+            "Lilo and Nani's parents have died before the story begins, and the sisters may be separated by social services.",
+            "Stitch causes destruction and is pursued by alien authorities.",
+            "A house explosion, spaceship chase, and Lilo's kidnapping create real peril.",
+          ],
+          violence: [
+            "Sci-fi action includes blasters, crashes, alien fights, explosions, and chase scenes.",
+            "Stitch is designed to destroy things and causes frequent comic chaos.",
+            "The violence is animated and not graphic, but the family-separation stakes can make it feel more serious.",
+          ],
+          language: [
+            "Language is mild, with insults, yelling, and sibling conflict.",
+            "Some comments and behavior are rude, especially when Lilo and Nani are under stress.",
+          ],
+          romanceNudity: [
+            "Nani and David have mild romantic interest and affection.",
+            "Characters wear swimsuits and beach clothing, but there is no sexual content.",
+          ],
+          substances: [
+            "No meaningful drinking, smoking, or drug content is noted in this guide.",
+          ],
+        },
       }),
       adventurePick({
         id: "tt9288046",
@@ -2071,6 +2340,29 @@ export const homeAppealCategories = [
         mayNotFit: ["kids scared by giant sea creatures", "families avoiding battle-heavy adventure"],
         watchOutFor: ["monster-hunting violence and shipwreck peril", "orphan/backstory sadness"],
         conversationTopics: ["propaganda", "changing beliefs", "courage", "mercy"],
+        concernDetails: {
+          scare: [
+            "Large sea beasts attack ships and are hunted by crews, creating frequent monster peril.",
+            "Maisie is an orphan, and the story includes sadness around loss and belonging.",
+            "Storms, shipwreck danger, and underwater moments may worry kids sensitive to ocean peril.",
+          ],
+          violence: [
+            "There are harpoons, cannons, swords, ship battles, explosions, and monster attacks.",
+            "Characters hunt creatures and are nearly crushed, drowned, or thrown overboard.",
+            "Violence is animated and not bloody, but the battles are frequent.",
+          ],
+          language: [
+            "Language is mild, with insults, shouting, and seafaring banter.",
+            "No strong profanity is central to the movie.",
+          ],
+          romanceNudity: [
+            "No meaningful romance, nudity, or sexual content is central to the movie.",
+          ],
+          substances: [
+            "There are tavern and old seafaring atmosphere touches.",
+            "Substance content is not a major focus.",
+          ],
+        },
       }),
       adventurePick({
         id: "tt0138749",
@@ -2091,6 +2383,30 @@ export const homeAppealCategories = [
         mayNotFit: ["families avoiding con-artist heroes", "younger kids confused by suggestive humor"],
         watchOutFor: ["deception and gambling setup", "mild innuendo and fantasy danger"],
         conversationTopics: ["honesty", "greed", "friendship", "power"],
+        concernDetails: {
+          scare: [
+            "The heroes are chased, threatened, and nearly sacrificed in a hidden-city adventure.",
+            "Tzekel-Kan uses ominous rituals and creature imagery that may feel darker than the comedy around it.",
+            "The story includes deception escalating into danger for the city.",
+          ],
+          violence: [
+            "There are sword threats, chases, falls, a jaguar-like stone creature, and fantasy peril.",
+            "Characters are trapped, threatened, or chased, but injuries are not graphic.",
+          ],
+          language: [
+            "Language is mild, with insults, teasing, and con-artist banter.",
+            "No strong profanity is central to the movie.",
+          ],
+          romanceNudity: [
+            "There is flirtation and suggestive humor involving Chel and the two leads.",
+            "A few jokes and poses are more adult-leaning than many younger-kid animated movies.",
+            "No explicit nudity is shown.",
+          ],
+          substances: [
+            "The opening includes gambling with loaded dice.",
+            "There is some party/feast atmosphere, but substance use is not a major focus.",
+          ],
+        },
       }),
       adventurePick({
         id: "tt0230011",
@@ -2111,6 +2427,30 @@ export const homeAppealCategories = [
         mayNotFit: ["younger kids bothered by combat or deaths", "families avoiding gun-heavy animated action"],
         watchOutFor: ["guns, explosions, and character deaths", "greed and betrayal"],
         conversationTopics: ["colonialism", "greed", "knowledge", "protection"],
+        concernDetails: {
+          scare: [
+            "The expedition faces dangerous machines, deep-sea peril, collapsing tunnels, and betrayal.",
+            "Some characters die or appear to die during attacks and disasters.",
+            "The villain's greed puts Atlantis and its people in serious danger.",
+          ],
+          violence: [
+            "This is one of Disney's more action-heavy animated adventures, with guns, explosions, vehicles, fights, and battle scenes.",
+            "Characters are shot at, trapped, knocked around, and killed offscreen or non-graphically.",
+            "The violence is not bloody, but the military tone is stronger than in many family animated films.",
+          ],
+          language: [
+            "Language is mild, with insults, sarcasm, and tense expedition banter.",
+            "No frequent strong profanity is central to the movie.",
+          ],
+          romanceNudity: [
+            "Milo and Kida have mild romantic interest.",
+            "Some Atlantean clothing is minimal by design, but there is no explicit sexual content.",
+          ],
+          substances: [
+            "There are brief adult expedition/crew atmosphere moments.",
+            "Substance content is not a major focus.",
+          ],
+        },
       }),
       adventurePick({
         id: "tt0133240",
@@ -2131,6 +2471,29 @@ export const homeAppealCategories = [
         mayNotFit: ["families avoiding pirate violence", "younger kids scared by space peril"],
         watchOutFor: ["laser weapons, explosions, and pirate threats", "father absence and betrayal"],
         conversationTopics: ["mentorship", "trust", "potential", "betrayal"],
+        concernDetails: {
+          scare: [
+            "Space storms, black holes, mutiny, and pirate betrayal create repeated peril.",
+            "Jim's father absence and complicated bond with Silver may be emotionally heavy for some kids.",
+            "The climax includes collapsing treasure, dangerous machinery, and escape tension.",
+          ],
+          violence: [
+            "Action includes laser weapons, explosions, sword-style fights, chases, and pirate attacks.",
+            "Characters are threatened, betrayed, captured, and sometimes injured or killed non-graphically.",
+            "The adventure tone is swashbuckling but more intense than gentle animated picks.",
+          ],
+          language: [
+            "Language is mild, with insults, pirate banter, and teen frustration.",
+            "No strong profanity is central to the movie.",
+          ],
+          romanceNudity: [
+            "No meaningful romance, nudity, or sexual content is central to the movie.",
+          ],
+          substances: [
+            "There is pirate/crew atmosphere that may imply adult tavern-style behavior.",
+            "Substance content is not a major focus.",
+          ],
+        },
       }),
       adventurePick({
         id: "tt0110357",
@@ -2151,6 +2514,29 @@ export const homeAppealCategories = [
         mayNotFit: ["kids sensitive to parent death", "families avoiding intense animal peril"],
         watchOutFor: ["Mufasa dies onscreen after a stampede", "villain threats and hyena menace"],
         conversationTopics: ["grief", "responsibility", "identity", "courage"],
+        concernDetails: {
+          scare: [
+            "The wildebeest stampede is intense and leads directly to Mufasa's death.",
+            "Scar manipulates Simba and later becomes threatening as ruler.",
+            "Hyena scenes, dark landscapes, and the final fire may scare younger kids.",
+          ],
+          violence: [
+            "Animal fights, claws, bites, stampede peril, and the final battle are central action moments.",
+            "Mufasa dies onscreen after falling into the stampede.",
+            "Violence is not graphic, but the emotional impact is strong.",
+          ],
+          language: [
+            "No meaningful language concern is noted in this guide.",
+            "There is teasing, villainous sarcasm, and some insults.",
+          ],
+          romanceNudity: [
+            "Simba and Nala have a mild romantic song/relationship as adults.",
+            "No nudity or sexual content is present.",
+          ],
+          substances: [
+            "No meaningful drinking, smoking, or drug content is noted in this guide.",
+          ],
+        },
       }),
       adventurePick({
         id: "tt0166813",
@@ -2171,6 +2557,28 @@ export const homeAppealCategories = [
         mayNotFit: ["kids distressed by animal capture", "viewers who need dialogue-heavy stories"],
         watchOutFor: ["horse capture and restraint", "fire, falls, and chase peril"],
         conversationTopics: ["freedom", "respect for animals", "courage", "home"],
+        concernDetails: {
+          scare: [
+            "Spirit is captured, restrained, and forced into human control, which may upset animal-sensitive kids.",
+            "There are fire, train, river, and cliff peril scenes.",
+            "The movie's low-dialogue style can make the danger feel more immediate and emotional.",
+          ],
+          violence: [
+            "Physical content includes horse chases, capture, restraint, falls, crashes, and military pursuit.",
+            "Humans use ropes, pens, and force to control horses.",
+            "Violence is not graphic, but animal captivity is a repeated theme.",
+          ],
+          language: [
+            "No meaningful language concern is noted in this guide.",
+          ],
+          romanceNudity: [
+            "Spirit has a gentle bond with Rain, another horse.",
+            "No sexual content is present.",
+          ],
+          substances: [
+            "No meaningful drinking, smoking, or drug content is noted in this guide.",
+          ],
+        },
       }),
       adventurePick({
         id: "tt29623480",
@@ -2191,6 +2599,28 @@ export const homeAppealCategories = [
         mayNotFit: ["kids sensitive to animal peril or orphan stories", "families avoiding emotional survival stories"],
         watchOutFor: ["animal death/orphaning in the setup", "survival peril and separation"],
         conversationTopics: ["parenting", "adaptation", "nature", "letting go"],
+        concernDetails: {
+          scare: [
+            "Roz discovers an orphaned gosling after animal deaths in the setup.",
+            "The island includes predator-prey survival, storms, winter danger, and separation anxiety.",
+            "Later action involving robots and retrieval forces may feel intense for younger viewers.",
+          ],
+          violence: [
+            "Animal survival includes predator attacks and moments where creatures are hurt or killed offscreen or gently implied.",
+            "There are robot action scenes, crashes, and protective fights.",
+            "The movie is tender overall, but it does not avoid the harsher parts of nature.",
+          ],
+          language: [
+            "Language is mild, with a few insults or tense comments.",
+            "No strong profanity is central to the movie.",
+          ],
+          romanceNudity: [
+            "No meaningful romance, nudity, or sexual content is central to the movie.",
+          ],
+          substances: [
+            "No meaningful drinking, smoking, or drug content is noted in this guide.",
+          ],
+        },
       }),
       adventurePick({
         id: "tt6495056",
@@ -2211,6 +2641,29 @@ export const homeAppealCategories = [
         mayNotFit: ["kids frightened by animal predators", "families wanting a deeper story"],
         watchOutFor: ["predator and chef threats", "city chaos and bird peril"],
         conversationTopics: ["trying new things", "family safety", "courage", "travel"],
+        concernDetails: {
+          scare: [
+            "The duck family faces predators, city hazards, storms, and unfamiliar places.",
+            "A chef threatens birds, which may bother kids sensitive to animal-eating jokes or peril.",
+            "Most danger is comic and quickly resolved.",
+          ],
+          violence: [
+            "Physical content includes chases, crashes, slapstick, predator threats, and bird peril.",
+            "Characters are nearly caught, hit, or cooked in comic action scenes.",
+            "Violence is mild and non-graphic.",
+          ],
+          language: [
+            "Language is mild, with teasing, family arguing, and rude jokes.",
+            "No strong profanity is central to the movie.",
+          ],
+          romanceNudity: [
+            "Parent affection and family bonds are present.",
+            "No nudity or sexual content is present.",
+          ],
+          substances: [
+            "No meaningful drinking, smoking, or drug content is noted in this guide.",
+          ],
+        },
       }),
     ],
   },
