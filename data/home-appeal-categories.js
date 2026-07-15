@@ -2691,6 +2691,28 @@ export const homeAppealCategories = [
         mayNotFit: ["younger kids not ready for historical discrimination", "families wanting a light comedy"],
         watchOutFor: ["racism and sexism throughout", "space-mission tension"],
         conversationTopics: ["perseverance", "civil rights", "STEM", "recognition"],
+        concernDetails: {
+          scare: [
+            "The space-mission sequences create tension around launch safety, re-entry, and whether astronauts will survive.",
+            "The main emotional weight comes from racism, sexism, and workplace humiliation rather than scary imagery.",
+          ],
+          violence: [
+            "There is very little physical violence.",
+            "Historical racism, segregation, and discriminatory treatment are central and may feel upsetting even without physical attacks.",
+          ],
+          language: [
+            "Language is mild overall, but discriminatory language and demeaning remarks are part of the historical setting.",
+            "Families may want to talk about why some words and treatment are harmful.",
+          ],
+          romanceNudity: [
+            "There is mild romance, dating, marriage, and affectionate adult relationships.",
+            "No nudity or explicit sexual content is present.",
+          ],
+          substances: [
+            "Adults are occasionally shown in social or workplace settings where smoking or drinking may appear in the background.",
+            "Substance content is not a major focus.",
+          ],
+        },
       }),
       teenPick({
         id: "tt0210945",
@@ -2711,6 +2733,29 @@ export const homeAppealCategories = [
         mayNotFit: ["kids not ready for racial slurs or prejudice", "families avoiding football injuries"],
         watchOutFor: ["racist language and threats", "football hits and a car crash aftermath"],
         conversationTopics: ["racism", "teamwork", "leadership", "change"],
+        concernDetails: {
+          scare: [
+            "Racial tension, threats, and hostility around school integration may be emotionally intense.",
+            "A serious car crash changes one character's life and may upset viewers sensitive to injury.",
+          ],
+          violence: [
+            "Football hits, rough practices, and on-field collisions are frequent.",
+            "There are also scenes of intimidation, fighting, and racial hostility.",
+            "The car crash aftermath is not graphic, but its consequences are serious.",
+          ],
+          language: [
+            "The movie includes racist language and insults tied to the historical setting.",
+            "There is also mild profanity, yelling, and harsh coach/player talk.",
+          ],
+          romanceNudity: [
+            "There is mild teen dating material and affectionate references.",
+            "No nudity or explicit sexual content is central to the movie.",
+          ],
+          substances: [
+            "There are brief adult social settings and references around teen/adult life.",
+            "Substance content is not a major focus.",
+          ],
+        },
       }),
       teenPick({
         id: "tt0437800",
@@ -2731,6 +2776,26 @@ export const homeAppealCategories = [
         mayNotFit: ["viewers wanting action", "kids sensitive to academic pressure"],
         watchOutFor: ["family grief in the background", "some mild language and bullying"],
         conversationTopics: ["confidence", "education", "community", "pressure"],
+        concernDetails: {
+          scare: [
+            "The movie is not physically scary, but Akeelah faces pressure, insecurity, and fear of failing publicly.",
+            "Her father's death is part of the family background and may bring up grief conversations.",
+          ],
+          violence: [
+            "Physical violence is minimal.",
+            "There are moments of teasing, bullying, and neighborhood hardship, but no graphic violence.",
+          ],
+          language: [
+            "Language is mild, with teasing, insults, and some frustrated comments.",
+            "No strong profanity is central to the movie.",
+          ],
+          romanceNudity: [
+            "No meaningful romance, nudity, or sexual content is central to the movie.",
+          ],
+          substances: [
+            "No meaningful drinking, smoking, or drug content is noted in this guide.",
+          ],
+        },
       }),
       teenPick({
         id: "tt0132477",
@@ -2751,6 +2816,28 @@ export const homeAppealCategories = [
         mayNotFit: ["younger kids bored by slower drama", "families avoiding workplace-injury themes"],
         watchOutFor: ["mine accident danger", "family tension and mild language"],
         conversationTopics: ["dreams", "science", "class", "parent expectations"],
+        concernDetails: {
+          scare: [
+            "Coal-mine danger and the possibility of injury or death are part of the story's background.",
+            "A mine accident and family conflict may feel tense for kids sensitive to workplace danger.",
+          ],
+          violence: [
+            "There is little direct violence.",
+            "Rocket experiments sometimes misfire or create danger, and mining work is shown as hazardous.",
+          ],
+          language: [
+            "Language is mild, with some profanity, insults, and family frustration.",
+            "The tone stays grounded rather than crude.",
+          ],
+          romanceNudity: [
+            "There is mild teen interest and adult relationship material.",
+            "No nudity or explicit sexual content is present.",
+          ],
+          substances: [
+            "Adults may appear in small-town social settings with drinking or smoking atmosphere.",
+            "Substance content is not a major focus.",
+          ],
+        },
       }),
       teenPick({
         id: "tt0108037",
@@ -2771,6 +2858,28 @@ export const homeAppealCategories = [
         mayNotFit: ["families avoiding insults or tobacco", "kids sensitive to bullying-style teasing"],
         watchOutFor: ["name-calling and mild language", "chewing tobacco scene with vomiting"],
         conversationTopics: ["friendship", "belonging", "sportsmanship", "nostalgia"],
+        concernDetails: {
+          scare: [
+            "The Beast is built up as a terrifying dog, though the reveal is gentler than the legend.",
+            "A few chase and retrieval scenes create comic suspense.",
+          ],
+          violence: [
+            "Physical content is mild kid comedy: falls, baseball mishaps, chases, and roughhousing.",
+            "There is teasing and social pressure among the boys.",
+          ],
+          language: [
+            "The movie includes insults, name-calling, and mild profanity.",
+            "Some jokes and kid banter are rougher than many modern family comedies.",
+          ],
+          romanceNudity: [
+            "There is a famous pool scene involving a boy's crush on an older lifeguard and an unwanted kiss.",
+            "No nudity is shown, but the scene may be awkward for some families.",
+          ],
+          substances: [
+            "The boys try chewing tobacco at a carnival and get sick afterward.",
+            "This is the main substance concern and is played as a bad idea with gross consequences.",
+          ],
+        },
       }),
       teenPick({
         id: "tt0311289",
@@ -2791,6 +2900,30 @@ export const homeAppealCategories = [
         mayNotFit: ["kids sensitive to cruel authority figures", "families avoiding racism-related storylines"],
         watchOutFor: ["harsh juvenile camp conditions", "lizard and desert peril", "historical racism"],
         conversationTopics: ["justice", "family history", "friendship", "resilience"],
+        concernDetails: {
+          scare: [
+            "Camp Green Lake is harsh, isolated, and run by cruel adults.",
+            "Poisonous lizards, desert heat, and unjust punishment create repeated peril.",
+            "Flashbacks include racism and tragedy around a forbidden relationship.",
+          ],
+          violence: [
+            "Boys are forced to dig holes in dangerous heat and are threatened by adults.",
+            "There are fights, threats, a rattlesnake/scorpion/lizard danger tone, and historical violence.",
+            "Violence is not graphic, but the cruelty is central.",
+          ],
+          language: [
+            "Language is mild to moderate for a family movie, with insults, threats, and some profanity.",
+            "There is also racially charged dialogue in the historical storyline.",
+          ],
+          romanceNudity: [
+            "A flashback romance is important to the story and includes kissing/affection.",
+            "No nudity or explicit sexual content is present.",
+          ],
+          substances: [
+            "There are brief references to old-west outlaw life and adult behavior.",
+            "Substance content is not a major focus.",
+          ],
+        },
       }),
       teenPick({
         id: "tt0368891",
@@ -2811,6 +2944,27 @@ export const homeAppealCategories = [
         mayNotFit: ["families avoiding gun threats or stealing-as-plot", "younger kids bored by historical clues"],
         watchOutFor: ["guns, chases, and explosions", "the heroes steal a historic document"],
         conversationTopics: ["history", "ethics", "puzzles", "legacy"],
+        concernDetails: {
+          scare: [
+            "The adventure includes chase scenes, underground danger, and moments where characters are trapped.",
+            "Gun threats and betrayal may feel tense for younger viewers.",
+          ],
+          violence: [
+            "There are guns, explosions, car chases, fistfights, and treasure-hunt peril.",
+            "Characters are threatened and pursued, but injuries are not graphic.",
+          ],
+          language: [
+            "Language is mild, with some insults, sarcasm, and action-movie banter.",
+            "No strong profanity is central to the movie.",
+          ],
+          romanceNudity: [
+            "There is mild flirting and romantic tension between adult characters.",
+            "No nudity or explicit sexual content is present.",
+          ],
+          substances: [
+            "No meaningful drinking, smoking, or drug content is noted in this guide.",
+          ],
+        },
       }),
       teenPick({
         id: "tt0087538",
@@ -2831,6 +2985,29 @@ export const homeAppealCategories = [
         mayNotFit: ["families avoiding martial-arts violence", "younger kids sensitive to bullying"],
         watchOutFor: ["repeated bullying and fights", "teen partying and mild language"],
         conversationTopics: ["discipline", "bullying", "mentorship", "restraint"],
+        concernDetails: {
+          scare: [
+            "Daniel is repeatedly bullied, chased, and intimidated by older teens.",
+            "The Cobra Kai students can feel threatening because the harassment continues across the movie.",
+          ],
+          violence: [
+            "Martial-arts fights, tournament hits, street bullying, and a serious leg injury are central.",
+            "Mr. Miyagi also uses karate defensively to stop attackers.",
+            "Violence is not graphic, but the bullying feels personal and repeated.",
+          ],
+          language: [
+            "Language includes mild profanity, insults, and teen taunting.",
+            "Some bullying language may feel harsher than the rating suggests.",
+          ],
+          romanceNudity: [
+            "Daniel and Ali have a teen romance with flirting, dating, and kissing.",
+            "No nudity or explicit sexual content is present.",
+          ],
+          substances: [
+            "Teen partying and adult social scenes include drinking atmosphere.",
+            "Substance content is present but not the main focus.",
+          ],
+        },
       }),
       teenPick({
         id: "tt0286499",
@@ -2851,6 +3028,28 @@ export const homeAppealCategories = [
         mayNotFit: ["families avoiding PG-13 language or sexuality", "younger kids not ready for teen romance"],
         watchOutFor: ["language and sexual references", "family conflict and cultural pressure"],
         conversationTopics: ["identity", "tradition", "sports", "ambition"],
+        concernDetails: {
+          scare: [
+            "The movie is not physically scary, but Jess faces intense family pressure and fear of disappointing her parents.",
+            "There are emotional conflicts around identity, cultural expectations, and being misunderstood.",
+          ],
+          violence: [
+            "Physical content is mostly soccer play and brief pushing or arguments.",
+            "No graphic violence is central to the movie.",
+          ],
+          language: [
+            "The movie includes PG-13 language, insults, and sexual references.",
+            "Some dialogue includes homophobic assumptions or comments that families may want to discuss.",
+          ],
+          romanceNudity: [
+            "Teen romance, crushes, jealousy, and sexual references are part of the story.",
+            "There is no explicit nudity, but the material is more mature than a PG family sports movie.",
+          ],
+          substances: [
+            "There are party/social scenes where drinking may appear or be implied.",
+            "Substance content is not a major focus, but the teen/adult social setting is present.",
+          ],
+        },
       }),
       teenPick({
         id: "tt0112384",
@@ -2871,6 +3070,29 @@ export const homeAppealCategories = [
         mayNotFit: ["kids anxious about space disaster", "families needing a shorter movie"],
         watchOutFor: ["sustained life-or-death space peril", "some language and stress"],
         conversationTopics: ["problem solving", "teamwork", "courage", "engineering"],
+        concernDetails: {
+          scare: [
+            "The astronauts face sustained life-or-death danger after an explosion damages the spacecraft.",
+            "Oxygen, power, cold, re-entry, and communication problems create ongoing tension.",
+            "Families with anxious kids should know the peril lasts for much of the movie.",
+          ],
+          violence: [
+            "There is little person-to-person violence.",
+            "The danger comes from the explosion, equipment failure, and survival crisis in space.",
+          ],
+          language: [
+            "Language includes some profanity and intense stressed dialogue.",
+            "The famous emergency phrase and NASA crisis tone may be gripping but not crude.",
+          ],
+          romanceNudity: [
+            "There are married-family relationships and brief affectionate moments.",
+            "No nudity or explicit sexual content is present.",
+          ],
+          substances: [
+            "Adults may smoke or drink in period-accurate settings.",
+            "Substance content is not a major focus.",
+          ],
+        },
       }),
       teenPick({
         id: "tt0120382",
@@ -2891,6 +3113,29 @@ export const homeAppealCategories = [
         mayNotFit: ["younger kids troubled by reality/manipulation themes", "families wanting a simple comedy"],
         watchOutFor: ["emotional manipulation and surveillance", "marriage deception and peril at sea"],
         conversationTopics: ["privacy", "media", "free will", "truth"],
+        concernDetails: {
+          scare: [
+            "The premise can feel unsettling: Truman's entire life has been watched, controlled, and manipulated.",
+            "A staged disaster and later storm-at-sea sequence are designed to frighten Truman away from escape.",
+            "The emotional intensity comes from betrayal, surveillance, and questioning reality.",
+          ],
+          violence: [
+            "Physical violence is minimal.",
+            "There is peril at sea, staged danger, and emotional abuse/manipulation by the show's creator.",
+          ],
+          language: [
+            "Language is mild, with some profanity, frustration, and satirical adult dialogue.",
+            "No frequent strong profanity is central to the movie.",
+          ],
+          romanceNudity: [
+            "Truman's marriage is revealed to be part of the staged show, creating relationship deception.",
+            "There is mild romance and kissing, but no explicit sexual content.",
+          ],
+          substances: [
+            "Adults are shown in ordinary social and TV-production settings where drinking may appear.",
+            "Substance content is not a major focus.",
+          ],
+        },
       }),
       teenPick({
         id: "tt0108002",
@@ -2911,6 +3156,27 @@ export const homeAppealCategories = [
         mayNotFit: ["families bored by sports dramas", "kids sensitive to discouraging adults"],
         watchOutFor: ["football contact", "family and academic disappointment"],
         conversationTopics: ["perseverance", "limits", "dreams", "support"],
+        concernDetails: {
+          scare: [
+            "The movie is not scary, but Rudy faces repeated rejection, discouragement, and emotional disappointment.",
+            "Family pressure and the fear of failing a lifelong dream may feel heavy for sensitive viewers.",
+          ],
+          violence: [
+            "Football practices and games include tackles, hits, and physical exhaustion.",
+            "No graphic injury or intense violence is central to the movie.",
+          ],
+          language: [
+            "Language is mild, with some profanity, insults, and frustrated sports talk.",
+            "No strong profanity is central to the movie.",
+          ],
+          romanceNudity: [
+            "No meaningful romance, nudity, or sexual content is central to the movie.",
+          ],
+          substances: [
+            "There are brief adult/college social settings.",
+            "Substance content is not a major focus.",
+          ],
+        },
       }),
       teenPick({
         id: "tt0106611",
@@ -2931,6 +3197,28 @@ export const homeAppealCategories = [
         mayNotFit: ["families avoiding mild language or bar scenes", "younger kids bored by Olympic setup"],
         watchOutFor: ["bobsled crash peril", "mild language and drinking"],
         conversationTopics: ["resilience", "sportsmanship", "national pride", "failure"],
+        concernDetails: {
+          scare: [
+            "Bobsled crashes and high-speed racing create mild sports peril.",
+            "The team faces public humiliation, pressure, and fear of being taken seriously.",
+          ],
+          violence: [
+            "Physical content includes bobsled crashes, training mishaps, and comic falls.",
+            "No graphic injury or realistic violence is central to the movie.",
+          ],
+          language: [
+            "Language includes mild profanity, insults, and sports-comedy banter.",
+            "The tone is upbeat rather than harsh.",
+          ],
+          romanceNudity: [
+            "There are a few mild flirtation or relationship references.",
+            "No nudity or explicit sexual content is present.",
+          ],
+          substances: [
+            "Some scenes include drinking or bar/social atmosphere.",
+            "Substance content is mild but visible enough for families avoiding it to know.",
+          ],
+        },
       }),
       teenPick({
         id: "tt0265662",
@@ -2951,6 +3239,27 @@ export const homeAppealCategories = [
         mayNotFit: ["kids who need fast pacing", "families uninterested in baseball"],
         watchOutFor: ["sports injury concern", "family disappointment and career stress"],
         conversationTopics: ["second chances", "commitment", "family support", "dreams"],
+        concernDetails: {
+          scare: [
+            "The movie is not scary, though career uncertainty, family stress, and injury worries create mild tension.",
+            "Younger kids may find the adult responsibilities and slower sports drama less engaging than upsetting.",
+          ],
+          violence: [
+            "Physical content is limited to baseball play and sports strain.",
+            "No meaningful violence or graphic injury is central to the movie.",
+          ],
+          language: [
+            "No meaningful language concern is noted in this guide.",
+            "There may be mild sports frustration, but the overall tone is clean.",
+          ],
+          romanceNudity: [
+            "Marriage and family relationships are central.",
+            "No nudity or sexual content is present.",
+          ],
+          substances: [
+            "No meaningful drinking, smoking, or drug content is noted in this guide.",
+          ],
+        },
       }),
       teenPick({
         id: "tt0349825",
@@ -2971,6 +3280,28 @@ export const homeAppealCategories = [
         mayNotFit: ["families avoiding sports violence", "younger kids bored by training scenes"],
         watchOutFor: ["rough hockey hits", "coach yelling and mild language"],
         conversationTopics: ["teamwork", "discipline", "history", "pressure"],
+        concernDetails: {
+          scare: [
+            "The main intensity comes from pressure, exhaustion, Cold War stakes, and coach-player conflict.",
+            "The hockey games are tense, but not frightening in a horror or peril sense.",
+          ],
+          violence: [
+            "Hockey action includes checking, collisions, falls, fights, and rough practices.",
+            "No graphic injury is central, but sports contact is frequent.",
+          ],
+          language: [
+            "Language includes mild profanity, yelling, and harsh coaching.",
+            "The locker-room and sports setting makes the dialogue rougher than a little-kid sports movie.",
+          ],
+          romanceNudity: [
+            "There are brief adult relationship/family moments.",
+            "No nudity or explicit sexual content is central to the movie.",
+          ],
+          substances: [
+            "Adult social settings may include drinking.",
+            "Substance content is not a major focus.",
+          ],
+        },
       }),
       teenPick({
         id: "tt4341582",
@@ -2991,6 +3322,26 @@ export const homeAppealCategories = [
         mayNotFit: ["younger kids not ready for poverty and grief themes", "families wanting a fast sports movie"],
         watchOutFor: ["family hardship and poverty", "death/grief in the community"],
         conversationTopics: ["opportunity", "education", "perseverance", "family sacrifice"],
+        concernDetails: {
+          scare: [
+            "The movie is not scary, but poverty, instability, and family hardship are central.",
+            "Grief and loss in the community may be emotional for younger viewers.",
+          ],
+          violence: [
+            "There is little direct violence.",
+            "Hard living conditions and social vulnerability are the main concerns rather than physical action.",
+          ],
+          language: [
+            "No meaningful language concern is noted in this guide.",
+            "Dialogue may include conflict or frustration, but not strong profanity.",
+          ],
+          romanceNudity: [
+            "No meaningful romance, nudity, or sexual content is central to the movie.",
+          ],
+          substances: [
+            "No meaningful drinking, smoking, or drug content is noted in this guide.",
+          ],
+        },
       }),
       teenPick({
         id: "tt1389137",
@@ -3011,6 +3362,29 @@ export const homeAppealCategories = [
         mayNotFit: ["kids sensitive to death of a parent", "families avoiding animal illness/death themes"],
         watchOutFor: ["widowed-parent grief", "teen anger and mild language", "animal peril"],
         conversationTopics: ["grief", "new starts", "risk", "parent-child trust"],
+        concernDetails: {
+          scare: [
+            "The family is grieving the death of the mother before the story begins.",
+            "Animal illness, zoo safety, and financial stress create mild emotional tension.",
+            "A few animal scenes may worry kids who are sensitive to animal peril or death.",
+          ],
+          violence: [
+            "Physical violence is minimal.",
+            "The main concerns are animal-care stress, teen anger, and grief rather than fights.",
+          ],
+          language: [
+            "Language includes mild profanity and frustrated family arguments.",
+            "Teen anger and parent-child conflict may feel sharper than the movie's warm tone suggests.",
+          ],
+          romanceNudity: [
+            "There is mild adult romantic interest and dating tension.",
+            "No nudity or explicit sexual content is central to the movie.",
+          ],
+          substances: [
+            "Adults may drink in social or reflective settings.",
+            "Substance content is not a major focus.",
+          ],
+        },
       }),
       teenPick({
         id: "tt0359950",
@@ -3031,6 +3405,29 @@ export const homeAppealCategories = [
         mayNotFit: ["younger kids bored by adult workplace themes", "families wanting nonstop comedy"],
         watchOutFor: ["travel peril and fantasy action daydreams", "some mild language"],
         conversationTopics: ["risk", "purpose", "work", "courage"],
+        concernDetails: {
+          scare: [
+            "Walter faces travel danger including rough seas, a volcano area, heights, and isolation.",
+            "Some fantasy/daydream sequences include sudden action or disaster imagery.",
+            "The emotional tension is mostly adult self-doubt and job insecurity.",
+          ],
+          violence: [
+            "Physical content is mild adventure peril, comic fights/daydreams, falls, and travel hazards.",
+            "No graphic violence is central to the movie.",
+          ],
+          language: [
+            "Language includes mild profanity and adult workplace frustration.",
+            "No frequent strong profanity is central to the movie.",
+          ],
+          romanceNudity: [
+            "Walter has a romantic interest and the story includes mild longing/flirting.",
+            "No nudity or explicit sexual content is present.",
+          ],
+          substances: [
+            "Adults may drink in social settings, and there are brief adult-world references.",
+            "Substance content is not a major focus.",
+          ],
+        },
       }),
       teenPick({
         id: "tt2543472",
@@ -3051,6 +3448,26 @@ export const homeAppealCategories = [
         mayNotFit: ["kids currently raw around bullying or appearance differences", "families wanting a light comedy"],
         watchOutFor: ["bullying and social exclusion", "medical and surgery references"],
         conversationTopics: ["empathy", "kindness", "appearance", "friendship"],
+        concernDetails: {
+          scare: [
+            "The movie is not scary, but bullying, staring, exclusion, and loneliness may be emotionally hard.",
+            "Medical history and surgery references may worry kids sensitive to hospitals or appearance differences.",
+          ],
+          violence: [
+            "There is little physical violence.",
+            "The main harm is social cruelty, verbal bullying, and exclusion.",
+          ],
+          language: [
+            "Language is mild, but insults and cruel comments are part of the bullying.",
+            "Families may want to discuss why casual cruelty can still be deeply damaging.",
+          ],
+          romanceNudity: [
+            "No meaningful romance, nudity, or sexual content is central to the movie.",
+          ],
+          substances: [
+            "No meaningful drinking, smoking, or drug content is noted in this guide.",
+          ],
+        },
       }),
       teenPick({
         id: "tt3659388",
@@ -3071,6 +3488,29 @@ export const homeAppealCategories = [
         mayNotFit: ["families avoiding stronger PG-13 language", "younger kids anxious about isolation or injury"],
         watchOutFor: ["sustained survival peril", "stronger language", "brief bloody injury"],
         conversationTopics: ["science", "resilience", "problem solving", "teamwork"],
+        concernDetails: {
+          scare: [
+            "Mark Watney is stranded alone on Mars and must repeatedly solve life-or-death survival problems.",
+            "There is a brief bloody injury after the storm and many tense scenes involving food, oxygen, pressure, and rescue.",
+            "The isolation and realism may be intense for younger kids even though the tone includes humor.",
+          ],
+          violence: [
+            "There is little interpersonal violence.",
+            "The main physical content is the storm injury, accidents, explosions, and survival peril.",
+          ],
+          language: [
+            "The movie includes stronger PG-13 profanity, including repeated frustrated language.",
+            "The language is a major reason this is best treated as a teen pick.",
+          ],
+          romanceNudity: [
+            "There are brief adult relationship references and normal crew/family affection.",
+            "No explicit sexual content is central to the movie.",
+          ],
+          substances: [
+            "Alcohol is briefly present in adult settings or references.",
+            "Substance content is not a major focus.",
+          ],
+        },
       }),
     ],
   },
