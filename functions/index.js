@@ -10,6 +10,8 @@ const INVITE_CODE_LENGTH = 8;
 const INVITE_CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const SITE_URL = "https://thepizzascale.pizza";
 const INVITE_IMAGE_URL = `${SITE_URL}/PizzaLogo.png`;
+const WATCH_PROVIDER_CACHE_MS = 12 * 60 * 60 * 1000;
+const DEFAULT_WATCH_REGION = "US";
 
 export const familyInvite = onRequest(
   {
@@ -117,6 +119,89 @@ export const aggregateMovieRating = onDocumentWritten(
       },
       { merge: true },
     );
+  },
+);
+
+export const getWatchProviders = onCall(
+  {
+    region: "us-central1",
+  },
+  async (request) => {
+    const imdbId = String(request.data?.imdbId || request.data?.movieId || "")
+      .trim()
+      .slice(0, 24);
+    const region = normalizeWatchRegion(request.data?.region);
+
+    if (!/^tt\d{5,12}$/.test(imdbId)) {
+      throw new HttpsError("invalid-argument", "A valid IMDb movie id is required.");
+    }
+
+    const cacheRef = db.collection("watchProviders").doc(`${region}_${imdbId}`);
+    const cacheSnapshot = await cacheRef.get();
+    const cached = cacheSnapshot.exists ? cacheSnapshot.data() : null;
+    const cachedAtMillis = getMillis(cached?.checkedAt);
+
+    if (cached && Date.now() - cachedAtMillis < WATCH_PROVIDER_CACHE_MS) {
+      return stripWatchProviderCacheFields(cached);
+    }
+
+    const apiKey = process.env.WATCHMODE_API_KEY || process.env.WATCHMODE_KEY;
+
+    if (!apiKey) {
+      return {
+        status: "unavailable",
+        region,
+        providers: emptyWatchProviderGroups(),
+        message: "Watch availability is unavailable right now.",
+      };
+    }
+
+    try {
+      const watchmodeTitle = await findWatchmodeTitleByImdbId({ apiKey, imdbId });
+
+      if (!watchmodeTitle?.id) {
+        const unavailablePayload = {
+          status: "unavailable",
+          imdbId,
+          region,
+          providers: emptyWatchProviderGroups(),
+          message: "Watch availability is unavailable for this movie.",
+          checkedAt: FieldValue.serverTimestamp(),
+        };
+        await cacheRef.set(unavailablePayload, { merge: true });
+        return stripWatchProviderCacheFields(unavailablePayload);
+      }
+
+      const sources = await fetchWatchmodeSources({
+        apiKey,
+        watchmodeId: watchmodeTitle.id,
+        region,
+      });
+      const payload = {
+        status: "ready",
+        imdbId,
+        region,
+        watchmodeId: watchmodeTitle.id,
+        providers: groupWatchProviders(sources),
+        checkedAt: FieldValue.serverTimestamp(),
+      };
+
+      await cacheRef.set(payload, { merge: true });
+      return stripWatchProviderCacheFields(payload);
+    } catch (error) {
+      console.error("Watch provider lookup failed", {
+        imdbId,
+        region,
+        message: error?.message,
+      });
+
+      return {
+        status: "unavailable",
+        region,
+        providers: emptyWatchProviderGroups(),
+        message: "Watch availability is unavailable right now.",
+      };
+    }
   },
 );
 
@@ -489,6 +574,129 @@ function escapeHtml(value) {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#39;");
+}
+
+function normalizeWatchRegion(value) {
+  const region = String(value || DEFAULT_WATCH_REGION)
+    .trim()
+    .toUpperCase()
+    .replace(/[^A-Z]/g, "")
+    .slice(0, 2);
+
+  return region || DEFAULT_WATCH_REGION;
+}
+
+function getMillis(value) {
+  if (!value) return 0;
+  if (typeof value.toMillis === "function") return value.toMillis();
+  if (typeof value === "number") return value;
+
+  return 0;
+}
+
+function emptyWatchProviderGroups() {
+  return {
+    stream: [],
+    rent: [],
+    buy: [],
+  };
+}
+
+function stripWatchProviderCacheFields(payload) {
+  return {
+    status: payload.status || "unavailable",
+    region: payload.region || DEFAULT_WATCH_REGION,
+    providers: payload.providers || emptyWatchProviderGroups(),
+    message: payload.message || "",
+  };
+}
+
+async function findWatchmodeTitleByImdbId({ apiKey, imdbId }) {
+  const url = new URL("https://api.watchmode.com/v1/search/");
+  url.searchParams.set("apiKey", apiKey);
+  url.searchParams.set("search_field", "imdb_id");
+  url.searchParams.set("search_value", imdbId);
+
+  const response = await fetchJson(url);
+  const titleResults = Array.isArray(response?.title_results) ? response.title_results : [];
+
+  return titleResults.find((title) => title?.imdb_id === imdbId) || titleResults[0] || null;
+}
+
+async function fetchWatchmodeSources({ apiKey, watchmodeId, region }) {
+  const url = new URL(`https://api.watchmode.com/v1/title/${watchmodeId}/sources/`);
+  url.searchParams.set("apiKey", apiKey);
+  url.searchParams.set("regions", region);
+
+  const response = await fetchJson(url);
+
+  return Array.isArray(response) ? response : [];
+}
+
+async function fetchJson(url) {
+  const response = await fetch(url);
+
+  if (!response.ok) {
+    throw new Error(`Watchmode responded with ${response.status}`);
+  }
+
+  return response.json();
+}
+
+function groupWatchProviders(sources) {
+  const groups = emptyWatchProviderGroups();
+  const seen = new Set();
+
+  for (const source of sources) {
+    const groupKey = getWatchProviderGroup(source?.type);
+
+    if (!groupKey) continue;
+
+    const provider = normalizeWatchProvider(source);
+    const dedupeKey = `${groupKey}:${provider.id || provider.name}`;
+
+    if (!provider.name || seen.has(dedupeKey)) continue;
+
+    seen.add(dedupeKey);
+    groups[groupKey].push(provider);
+  }
+
+  return Object.fromEntries(
+    Object.entries(groups).map(([key, providers]) => [
+      key,
+      providers
+        .sort((first, second) => first.name.localeCompare(second.name))
+        .slice(0, 12),
+    ]),
+  );
+}
+
+function getWatchProviderGroup(type) {
+  const normalizedType = String(type || "").toLowerCase();
+
+  if (["sub", "free", "tve"].includes(normalizedType)) return "stream";
+  if (normalizedType === "rent") return "rent";
+  if (normalizedType === "buy") return "buy";
+
+  return "";
+}
+
+function normalizeWatchProvider(source) {
+  return {
+    id: source.source_id || source.id || "",
+    name: String(source.name || source.source_name || "").trim().slice(0, 80),
+    type: String(source.type || "").trim().slice(0, 24),
+    logoUrl: String(
+      source.logo_100px ||
+        source.logo_50px ||
+        source.logo_url ||
+        source.icon_url ||
+        "",
+    )
+      .trim()
+      .slice(0, 500),
+    webUrl: String(source.web_url || "").trim().slice(0, 500),
+  };
 }
 
 async function createUniqueInviteCode() {

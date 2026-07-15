@@ -2,6 +2,7 @@ import React, { useEffect, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
   Check,
+  ChevronDown,
   ChevronLeft,
   Copy,
   Eye,
@@ -1670,6 +1671,79 @@ function normalizeConcernDetails(value) {
   );
 }
 
+function emptyWatchProviderGroups() {
+  return {
+    stream: [],
+    rent: [],
+    buy: [],
+  };
+}
+
+function normalizeWatchProviderGroups(value) {
+  const groups = emptyWatchProviderGroups();
+
+  return Object.fromEntries(
+    Object.keys(groups).map((key) => [
+      key,
+      Array.isArray(value?.[key])
+        ? value[key]
+            .map((provider) => ({
+              id: String(provider?.id || provider?.name || "").trim(),
+              name: String(provider?.name || "").trim(),
+              logoUrl: String(provider?.logoUrl || "").trim(),
+              webUrl: String(provider?.webUrl || "").trim(),
+            }))
+            .filter((provider) => provider.name)
+            .slice(0, 12)
+        : [],
+    ]),
+  );
+}
+
+function getProviderCount(groups) {
+  return Object.values(groups || {}).reduce(
+    (total, providers) => total + (Array.isArray(providers) ? providers.length : 0),
+    0,
+  );
+}
+
+function getUniqueWatchProviders(groups) {
+  const providers = [];
+  const seen = new Set();
+
+  Object.values(groups || {}).forEach((groupProviders) => {
+    if (!Array.isArray(groupProviders)) return;
+
+    groupProviders.forEach((provider) => {
+      const key = provider.id || provider.name;
+
+      if (!key || seen.has(key)) return;
+
+      seen.add(key);
+      providers.push(provider);
+    });
+  });
+
+  return providers;
+}
+
+function getProviderInitials(name) {
+  return String(name || "?")
+    .split(/\s+/)
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase();
+}
+
+function getWatchProviderSummary(watchState) {
+  if (watchState.status === "loading") return "Checking watch availability";
+  if (watchState.status === "unavailable") return "Watch availability unavailable";
+
+  return `${getProviderCount(watchState.providers)} watch options available`;
+}
+
 function canManageFamilyProfile(familyProfile, user) {
   if (!familyProfile || !user) return false;
   if (familyProfile.leadAdultUserId === user.uid) return true;
@@ -2330,6 +2404,7 @@ function MovieStatsPage({
                   : "No Pizza Scale reviews yet"}
               </span>
             </div>
+            <WhereToWatch movie={selectedMovie} />
           </div>
         </div>
 
@@ -2444,6 +2519,159 @@ function MovieStatsPage({
         </div>
       </section>
     </section>
+  );
+}
+
+function WhereToWatch({ movie }) {
+  const [watchState, setWatchState] = useState({
+    status: "idle",
+    providers: emptyWatchProviderGroups(),
+    message: "",
+  });
+  const [isExpanded, setIsExpanded] = useState(false);
+  const imdbId = movie?.imdbId || movie?.id;
+
+  useEffect(() => {
+    let isCurrent = true;
+
+    async function loadWatchProviders() {
+      if (!imdbId) {
+        setWatchState({
+          status: "unavailable",
+          providers: emptyWatchProviderGroups(),
+          message: "Watch availability is unavailable for this movie.",
+        });
+        return;
+      }
+
+      setWatchState((current) => ({
+        ...current,
+        status: "loading",
+        message: "",
+      }));
+
+      try {
+        const getWatchProviders = httpsCallable(functions, "getWatchProviders");
+        const result = await getWatchProviders({ imdbId, region: "US" });
+        const providers = normalizeWatchProviderGroups(result.data?.providers);
+        const hasProviders = getProviderCount(providers) > 0;
+
+        if (!isCurrent) return;
+
+        setWatchState({
+          status: result.data?.status === "ready" && hasProviders ? "ready" : "unavailable",
+          providers,
+          message:
+            result.data?.message ||
+            (hasProviders
+              ? ""
+              : "Watch availability is unavailable for this movie right now."),
+        });
+      } catch {
+        if (!isCurrent) return;
+
+        setWatchState({
+          status: "unavailable",
+          providers: emptyWatchProviderGroups(),
+          message: "Watch availability is unavailable right now.",
+        });
+      }
+    }
+
+    setIsExpanded(false);
+    loadWatchProviders();
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [imdbId]);
+
+  const providerCount = getProviderCount(watchState.providers);
+  const iconProviders = getUniqueWatchProviders(watchState.providers).slice(0, 8);
+  const isUnavailable = watchState.status === "unavailable";
+
+  return (
+    <section className="where-to-watch" aria-label={`Where to watch ${movie.title}`}>
+      <button
+        className="watch-summary"
+        type="button"
+        onClick={() => setIsExpanded((current) => !current)}
+        disabled={watchState.status === "loading"}
+        aria-expanded={isExpanded}
+      >
+        <span className="watch-title">Where to watch</span>
+        <span className="watch-provider-strip" aria-label={getWatchProviderSummary(watchState)}>
+          {watchState.status === "loading" ? (
+            <span className="watch-loading">Checking...</span>
+          ) : isUnavailable ? (
+            <span className="watch-unavailable">Unavailable</span>
+          ) : (
+            iconProviders.map((provider) => (
+              <WatchProviderIcon provider={provider} key={`${provider.id}-${provider.name}`} />
+            ))
+          )}
+        </span>
+        {providerCount > 0 && (
+          <ChevronDown
+            className={`watch-chevron ${isExpanded ? "expanded" : ""}`}
+            size={18}
+            aria-hidden="true"
+          />
+        )}
+      </button>
+
+      {isExpanded && providerCount > 0 && (
+        <div className="watch-details">
+          <WatchProviderGroup title="Stream" providers={watchState.providers.stream} />
+          <WatchProviderGroup title="Rent" providers={watchState.providers.rent} />
+          <WatchProviderGroup title="Buy" providers={watchState.providers.buy} />
+        </div>
+      )}
+
+      {isUnavailable && watchState.message && <p className="watch-note">{watchState.message}</p>}
+    </section>
+  );
+}
+
+function WatchProviderIcon({ provider }) {
+  return (
+    <span className="watch-provider-icon" title={provider.name}>
+      {provider.logoUrl ? (
+        <img src={provider.logoUrl} alt="" loading="lazy" />
+      ) : (
+        <span>{getProviderInitials(provider.name)}</span>
+      )}
+    </span>
+  );
+}
+
+function WatchProviderGroup({ title, providers }) {
+  if (!providers.length) return null;
+
+  return (
+    <div className="watch-provider-group">
+      <strong>{title}</strong>
+      <div>
+        {providers.map((provider) =>
+          provider.webUrl ? (
+            <a
+              href={provider.webUrl}
+              target="_blank"
+              rel="noreferrer"
+              key={`${title}-${provider.id}-${provider.name}`}
+            >
+              <WatchProviderIcon provider={provider} />
+              {provider.name}
+            </a>
+          ) : (
+            <span key={`${title}-${provider.id}-${provider.name}`}>
+              <WatchProviderIcon provider={provider} />
+              {provider.name}
+            </span>
+          ),
+        )}
+      </div>
+    </div>
   );
 }
 
