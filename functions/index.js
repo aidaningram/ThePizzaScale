@@ -11,6 +11,7 @@ const INVITE_CODE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 const SITE_URL = "https://thepizzascale.pizza";
 const INVITE_IMAGE_URL = `${SITE_URL}/PizzaLogo.png`;
 const WATCH_PROVIDER_CACHE_MS = 12 * 60 * 60 * 1000;
+const WATCH_PROVIDER_CACHE_VERSION = "v2";
 const DEFAULT_WATCH_REGION = "US";
 
 export const familyInvite = onRequest(
@@ -143,7 +144,9 @@ export const getWatchProviders = onCall(
       throw new HttpsError("invalid-argument", "A valid IMDb movie id is required.");
     }
 
-    const cacheRef = db.collection("watchProviders").doc(`${region}_${imdbId}`);
+    const cacheRef = db
+      .collection("watchProviders")
+      .doc(`${WATCH_PROVIDER_CACHE_VERSION}_${region}_${imdbId}`);
     const cacheSnapshot = await cacheRef.get();
     const cached = cacheSnapshot.exists ? cacheSnapshot.data() : null;
     const cachedAtMillis = getMillis(cached?.checkedAt);
@@ -215,6 +218,47 @@ export const getWatchProviders = onCall(
         message: "Watch availability is unavailable right now.",
       };
     }
+  },
+);
+
+export const getMovieScaleSummary = onCall(
+  {
+    region: "us-central1",
+  },
+  async (request) => {
+    const imdbId = String(request.data?.imdbId || request.data?.movieId || "")
+      .trim()
+      .slice(0, 24);
+    const familyId = String(request.data?.familyId || "").trim().slice(0, 80);
+
+    if (!/^tt\d{5,12}$/.test(imdbId)) {
+      throw new HttpsError("invalid-argument", "A valid IMDb movie id is required.");
+    }
+
+    const [movieSnapshot, guideSnapshot] = await Promise.all([
+      db.collection("movies").doc(imdbId).get(),
+      db.collection("movieGuides").doc(imdbId).get(),
+    ]);
+    let familyReview = null;
+
+    if (request.auth && familyId) {
+      const familySnapshot = await db.collection("families").doc(familyId).get();
+      const family = familySnapshot.exists ? familySnapshot.data() : {};
+      const isFamilyMember =
+        Array.isArray(family.memberUserIds) && family.memberUserIds.includes(request.auth.uid);
+
+      if (isFamilyMember) {
+        const reviewSnapshot = await db.collection("reviews").doc(`${familyId}_${imdbId}`).get();
+        familyReview = reviewSnapshot.exists ? summarizeFamilyReview(reviewSnapshot.data()) : null;
+      }
+    }
+
+    return {
+      imdbId,
+      movie: movieSnapshot.exists ? summarizeMovie(movieSnapshot.data()) : null,
+      guide: guideSnapshot.exists ? summarizeMovieGuide(guideSnapshot.data()) : null,
+      familyReview,
+    };
   },
 );
 
@@ -597,6 +641,49 @@ function normalizeWatchRegion(value) {
     .slice(0, 2);
 
   return region || DEFAULT_WATCH_REGION;
+}
+
+function summarizeMovie(movie = {}) {
+  return {
+    title: movie.title || "",
+    year: movie.year || "",
+    rated: movie.rated || "",
+    runtime: movie.runtime || "",
+    genre: movie.genre || "",
+    posterUrl: movie.posterUrl || "",
+    pizzaScore: typeof movie.avgPizzaScore === "number" ? movie.avgPizzaScore : null,
+    familyMatch: typeof movie.familyMatch === "number" ? movie.familyMatch : null,
+    reviewCount: typeof movie.reviewCount === "number" ? movie.reviewCount : 0,
+  };
+}
+
+function summarizeMovieGuide(guide = {}) {
+  return {
+    status: guide.status || "",
+    summary: guide.summary || "",
+    bestAgeRange: guide.bestAgeRange || "",
+    parentAppeal: numberOrNull(guide.parentAppeal),
+    kidAppeal: numberOrNull(guide.kidAppeal),
+    teenAppeal: numberOrNull(guide.teenAppeal),
+    concernLevels: guide.concernLevels || {},
+    watchOutFor: Array.isArray(guide.watchOutFor) ? guide.watchOutFor.slice(0, 5) : [],
+  };
+}
+
+function summarizeFamilyReview(review = {}) {
+  return {
+    pizzaScore: numberOrNull(review.pizzaScore),
+    parentScore: numberOrNull(review.parentScore),
+    kidScore: numberOrNull(review.kidScore),
+    visibility: review.visibility || "aggregate",
+    ratedAt: review.createdAt || review.updatedAt || null,
+  };
+}
+
+function numberOrNull(value) {
+  const number = Number(value);
+
+  return Number.isFinite(number) ? number : null;
 }
 
 function getMillis(value) {

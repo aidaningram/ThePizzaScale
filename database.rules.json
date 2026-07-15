@@ -1,0 +1,12 @@
+{
+  "rules": {
+    "families": {
+      "$familyId": {
+        "gameArena": {
+          ".read": "auth != null",
+          ".write": "auth != null"
+        }
+      }
+    }
+  }
+}

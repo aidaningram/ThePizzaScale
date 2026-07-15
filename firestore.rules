@@ -87,6 +87,10 @@ service cloud.firestore {
       allow delete: if canDeleteFamily(familyId);
     }
 
+    match /pizzaMovieNightFamilies/{familyId} {
+      allow read, write: if isFamilyMember(familyId);
+    }
+
     match /familyMembers/{memberId} {
       allow read: if isFamilyMember(resource.data.familyId);
       allow create: if canManageFamily(request.resource.data.familyId);
