@@ -1,1 +1,562 @@
-[]
+[
+  {
+    "id": "tt4468740",
+    "imdbId": "tt4468740",
+    "title": "Paddington 2",
+    "year": "2017",
+    "status": "ai-assisted",
+    "guideVersion": "pizza-guide-v1",
+    "sourceType": "source-checked-editorial",
+    "bestAgeRange": "6-12",
+    "summary": "A warm, funny, unusually gentle sequel that works well when a family wants kindness, slapstick, and enough grown-up charm to keep adults interested. The main cautions are a few prison scenes, a sad separation moment, and a late peril sequence that may feel intense for very sensitive younger kids.",
+    "parentAppeal": 8,
+    "kidAppeal": 8,
+    "teenAppeal": 6,
+    "familyNightFit": 8,
+    "concernLevels": {
+      "scare": 2,
+      "violence": 2,
+      "language": 1,
+      "romanceNudity": 1,
+      "substances": 0
+    },
+    "toneTags": ["warm", "kind", "silly", "storybook", "hopeful"],
+    "goodFor": [
+      "mixed-age families who want a low-stress crowd pleaser",
+      "parents who like family movies with wit and heart",
+      "kids who enjoy gentle slapstick and clear kindness themes"
+    ],
+    "mayNotFit": [
+      "very young kids who are upset by prison or separation scenes",
+      "families wanting fast superhero-style action"
+    ],
+    "watchOutFor": [
+      "Paddington is briefly sad and alone in prison",
+      "train and water peril near the ending",
+      "mostly slapstick action with a few threatening moments"
+    ],
+    "conversationTopics": ["kindness", "found family", "looking for the good in people"],
+    "matchSignals": ["strong parent appeal", "strong kid appeal", "low language", "positive family themes"],
+    "seedNotes": "Checked against Common Sense Media's Paddington 2 guide, which lists age 6+ and notes prison sadness, near-drowning peril, slapstick action, little romance, and no meaningful language/substances."
+  },
+  {
+    "id": "tt4633694",
+    "imdbId": "tt4633694",
+    "title": "Spider-Man: Into the Spider-Verse",
+    "year": "2018",
+    "status": "ai-assisted",
+    "guideVersion": "pizza-guide-v1",
+    "sourceType": "source-checked-editorial",
+    "bestAgeRange": "9-15",
+    "summary": "A high-energy superhero movie with huge teen appeal, inventive animation, and a strong family story underneath the action. It is an excellent pick for families ready for comic-book peril, intense fights, and an emotionally heavy character death.",
+    "parentAppeal": 8,
+    "kidAppeal": 7,
+    "teenAppeal": 8,
+    "familyNightFit": 7,
+    "concernLevels": {
+      "scare": 2,
+      "violence": 3,
+      "language": 2,
+      "romanceNudity": 1,
+      "substances": 0
+    },
+    "toneTags": ["bold", "funny", "emotional", "fast", "heroic"],
+    "goodFor": [
+      "families with older kids or teens who enjoy superheroes",
+      "viewers who like fast visuals and big emotional stakes",
+      "families looking for a movie with courage and identity themes"
+    ],
+    "mayNotFit": [
+      "younger kids bothered by loud action or death",
+      "families wanting a quiet, gentle movie night"
+    ],
+    "watchOutFor": [
+      "large-scale animated action and destruction",
+      "a major mentor death and family grief",
+      "mild language and insults"
+    ],
+    "conversationTopics": ["identity", "mentors", "courage", "family expectations"],
+    "matchSignals": ["teen appeal", "parent appeal", "superhero action", "emotional growth"],
+    "seedNotes": "Checked against Common Sense Media's Spider-Verse guide, which lists age 9+, intense action violence, mild language, and light flirting."
+  },
+  {
+    "id": "tt0332379",
+    "imdbId": "tt0332379",
+    "title": "School of Rock",
+    "year": "2003",
+    "status": "ai-assisted",
+    "guideVersion": "pizza-guide-v1",
+    "sourceType": "source-checked-editorial",
+    "bestAgeRange": "10-15",
+    "summary": "A funny, music-driven comedy that tends to land especially well with tweens, teens, and adults. The classroom story has a big-hearted creative streak, but families should know it also includes PG-13 language, adult irresponsibility, and some rock-concert drinking and smoking in the background.",
+    "parentAppeal": 7,
+    "kidAppeal": 6,
+    "teenAppeal": 8,
+    "familyNightFit": 6,
+    "concernLevels": {
+      "scare": 0,
+      "violence": 1,
+      "language": 3,
+      "romanceNudity": 1,
+      "substances": 2
+    },
+    "toneTags": ["funny", "musical", "rebellious", "upbeat", "goofy"],
+    "goodFor": [
+      "families with tweens or teens who love music",
+      "parents who are comfortable discussing rule-breaking",
+      "viewers who enjoy big comic performances"
+    ],
+    "mayNotFit": [
+      "families avoiding stronger language",
+      "younger kids who may copy the main character's bad choices without context"
+    ],
+    "watchOutFor": [
+      "occasional stronger PG-13 language",
+      "adults drinking or smoking in music settings",
+      "the main adult lies and impersonates a teacher"
+    ],
+    "conversationTopics": ["creativity", "honesty", "confidence", "teamwork"],
+    "matchSignals": ["teen appeal", "music", "comedy", "some language"],
+    "seedNotes": "Checked against Common Sense Media's School of Rock guide, which lists age 10+ and flags profanity, beer/cigarette presence, and very mild physical comedy."
+  },
+  {
+    "id": "tt0432283",
+    "imdbId": "tt0432283",
+    "title": "Fantastic Mr. Fox",
+    "year": "2009",
+    "status": "ai-assisted",
+    "guideVersion": "pizza-guide-v1",
+    "sourceType": "source-checked-editorial",
+    "bestAgeRange": "8-14",
+    "summary": "A clever, offbeat stop-motion adventure that may charm adults and older kids more than very young viewers. It has a playful storybook look, but its humor is dry, its heroes make messy choices, and the farmers' attempts to kill the animals add more edge than the cozy visuals suggest.",
+    "parentAppeal": 8,
+    "kidAppeal": 6,
+    "teenAppeal": 7,
+    "familyNightFit": 6,
+    "concernLevels": {
+      "scare": 2,
+      "violence": 2,
+      "language": 1,
+      "romanceNudity": 1,
+      "substances": 2
+    },
+    "toneTags": ["quirky", "dry", "clever", "adventurous", "offbeat"],
+    "goodFor": [
+      "families who like witty, stylized movies",
+      "older kids who can follow dry humor",
+      "parents who enjoy Wes Anderson's visual style"
+    ],
+    "mayNotFit": [
+      "younger kids expecting a simple cute-animal story",
+      "families bothered by animal peril or casual alcohol references"
+    ],
+    "watchOutFor": [
+      "farmers use guns and explosives against the animals",
+      "adult animals drink cider, wine, or champagne",
+      "frequent substitute swearing with the word cuss"
+    ],
+    "conversationTopics": ["promises", "family responsibility", "identity", "cleverness"],
+    "matchSignals": ["parent appeal", "quirky humor", "moderate peril", "older-kid fit"],
+    "seedNotes": "Checked against Common Sense Media's Fantastic Mr. Fox guide and Wired's parent notes; both point to witty adult appeal, farmer violence/peril, cider or alcohol references, and the repeated cuss-word joke."
+  },
+  {
+    "id": "tt0114709",
+    "imdbId": "tt0114709",
+    "title": "Toy Story",
+    "year": "1995",
+    "status": "ai-assisted",
+    "guideVersion": "pizza-guide-v1",
+    "sourceType": "source-checked-editorial",
+    "bestAgeRange": "5-11",
+    "summary": "A fast, funny Pixar classic that still works across a wide age range, especially for families who like friendship stories with plenty of motion. Most kids can handle it, but Sid's toy experiments, the dog chase, and a few insults may bother especially sensitive younger viewers.",
+    "parentAppeal": 8,
+    "kidAppeal": 8,
+    "teenAppeal": 6,
+    "familyNightFit": 8,
+    "concernLevels": {
+      "scare": 2,
+      "violence": 2,
+      "language": 1,
+      "romanceNudity": 1,
+      "substances": 1
+    },
+    "toneTags": ["classic", "funny", "energetic", "imaginative", "warm"],
+    "goodFor": [
+      "families wanting a proven all-ages animated movie",
+      "kids who enjoy toys, imagination, and adventure",
+      "parents looking for friendship and humility themes"
+    ],
+    "mayNotFit": [
+      "very sensitive young kids who dislike scary toy imagery",
+      "families avoiding insults or mild name-calling"
+    ],
+    "watchOutFor": [
+      "Sid's toy-mutilation scenes can look scary",
+      "a dog chases and threatens the toys",
+      "infrequent mild language and insults"
+    ],
+    "conversationTopics": ["jealousy", "friendship", "humility", "teamwork"],
+    "matchSignals": ["classic Pixar", "strong kid appeal", "parent nostalgia", "mild scare moments"],
+    "seedNotes": "Checked against Common Sense Media's Toy Story guide, which lists age 5+, tense toy peril, a dog chase, Sid's toy scenes, very little language, and brief beer cans."
+  },
+  {
+    "id": "tt0266543",
+    "imdbId": "tt0266543",
+    "title": "Finding Nemo",
+    "year": "2003",
+    "status": "ai-assisted",
+    "guideVersion": "pizza-guide-v1",
+    "sourceType": "source-checked-editorial",
+    "bestAgeRange": "6-11",
+    "summary": "A colorful adventure with a strong parent-child story and a lot of kid appeal. It is gentle in language and romance, but the opening loss, sharp-toothed creatures, and frequent peril make it more intense than the G rating may suggest for very young viewers.",
+    "parentAppeal": 8,
+    "kidAppeal": 8,
+    "teenAppeal": 6,
+    "familyNightFit": 8,
+    "concernLevels": {
+      "scare": 3,
+      "violence": 2,
+      "language": 0,
+      "romanceNudity": 0,
+      "substances": 0
+    },
+    "toneTags": ["adventurous", "funny", "emotional", "colorful", "tender"],
+    "goodFor": [
+      "families who want a funny adventure with real emotion",
+      "kids interested in ocean animals",
+      "parents looking for teamwork and bravery themes"
+    ],
+    "mayNotFit": [
+      "very young kids sensitive to parent-child separation",
+      "families avoiding scary creatures or early death themes"
+    ],
+    "watchOutFor": [
+      "the opening implies the death of Nemo's mother and siblings",
+      "many tense scenes with fish in danger",
+      "sharp-toothed sea creatures may scare younger kids"
+    ],
+    "conversationTopics": ["trust", "overprotection", "disability", "bravery"],
+    "matchSignals": ["strong kid appeal", "parent-child story", "low language", "some scary moments"],
+    "seedNotes": "Checked against Common Sense Media's Finding Nemo guide, which lists age 5+ but highlights very scary moments, the opening loss, creatures with sharp teeth, and no language/substances."
+  },
+  {
+    "id": "tt0317705",
+    "imdbId": "tt0317705",
+    "title": "The Incredibles",
+    "year": "2004",
+    "status": "ai-assisted",
+    "guideVersion": "pizza-guide-v1",
+    "sourceType": "source-checked-editorial",
+    "bestAgeRange": "8-13",
+    "summary": "A smart superhero family movie with great parent appeal and enough action to keep older kids engaged. It is more intense than many animated picks, with repeated battles, explosions, peril involving children, and some mature marriage/family tension that younger kids may not fully process.",
+    "parentAppeal": 8,
+    "kidAppeal": 7,
+    "teenAppeal": 8,
+    "familyNightFit": 7,
+    "concernLevels": {
+      "scare": 2,
+      "violence": 3,
+      "language": 1,
+      "romanceNudity": 2,
+      "substances": 1
+    },
+    "toneTags": ["action-packed", "funny", "stylish", "family-focused", "heroic"],
+    "goodFor": [
+      "families with older kids who like superhero action",
+      "parents who want an animated movie with adult-level themes",
+      "viewers who enjoy family teamwork stories"
+    ],
+    "mayNotFit": [
+      "families avoiding sustained action violence",
+      "younger kids who are frightened by explosions or near-death peril"
+    ],
+    "watchOutFor": [
+      "frequent superhero combat, weapons, and explosions",
+      "characters, including kids, are in serious peril",
+      "mild romantic/marriage tension and a few adult jokes"
+    ],
+    "conversationTopics": ["family teamwork", "using your gifts", "honesty", "identity"],
+    "matchSignals": ["parent appeal", "older-kid action", "family teamwork", "moderate violence"],
+    "seedNotes": "Checked against Common Sense Media's Incredibles guide, which lists age 8+ and notes sustained non-bloody violence, weapons, explosions, deaths, mild references, and some drinks/smoking."
+  },
+  {
+    "id": "tt0382932",
+    "imdbId": "tt0382932",
+    "title": "Ratatouille",
+    "year": "2007",
+    "status": "ai-assisted",
+    "guideVersion": "pizza-guide-v1",
+    "sourceType": "source-checked-editorial",
+    "bestAgeRange": "6-12",
+    "summary": "A thoughtful, funny Pixar movie that gives parents plenty to enjoy while still offering kids a clear underdog story. The biggest family fit question is sensitivity to rats and kitchen peril: Remy is chased, trapped, nearly drowned, and threatened by humans with guns or knives.",
+    "parentAppeal": 8,
+    "kidAppeal": 7,
+    "teenAppeal": 7,
+    "familyNightFit": 7,
+    "concernLevels": {
+      "scare": 2,
+      "violence": 2,
+      "language": 1,
+      "romanceNudity": 1,
+      "substances": 1
+    },
+    "toneTags": ["clever", "foodie", "funny", "warm", "ambitious"],
+    "goodFor": [
+      "families who like smart animated comedies",
+      "kids interested in cooking or Paris settings",
+      "parents looking for perseverance and integrity themes"
+    ],
+    "mayNotFit": [
+      "kids who are scared of rats",
+      "families avoiding gun/knife peril even in animated comedy"
+    ],
+    "watchOutFor": [
+      "Remy is chased by an armed grandmother and kitchen staff",
+      "a sewer sequence and near-drowning moment may be tense",
+      "mild insults and a little wine presence"
+    ],
+    "conversationTopics": ["talent", "integrity", "family loyalty", "giving credit"],
+    "matchSignals": ["parent appeal", "food themes", "mild language", "some animated peril"],
+    "seedNotes": "Checked against Common Sense Media's Ratatouille guide, which lists age 6+, moderate rat peril, gun and knife moments, very mild language, light romance, and wine presence."
+  },
+  {
+    "id": "tt0910970",
+    "imdbId": "tt0910970",
+    "title": "WALL-E",
+    "year": "2008",
+    "status": "ai-assisted",
+    "guideVersion": "pizza-guide-v1",
+    "sourceType": "source-checked-editorial",
+    "bestAgeRange": "6-12",
+    "summary": "A quiet, visually rich Pixar movie with strong environmental themes and a sweet robot romance. It is a strong family pick for patient viewers, though some younger kids may find the first half slow and a few robot fights, lasers, explosions, and body-image themes worth discussing.",
+    "parentAppeal": 8,
+    "kidAppeal": 6,
+    "teenAppeal": 7,
+    "familyNightFit": 7,
+    "concernLevels": {
+      "scare": 1,
+      "violence": 2,
+      "language": 0,
+      "romanceNudity": 1,
+      "substances": 0
+    },
+    "toneTags": ["quiet", "charming", "thoughtful", "romantic", "eco-minded"],
+    "goodFor": [
+      "families open to a slower, more visual movie",
+      "kids who like robots and space",
+      "parents who want environmental conversation starters"
+    ],
+    "mayNotFit": [
+      "younger kids who need constant dialogue",
+      "families sensitive to body-image messaging"
+    ],
+    "watchOutFor": [
+      "laser blasts, robot fights, and explosions",
+      "brief human peril",
+      "consumerism and body-image themes may need context"
+    ],
+    "conversationTopics": ["stewardship", "loneliness", "consumerism", "care for others"],
+    "matchSignals": ["low language", "thoughtful tone", "parent appeal", "environmental themes"],
+    "seedNotes": "Checked against Common Sense Media's WALL-E guide, which lists age 5+, robot/human fights, lasers, explosions, no language/substances, and concern about its body-size messaging."
+  },
+  {
+    "id": "tt2380307",
+    "imdbId": "tt2380307",
+    "title": "Coco",
+    "year": "2017",
+    "status": "ai-assisted",
+    "guideVersion": "pizza-guide-v1",
+    "sourceType": "source-checked-editorial",
+    "bestAgeRange": "7-13",
+    "summary": "A beautiful, emotional family movie with music, humor, and a strong celebration of memory and heritage. It is often a great mixed-age pick, but families should expect skeleton imagery, death and afterlife themes, a poisoning reveal, adult drinking in a few scenes, and a tearful ending.",
+    "parentAppeal": 8,
+    "kidAppeal": 8,
+    "teenAppeal": 7,
+    "familyNightFit": 8,
+    "concernLevels": {
+      "scare": 2,
+      "violence": 2,
+      "language": 1,
+      "romanceNudity": 1,
+      "substances": 2
+    },
+    "toneTags": ["musical", "emotional", "colorful", "family-centered", "heartfelt"],
+    "goodFor": [
+      "families who like music and emotional Pixar stories",
+      "kids who can handle skeleton imagery",
+      "parents looking for heritage and family conversation"
+    ],
+    "mayNotFit": [
+      "children currently sensitive to death or grief",
+      "families avoiding afterlife imagery"
+    ],
+    "watchOutFor": [
+      "skeletons and Land of the Dead imagery throughout",
+      "death, memory, and grief themes",
+      "adult drinking and a poisoning reveal"
+    ],
+    "conversationTopics": ["family memory", "tradition", "forgiveness", "following dreams"],
+    "matchSignals": ["strong family themes", "music", "emotional ending", "some scare imagery"],
+    "seedNotes": "Checked against Common Sense Media's Coco guide, which lists age 7+ and notes skeleton imagery, life-or-death peril, emotional grief, adult drinking, and mild language."
+  },
+  {
+    "id": "tt1490017",
+    "imdbId": "tt1490017",
+    "title": "The Lego Movie",
+    "year": "2014",
+    "status": "ai-assisted",
+    "guideVersion": "pizza-guide-v1",
+    "sourceType": "source-checked-editorial",
+    "bestAgeRange": "6-12",
+    "summary": "A fast, silly, creative animated comedy with broad kid appeal and enough jokes for parents. The big caveats are constant toy-brand presence and lots of Lego-style action, including gunfire, explosions, captures, and pieces popping apart in ways that are meant to be funny rather than graphic.",
+    "parentAppeal": 7,
+    "kidAppeal": 8,
+    "teenAppeal": 7,
+    "familyNightFit": 7,
+    "concernLevels": {
+      "scare": 1,
+      "violence": 2,
+      "language": 1,
+      "romanceNudity": 1,
+      "substances": 0
+    },
+    "toneTags": ["silly", "fast", "creative", "meta", "playful"],
+    "goodFor": [
+      "families who want high-energy comedy",
+      "kids who like Lego or imaginative play",
+      "parents who enjoy self-aware jokes"
+    ],
+    "mayNotFit": [
+      "families avoiding toy tie-ins or merchandise pressure",
+      "kids overwhelmed by very fast pacing"
+    ],
+    "watchOutFor": [
+      "lots of Lego action, peril, and explosions",
+      "very mild language and insults",
+      "strong product and toy tie-in presence"
+    ],
+    "conversationTopics": ["creativity", "following instructions", "teamwork", "play"],
+    "matchSignals": ["high kid appeal", "fast comedy", "creativity", "mild language"],
+    "seedNotes": "Checked against Common Sense Media's Lego Movie guide, which lists age 6+, Lego action/peril, frequent brand/tie-in presence, very mild language, and no substances."
+  },
+  {
+    "id": "tt0093779",
+    "imdbId": "tt0093779",
+    "title": "The Princess Bride",
+    "year": "1987",
+    "status": "ai-assisted",
+    "guideVersion": "pizza-guide-v1",
+    "sourceType": "source-checked-editorial",
+    "bestAgeRange": "9-14",
+    "summary": "A witty, beloved storybook adventure with strong parent and teen appeal. It can be a terrific family movie for older kids, but it has more violence and language than some families remember, including sword fights, torture, blood, poisoning, threatening creatures, drinking, and a few suggestive lines.",
+    "parentAppeal": 8,
+    "kidAppeal": 6,
+    "teenAppeal": 8,
+    "familyNightFit": 7,
+    "concernLevels": {
+      "scare": 3,
+      "violence": 3,
+      "language": 2,
+      "romanceNudity": 2,
+      "substances": 2
+    },
+    "toneTags": ["witty", "romantic", "adventurous", "storybook", "quotable"],
+    "goodFor": [
+      "families with older kids who enjoy fantasy adventure",
+      "parents who want a nostalgic, quotable movie night",
+      "teens who like clever comedy and romance"
+    ],
+    "mayNotFit": [
+      "younger kids frightened by torture, monsters, or sword fights",
+      "families avoiding stronger insults or suggestive references"
+    ],
+    "watchOutFor": [
+      "torture machine sequence and presumed death",
+      "sword fights, blood, poisoning, and giant creatures",
+      "some language, drinking, kissing, and suggestive references"
+    ],
+    "conversationTopics": ["true love", "revenge", "honor", "storytelling"],
+    "matchSignals": ["teen appeal", "parent nostalgia", "fantasy adventure", "moderate violence"],
+    "seedNotes": "Checked against Common Sense Media's Princess Bride guide, which lists age 9+ and flags violence, torture, sword fights, poisoning, language, drinking, kissing, and suggestive references."
+  },
+  {
+    "id": "tt0083866",
+    "imdbId": "tt0083866",
+    "title": "E.T. the Extra-Terrestrial",
+    "year": "1982",
+    "status": "ai-assisted",
+    "guideVersion": "pizza-guide-v1",
+    "sourceType": "source-checked-editorial",
+    "bestAgeRange": "8-13",
+    "summary": "A classic family sci-fi movie with deep emotional payoff and strong parent nostalgia. It is still a powerful pick, but it can be intense for younger kids because of government pursuit, medical crisis scenes, apparent death, stronger language than expected, and a comic beer/tipsy sequence.",
+    "parentAppeal": 8,
+    "kidAppeal": 6,
+    "teenAppeal": 7,
+    "familyNightFit": 7,
+    "concernLevels": {
+      "scare": 3,
+      "violence": 2,
+      "language": 3,
+      "romanceNudity": 1,
+      "substances": 2
+    },
+    "toneTags": ["classic", "emotional", "sci-fi", "tender", "suspenseful"],
+    "goodFor": [
+      "families with kids ready for emotional intensity",
+      "parents sharing a classic from their childhood",
+      "viewers who like friendship and alien stories"
+    ],
+    "mayNotFit": [
+      "young kids scared by medical peril or government agents",
+      "families avoiding stronger language in older PG movies"
+    ],
+    "watchOutFor": [
+      "E.T. appears gravely ill or dead",
+      "government pursuit and gun-related peril in some versions",
+      "stronger language than many modern PG family movies"
+    ],
+    "conversationTopics": ["friendship", "empathy", "trust", "letting go"],
+    "matchSignals": ["parent nostalgia", "emotional intensity", "some language", "classic sci-fi"],
+    "seedNotes": "Checked against Common Sense Media's E.T. guide, which lists age 7+, emotional peril/apparent death, government pursuit, stronger language, guns in the theatrical version, and E.T. drinking beer."
+  },
+  {
+    "id": "tt0097814",
+    "imdbId": "tt0097814",
+    "title": "Kiki's Delivery Service",
+    "year": "1989",
+    "status": "ai-assisted",
+    "guideVersion": "pizza-guide-v1",
+    "sourceType": "source-checked-editorial",
+    "bestAgeRange": "5-11",
+    "summary": "A gentle, positive coming-of-age story that is one of the easiest starter Studio Ghibli picks for family movie night. It has very little objectionable content, with the main cautions being a few flying-peril moments, mild name-calling, light flirting, and a storm/rescue sequence near the end.",
+    "parentAppeal": 8,
+    "kidAppeal": 7,
+    "teenAppeal": 6,
+    "familyNightFit": 8,
+    "concernLevels": {
+      "scare": 1,
+      "violence": 1,
+      "language": 1,
+      "romanceNudity": 1,
+      "substances": 0
+    },
+    "toneTags": ["gentle", "warm", "independent", "magical", "positive"],
+    "goodFor": [
+      "families wanting a calm, low-conflict movie",
+      "kids who like magic without scary villains",
+      "parents looking for independence and self-confidence themes"
+    ],
+    "mayNotFit": [
+      "viewers who need fast pacing or constant jokes",
+      "kids scared by storm or height peril"
+    ],
+    "watchOutFor": [
+      "Kiki has a few scary flying close calls",
+      "Tombo is briefly in danger at a great height",
+      "very mild name-calling and light flirting"
+    ],
+    "conversationTopics": ["independence", "self-doubt", "helpfulness", "friendship"],
+    "matchSignals": ["low concern levels", "gentle tone", "strong parent appeal", "younger-kid fit"],
+    "seedNotes": "Checked against Common Sense Media's Kiki guide, which lists age 5+, very little violence/scariness, very little language, no substances, and mild flirting."
+  }
+]

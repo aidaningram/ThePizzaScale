@@ -41,6 +41,7 @@ import { getDownloadURL, ref, uploadString } from "firebase/storage";
 import { auth, db, functions, storage } from "./firebase";
 import { getOmdbMovie, searchOmdbMovies } from "./movieProvider";
 import pizzaWordmark from "./assets/PizzaScaleWordmark.png";
+import seededMovieGuides from "../data/movie-guides.seed.json";
 import "./styles.css";
 
 const posterThemes = ["marmalade", "neon", "stage", "woodland"];
@@ -72,6 +73,10 @@ const guideConcernLabels = {
   romanceNudity: "Romance/nudity",
   substances: "Substances",
 };
+
+const seededMovieGuideMap = new Map(
+  seededMovieGuides.map((guide) => [guide.id || guide.imdbId, guide]),
+);
 
 const featuredMovies = [
   {
@@ -1515,6 +1520,8 @@ async function hydrateMoviesWithStats(movies) {
 
         if (guideSnapshot.exists()) {
           hydratedMovie = mergeMovieGuide(hydratedMovie, guideSnapshot.data());
+        } else if (seededMovieGuideMap.has(movie.id)) {
+          hydratedMovie = mergeMovieGuide(hydratedMovie, seededMovieGuideMap.get(movie.id));
         }
 
         return hydratedMovie;
@@ -2567,6 +2574,7 @@ function PizzaGuidePanel({ guide, movieTitle }) {
         </div>
       )}
       <GuideList title="Good for families who like" items={guide.goodFor} />
+      <GuideList title="May not fit families who are avoiding" items={guide.mayNotFit} />
       <GuideList title="Watch out for" items={guide.watchOutFor} />
       <GuideList title="Conversation starters" items={guide.conversationTopics} />
     </section>
