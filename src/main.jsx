@@ -41,6 +41,10 @@ import { getDownloadURL, ref, uploadString } from "firebase/storage";
 import { auth, db, functions, storage } from "./firebase";
 import { getOmdbMovie, searchOmdbMovies } from "./movieProvider";
 import pizzaWordmark from "./assets/PizzaScaleWordmark.png";
+import {
+  homeAppealMovieCatalog,
+  homeAppealMovieGuides,
+} from "../data/home-appeal-categories.js";
 import seededMovieGuides from "../data/movie-guides.seed.json";
 import "./styles.css";
 
@@ -75,7 +79,10 @@ const guideConcernLabels = {
 };
 
 const seededMovieGuideMap = new Map(
-  seededMovieGuides.map((guide) => [guide.id || guide.imdbId, guide]),
+  [...seededMovieGuides, ...homeAppealMovieGuides].map((guide) => [
+    guide.id || guide.imdbId,
+    guide,
+  ]),
 );
 
 const featuredMovies = [
@@ -495,6 +502,7 @@ function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [featuredCatalog, setFeaturedCatalog] = useState(featuredMovies);
+  const [appealCatalog, setAppealCatalog] = useState(homeAppealMovieCatalog);
   const [movieResults, setMovieResults] = useState(featuredMovies);
   const [selectedMovie, setSelectedMovie] = useState(featuredMovies[0]);
   const [searchStatus, setSearchStatus] = useState("idle");
@@ -633,25 +641,40 @@ function App() {
     let isCurrent = true;
 
     async function loadFeaturedPosters() {
-      const hydratedMovies = await Promise.all(
-        featuredMovies.map(async (movie, index) => {
-          try {
-            return normalizeOmdbMovie(await getOmdbMovie(movie.imdbId), index);
-          } catch {
-            return movie;
-          }
-        }),
+      const hydrateSeedMovies = async (movies) => {
+        const hydratedMovies = await Promise.all(
+          movies.map(async (movie, index) => {
+            try {
+              return {
+                ...movie,
+                ...normalizeOmdbMovie(await getOmdbMovie(movie.imdbId), index),
+              };
+            } catch {
+              return movie;
+            }
+          }),
+        );
+
+        return hydrateMoviesWithStats(hydratedMovies);
+      };
+
+      const hydratedAppealCatalog = await Promise.all(
+        homeAppealMovieCatalog.map(async (category) => ({
+          ...category,
+          movies: await hydrateSeedMovies(category.movies),
+        })),
       );
-      const moviesWithStats = await hydrateMoviesWithStats(hydratedMovies);
+      const hydratedMovies = await hydrateSeedMovies(featuredMovies);
 
       if (!isCurrent) return;
 
-      setFeaturedCatalog(moviesWithStats);
+      setFeaturedCatalog(hydratedMovies);
+      setAppealCatalog(hydratedAppealCatalog);
       setMovieResults((currentResults) =>
-        currentResults === featuredMovies ? moviesWithStats : currentResults,
+        currentResults === featuredMovies ? hydratedMovies : currentResults,
       );
       setSelectedMovie((currentMovie) =>
-        currentMovie.id === featuredMovies[0].id ? moviesWithStats[0] : currentMovie,
+        currentMovie.id === featuredMovies[0].id ? hydratedMovies[0] : currentMovie,
       );
     }
 
@@ -1355,6 +1378,7 @@ function App() {
       {page === "home" && (
         <HomePage
           movieResults={featuredCatalog}
+          appealCategories={appealCatalog}
           selectedMovie={selectedMovie}
           onOpenMovie={(movie) => openMovieStats(movie, "home")}
         />
@@ -2192,6 +2216,7 @@ function SearchPage({
 
 function HomePage({
   movieResults,
+  appealCategories,
   selectedMovie,
   onOpenMovie,
 }) {
@@ -2202,6 +2227,7 @@ function HomePage({
       description: "Starter picks while The Pizza Scale gathers real family ratings.",
       movies: movieResults,
     },
+    ...appealCategories,
   ];
 
   return (
@@ -2582,7 +2608,7 @@ function PizzaGuidePanel({ guide, movieTitle, canShowFamilyFit = false }) {
           ))}
         </div>
       )}
-      <GuideList title="Good for families who like" items={guide.goodFor} variant="good" />
+      <GuideList title="Good for" items={guide.goodFor} variant="good" />
       <GuideList
         title="May not fit families who are avoiding"
         items={guide.mayNotFit}

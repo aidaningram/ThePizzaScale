@@ -1,10 +1,11 @@
 import { readFile } from "node:fs/promises";
 import { createRequire } from "node:module";
+import { homeAppealMovieGuides } from "../data/home-appeal-categories.js";
 
 const require = createRequire(import.meta.url);
 const seedPath = new URL("../data/movie-guides.seed.json", import.meta.url);
 const rawSeed = await readFile(seedPath, "utf8");
-const guides = JSON.parse(rawSeed);
+const guides = [...JSON.parse(rawSeed), ...homeAppealMovieGuides];
 const shouldWrite = process.argv.includes("--write");
 
 if (!Array.isArray(guides)) {
