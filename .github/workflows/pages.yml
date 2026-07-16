@@ -49,7 +49,7 @@ jobs:
           VITE_FIREBASE_MESSAGING_SENDER_ID: "805928480114"
           VITE_FIREBASE_APP_ID: "1:805928480114:web:757451897522cf1def01eb"
           VITE_FIREBASE_MEASUREMENT_ID: "G-DTER8KTXMF"
-          VITE_OMDB_API_KEY: "c24b1a88"
+          VITE_OMDB_API_KEY: "17fda6e5"
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
