@@ -40,12 +40,14 @@ const removedMembers = [];
 Object.entries(appMembers).forEach(([uid, member]) => {
   const nameKey = memberNameKey(member);
   const isDuplicateOfSharedProfile = nameKey && sharedNames.has(nameKey) && !sharedKeys.has(uid);
+  const hasAccount = memberHasAccount(uid, member);
 
-  if (isDuplicateOfSharedProfile) {
+  if (isDuplicateOfSharedProfile || !hasAccount) {
     removedMembers.push({
       uid,
       name: member.name || member.firstNameOrNickname || "",
       email: member.email || "",
+      reason: isDuplicateOfSharedProfile ? "duplicate shared profile" : "no linked account or email",
     });
     return;
   }
@@ -59,7 +61,7 @@ console.log(JSON.stringify({
   familyId,
   appMemberCountBefore: Object.keys(appMembers).length,
   sharedMemberCount: sharedMembersSnap.size,
-  duplicateMemberCount: removedMembers.length,
+  removedMemberCount: removedMembers.length,
   removedMembers,
   appMemberCountAfter: Object.keys(cleanedMembers).length,
 }, null, 2));
@@ -81,6 +83,16 @@ function memberNameKey(member = {}) {
     .trim()
     .toLowerCase()
     .replace(/\s+/g, " ");
+}
+
+function memberHasAccount(uid, member = {}) {
+  return Boolean(
+    member.email ||
+    member.userId ||
+    member.uid ||
+    member.linkedAccountUserId ||
+    sharedKeys.has(uid)
+  );
 }
 
 function getArgValue(name) {
