@@ -450,6 +450,26 @@ function getInitialJoinCode() {
   }
 }
 
+function getMovieDeepLink() {
+  try {
+    const hash = window.location.hash || "";
+    const [hashRoute, hashQuery = ""] = hash.replace(/^#/, "").split("?");
+    const hashParams = new URLSearchParams(hashQuery);
+    const searchParams = new URLSearchParams(window.location.search);
+    const imdbId = (hashParams.get("imdbId") || searchParams.get("imdbId") || "").trim();
+
+    if (!/^tt\d{5,12}$/.test(imdbId)) return null;
+
+    return {
+      imdbId,
+      title: (hashParams.get("title") || searchParams.get("title") || "").trim(),
+      page: hashRoute === "/rate-movie" ? "rate-movie" : "movie",
+    };
+  } catch {
+    return null;
+  }
+}
+
 function buildFamilyInviteLink(inviteCode, inviterName = "") {
   if (!inviteCode) return "";
 
@@ -506,6 +526,7 @@ function App() {
   const [appealCatalog, setAppealCatalog] = useState(homeAppealMovieCatalog);
   const [movieResults, setMovieResults] = useState(featuredMovies);
   const [selectedMovie, setSelectedMovie] = useState(featuredMovies[0]);
+  const [deepLinkHandled, setDeepLinkHandled] = useState(false);
   const [searchStatus, setSearchStatus] = useState("idle");
   const [searchMessage, setSearchMessage] = useState("");
   const [user, setUser] = useState(null);
@@ -686,6 +707,65 @@ function App() {
       isCurrent = false;
     };
   }, []);
+
+  useEffect(() => {
+    if (deepLinkHandled) return;
+
+    const deepLink = getMovieDeepLink();
+    if (!deepLink?.imdbId) {
+      setDeepLinkHandled(true);
+      return;
+    }
+
+    let isCurrent = true;
+
+    async function openDeepLinkedMovie() {
+      const catalogMovies = [
+        ...featuredCatalog,
+        ...appealCatalog.flatMap((category) => category.movies || []),
+      ];
+      const catalogMovie = catalogMovies.find(
+        (movie) => movie.id === deepLink.imdbId || movie.imdbId === deepLink.imdbId,
+      );
+      const seededGuide = seededMovieGuideMap.get(deepLink.imdbId);
+      let movie =
+        catalogMovie ||
+        normalizeOmdbMovie(
+          {
+            imdbId: deepLink.imdbId,
+            title: deepLink.title || seededGuide?.title || "Selected movie",
+            year: "",
+          },
+          0,
+        );
+
+      try {
+        movie = normalizeOmdbMovie(await getOmdbMovie(deepLink.imdbId), 0);
+      } catch {
+        // The fallback movie still lets the guide open if OMDb is unavailable.
+      }
+
+      const [hydratedMovie] = await hydrateMoviesWithStats([movie]);
+
+      if (!isCurrent) return;
+
+      setSelectedMovie(hydratedMovie);
+      setMovieResults((currentResults) =>
+        currentResults.some((currentMovie) => currentMovie.id === hydratedMovie.id)
+          ? currentResults
+          : [hydratedMovie, ...currentResults],
+      );
+      setMovieBackPage("home");
+      setPage(deepLink.page);
+      setDeepLinkHandled(true);
+    }
+
+    openDeepLinkedMovie();
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [appealCatalog, deepLinkHandled, featuredCatalog]);
 
   useEffect(() => {
     const normalizedQuery = query.trim();
