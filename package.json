@@ -12,7 +12,8 @@
     "seed:guides": "node scripts/seed-movie-guides.mjs --write",
     "migrate:pizza-movie-night:check": "cd functions && npm run migrate:pizza-movie-night:check",
     "migrate:pizza-movie-night": "cd functions && npm run migrate:pizza-movie-night",
-    "import:pizza-movie-night-state": "cd functions && npm run import:pizza-movie-night-state"
+    "import:pizza-movie-night-state": "cd functions && npm run import:pizza-movie-night-state",
+    "cleanup:pizza-movie-night-members": "cd functions && npm run cleanup:pizza-movie-night-members"
   },
   "dependencies": {
     "@vitejs/plugin-react": "latest",

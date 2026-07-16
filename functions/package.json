@@ -7,10 +7,11 @@
     "node": "22"
   },
   "scripts": {
-    "lint": "node --check index.js && node --check scripts/migrate-pizza-movie-night-family.mjs && node --check scripts/import-pizza-movie-night-state.mjs",
+    "lint": "node --check index.js && node --check scripts/migrate-pizza-movie-night-family.mjs && node --check scripts/import-pizza-movie-night-state.mjs && node --check scripts/cleanup-pizza-movie-night-members.mjs",
     "migrate:pizza-movie-night:check": "node scripts/migrate-pizza-movie-night-family.mjs",
     "migrate:pizza-movie-night": "node scripts/migrate-pizza-movie-night-family.mjs --write",
-    "import:pizza-movie-night-state": "node scripts/import-pizza-movie-night-state.mjs"
+    "import:pizza-movie-night-state": "node scripts/import-pizza-movie-night-state.mjs",
+    "cleanup:pizza-movie-night-members": "node scripts/cleanup-pizza-movie-night-members.mjs"
   },
   "dependencies": {
     "firebase-admin": "^13.0.0",
