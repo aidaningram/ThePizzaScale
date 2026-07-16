@@ -298,7 +298,7 @@ function normalizeRole(value) {
 function normalizePermission(value, role) {
   const permission = String(value || "").trim().toLowerCase();
   if (permission === "lead") return "lead";
-  if (permission === "coleader" || permission === "co-leader") return "coleader";
+  if (permission === "colead" || permission === "coleader" || permission === "co-leader") return "colead";
   if (role !== "adult") return "profile";
   if (permission === "rate" || permission === "rater") return "rate";
   return "member";
