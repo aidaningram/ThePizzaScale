@@ -11,6 +11,7 @@
     {
       "firstNameOrNickname": "",
       "email": "",
+      "userId": "",
       "role": "adult",
       "birthDate": "",
       "gender": "",

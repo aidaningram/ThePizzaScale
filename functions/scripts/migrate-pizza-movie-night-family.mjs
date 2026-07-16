@@ -45,7 +45,9 @@ const resolvedMembers = [];
 
 for (const rawMember of rawMembers) {
   const member = normalizeMember(rawMember);
-  if (member.email) {
+  if (member.userId) {
+    if (member.email) authUsersByEmail.set(member.email.toLowerCase(), member.userId);
+  } else if (member.email) {
     member.userId = await resolveUidForEmail(member.email, exportedAccounts);
     authUsersByEmail.set(member.email.toLowerCase(), member.userId);
   }
@@ -225,6 +227,7 @@ async function resolveUidForEmail(email, exportedAccounts) {
 function normalizeMember(rawMember) {
   const firstNameOrNickname = cleanString(rawMember.firstNameOrNickname || rawMember.firstName || rawMember.name, 80);
   const email = cleanEmail(rawMember.email || "");
+  const userId = cleanString(rawMember.userId || rawMember.uid || "", 128);
   const role = normalizeRole(rawMember.role);
   const birthDate = cleanString(rawMember.birthDate || rawMember.birthday || "", 10);
   const gender = cleanString(rawMember.gender || "", 40);
@@ -243,7 +246,7 @@ function normalizeMember(rawMember) {
     gender,
     permission,
     canRate,
-    userId: "",
+    userId,
   };
 }
 

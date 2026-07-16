@@ -43,6 +43,7 @@ cp migration/pizza-movie-night-family.template.json migration/pizza-movie-night-
 - `leadAdultEmail`
 - each member's first name
 - each member's email, if they have an account
+- each member's Firebase Auth `userId`, if the account exists but local lookup cannot find it
 - birth dates in `YYYY-MM-DD`
 - gender
 - role
