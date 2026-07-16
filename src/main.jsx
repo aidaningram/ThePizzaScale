@@ -1693,11 +1693,15 @@ function normalizeWatchProviderGroups(value) {
               logoUrl: String(provider?.logoUrl || "").trim(),
               webUrl: String(provider?.webUrl || "").trim(),
             }))
-            .filter((provider) => provider.name)
+            .filter((provider) => provider.name && !isIndirectWatchProvider(provider))
             .slice(0, 12)
         : [],
     ]),
   );
+}
+
+function isIndirectWatchProvider(provider) {
+  return /\(\s*via\b/i.test(String(provider?.name || ""));
 }
 
 function getProviderCount(groups) {

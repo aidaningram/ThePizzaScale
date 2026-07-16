@@ -818,7 +818,7 @@ function groupWatchProviders(sources, sourceCatalog = new Map()) {
     const provider = enrichWatchProvider(normalizeWatchProvider(source), sourceCatalog, source);
     const dedupeKey = `${groupKey}:${provider.id || provider.name}`;
 
-    if (!provider.name || seen.has(dedupeKey)) continue;
+    if (!provider.name || isIndirectWatchProvider(provider) || seen.has(dedupeKey)) continue;
 
     seen.add(dedupeKey);
     groups[groupKey].push(provider);
@@ -878,6 +878,10 @@ function normalizeWatchProvider(source) {
       .slice(0, 500),
     webUrl: String(source.web_url || "").trim().slice(0, 500),
   };
+}
+
+function isIndirectWatchProvider(provider) {
+  return /\(\s*via\b/i.test(String(provider?.name || ""));
 }
 
 async function createUniqueInviteCode() {
