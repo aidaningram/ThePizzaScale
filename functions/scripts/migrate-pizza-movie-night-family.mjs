@@ -78,11 +78,7 @@ const familyRef = db.collection("families").doc(familyId);
 const inviteRef = db.collection("familyInvites").doc(familyCode);
 const appStateRef = db.collection("pizzaMovieNightFamilies").doc(familyId);
 
-const [familySnap, inviteSnap, appStateSnap] = await Promise.all([
-  familyRef.get(),
-  inviteRef.get(),
-  appStateRef.get(),
-]);
+const [familySnap, inviteSnap, appStateSnap] = await readExistingMigrationDocs();
 
 if (familySnap.exists && !mergeMode) {
   fail(`families/${familyId} already exists. Re-run with --merge if you intend to update it.`);
@@ -190,6 +186,26 @@ if (!appStateSnap.exists || mergeMode) {
 
 await batch.commit();
 console.log(`\nMigration write completed for ${familyRef.path}.`);
+
+async function readExistingMigrationDocs() {
+  try {
+    return await Promise.all([
+      familyRef.get(),
+      inviteRef.get(),
+      appStateRef.get(),
+    ]);
+  } catch (error) {
+    if (isMissingCredentialsError(error)) {
+      fail([
+        "Firebase Admin credentials are missing on this computer.",
+        "Create a Firebase service account key for the-pizza-scale, save it outside Git, then run:",
+        "GOOGLE_APPLICATION_CREDENTIALS=/full/path/to/the-key.json npm run migrate:pizza-movie-night:check",
+        "Use the same GOOGLE_APPLICATION_CREDENTIALS prefix for the final write command.",
+      ].join("\n"));
+    }
+    throw error;
+  }
+}
 
 function getArgValue(name) {
   const prefix = `${name}=`;
@@ -330,4 +346,12 @@ function printPreview(summary) {
 function fail(message) {
   console.error(`Migration stopped: ${message}`);
   process.exit(1);
+}
+
+function isMissingCredentialsError(error) {
+  const message = String(error?.message || error || "");
+  return message.includes("Could not load the default credentials")
+    || message.includes("Could not load the default credentials")
+    || message.includes("MetadataLookupWarning")
+    || message.includes("computeMetadata");
 }

@@ -5,3 +5,5 @@ dist/
 .env.local
 .DS_Store
 migration/*.plan.json
+*service-account*.json
+*firebase-adminsdk*.json

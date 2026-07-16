@@ -59,12 +59,24 @@ Run this first. It does not write data.
 npm run migrate:pizza-movie-night:check
 ```
 
+If your computer has no Firebase Admin credentials yet, create a service account key in Firebase Console:
+
+1. Open the `the-pizza-scale` Firebase project.
+2. Go to Project settings > Service accounts.
+3. Click Generate new private key.
+4. Save it somewhere private, such as `~/Downloads/the-pizza-scale-service-account.json`.
+5. Run the preview with:
+
+```bash
+GOOGLE_APPLICATION_CREDENTIALS=~/Downloads/the-pizza-scale-service-account.json npm run migrate:pizza-movie-night:check
+```
+
 ## Write
 
 Only after the preview looks right:
 
 ```bash
-npm run migrate:pizza-movie-night
+GOOGLE_APPLICATION_CREDENTIALS=~/Downloads/the-pizza-scale-service-account.json npm run migrate:pizza-movie-night
 ```
 
 If the family already exists and you intentionally want to update it:
