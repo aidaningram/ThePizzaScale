@@ -1773,15 +1773,16 @@ function normalizeWatchProviderGroups(value) {
               logoUrl: String(provider?.logoUrl || "").trim(),
               webUrl: String(provider?.webUrl || "").trim(),
             }))
-            .filter((provider) => provider.name && !isIndirectWatchProvider(provider))
+            .filter((provider) => provider.name && !isHiddenWatchProvider(provider))
             .slice(0, 12)
         : [],
     ]),
   );
 }
 
-function isIndirectWatchProvider(provider) {
-  return /\(\s*via\b/i.test(String(provider?.name || ""));
+function isHiddenWatchProvider(provider) {
+  const name = String(provider?.name || "");
+  return /\(\s*via\b/i.test(name) || /^kanopy$/i.test(name.trim());
 }
 
 function getProviderCount(groups) {
@@ -2704,7 +2705,7 @@ function WhereToWatch({ movie }) {
   }, [imdbId]);
 
   const providerCount = getProviderCount(watchState.providers);
-  const iconProviders = getUniqueWatchProviders(watchState.providers).slice(0, 8);
+  const iconProviders = getUniqueWatchProviders({ stream: watchState.providers.stream }).slice(0, 8);
   const isUnavailable = watchState.status === "unavailable";
 
   return (
@@ -2722,10 +2723,12 @@ function WhereToWatch({ movie }) {
             <span className="watch-loading">Checking...</span>
           ) : isUnavailable ? (
             <span className="watch-unavailable">Unavailable</span>
-          ) : (
+          ) : iconProviders.length ? (
             iconProviders.map((provider) => (
               <WatchProviderIcon provider={provider} key={`${provider.id}-${provider.name}`} />
             ))
+          ) : (
+            <span className="watch-unavailable">Rent/buy available</span>
           )}
         </span>
         {providerCount > 0 && (
