@@ -6,7 +6,7 @@
     "generatedBy": "scripts/build-popular-guide-backlog.mjs"
   },
   "totalCandidates": 250,
-  "existingGuideCount": 27,
+  "existingGuideCount": 51,
   "movies": [
     {
       "rank": 1,
@@ -161,8 +161,8 @@
       "genres": "Crime,Thriller",
       "averageRating": 8.4,
       "numVotes": 2005725,
-      "hasPizzaScaleGuide": false,
-      "guideStatus": "needs-source-checked-guide"
+      "hasPizzaScaleGuide": true,
+      "guideStatus": "existing"
     },
     {
       "rank": 14,
@@ -173,8 +173,8 @@
       "genres": "Adventure,Drama,Fantasy",
       "averageRating": 8.8,
       "numVotes": 1966650,
-      "hasPizzaScaleGuide": false,
-      "guideStatus": "needs-source-checked-guide"
+      "hasPizzaScaleGuide": true,
+      "guideStatus": "existing"
     },
     {
       "rank": 15,
@@ -185,8 +185,8 @@
       "genres": "Drama,Western",
       "averageRating": 8.5,
       "numVotes": 1894668,
-      "hasPizzaScaleGuide": false,
-      "guideStatus": "needs-source-checked-guide"
+      "hasPizzaScaleGuide": true,
+      "guideStatus": "existing"
     },
     {
       "rank": 16,
@@ -197,8 +197,8 @@
       "genres": "Action,Adventure,Drama",
       "averageRating": 8.5,
       "numVotes": 1860606,
-      "hasPizzaScaleGuide": false,
-      "guideStatus": "needs-source-checked-guide"
+      "hasPizzaScaleGuide": true,
+      "guideStatus": "existing"
     },
     {
       "rank": 17,
@@ -209,8 +209,8 @@
       "genres": "Biography,Comedy,Crime",
       "averageRating": 8.2,
       "numVotes": 1802815,
-      "hasPizzaScaleGuide": false,
-      "guideStatus": "needs-source-checked-guide"
+      "hasPizzaScaleGuide": true,
+      "guideStatus": "existing"
     },
     {
       "rank": 18,
@@ -221,8 +221,8 @@
       "genres": "Drama,War",
       "averageRating": 8.4,
       "numVotes": 1797585,
-      "hasPizzaScaleGuide": false,
-      "guideStatus": "needs-source-checked-guide"
+      "hasPizzaScaleGuide": true,
+      "guideStatus": "existing"
     },
     {
       "rank": 19,
@@ -233,8 +233,8 @@
       "genres": "Crime,Drama,Horror",
       "averageRating": 8.6,
       "numVotes": 1732908,
-      "hasPizzaScaleGuide": false,
-      "guideStatus": "needs-source-checked-guide"
+      "hasPizzaScaleGuide": true,
+      "guideStatus": "existing"
     },
     {
       "rank": 20,
@@ -245,8 +245,8 @@
       "genres": "Crime",
       "averageRating": 8.2,
       "numVotes": 1724596,
-      "hasPizzaScaleGuide": false,
-      "guideStatus": "needs-source-checked-guide"
+      "hasPizzaScaleGuide": true,
+      "guideStatus": "existing"
     },
     {
       "rank": 21,
@@ -257,8 +257,8 @@
       "genres": "Drama",
       "averageRating": 8.3,
       "numVotes": 1705760,
-      "hasPizzaScaleGuide": false,
-      "guideStatus": "needs-source-checked-guide"
+      "hasPizzaScaleGuide": true,
+      "guideStatus": "existing"
     },
     {
       "rank": 22,
@@ -269,8 +269,8 @@
       "genres": "Drama,Mystery,Thriller",
       "averageRating": 8.2,
       "numVotes": 1661346,
-      "hasPizzaScaleGuide": false,
-      "guideStatus": "needs-source-checked-guide"
+      "hasPizzaScaleGuide": true,
+      "guideStatus": "existing"
     },
     {
       "rank": 23,
@@ -281,8 +281,8 @@
       "genres": "Drama,War",
       "averageRating": 8.6,
       "numVotes": 1648437,
-      "hasPizzaScaleGuide": false,
-      "guideStatus": "needs-source-checked-guide"
+      "hasPizzaScaleGuide": true,
+      "guideStatus": "existing"
     },
     {
       "rank": 24,
@@ -293,8 +293,8 @@
       "genres": "Drama,Mystery,Sci-Fi",
       "averageRating": 8.5,
       "numVotes": 1599423,
-      "hasPizzaScaleGuide": false,
-      "guideStatus": "needs-source-checked-guide"
+      "hasPizzaScaleGuide": true,
+      "guideStatus": "existing"
     },
     {
       "rank": 25,
@@ -305,8 +305,8 @@
       "genres": "Biography,Drama,History",
       "averageRating": 9,
       "numVotes": 1591577,
-      "hasPizzaScaleGuide": false,
-      "guideStatus": "needs-source-checked-guide"
+      "hasPizzaScaleGuide": true,
+      "guideStatus": "existing"
     },
     {
       "rank": 26,
@@ -317,8 +317,8 @@
       "genres": "Action,Adventure,Fantasy",
       "averageRating": 8.6,
       "numVotes": 1577227,
-      "hasPizzaScaleGuide": false,
-      "guideStatus": "needs-source-checked-guide"
+      "hasPizzaScaleGuide": true,
+      "guideStatus": "existing"
     },
     {
       "rank": 27,
@@ -329,8 +329,8 @@
       "genres": "Crime,Drama,Fantasy",
       "averageRating": 8.6,
       "numVotes": 1570075,
-      "hasPizzaScaleGuide": false,
-      "guideStatus": "needs-source-checked-guide"
+      "hasPizzaScaleGuide": true,
+      "guideStatus": "existing"
     },
     {
       "rank": 28,
@@ -341,8 +341,8 @@
       "genres": "Action,Sci-Fi",
       "averageRating": 8,
       "numVotes": 1565355,
-      "hasPizzaScaleGuide": false,
-      "guideStatus": "needs-source-checked-guide"
+      "hasPizzaScaleGuide": true,
+      "guideStatus": "existing"
     },
     {
       "rank": 29,
@@ -353,8 +353,8 @@
       "genres": "Crime,Drama,Thriller",
       "averageRating": 8.5,
       "numVotes": 1562823,
-      "hasPizzaScaleGuide": false,
-      "guideStatus": "needs-source-checked-guide"
+      "hasPizzaScaleGuide": true,
+      "guideStatus": "existing"
     },
     {
       "rank": 30,
@@ -365,8 +365,8 @@
       "genres": "Adventure,Fantasy,Sci-Fi",
       "averageRating": 8.7,
       "numVotes": 1511904,
-      "hasPizzaScaleGuide": false,
-      "guideStatus": "needs-source-checked-guide"
+      "hasPizzaScaleGuide": true,
+      "guideStatus": "existing"
     },
     {
       "rank": 31,
@@ -377,8 +377,8 @@
       "genres": "Action,Adventure,Fantasy",
       "averageRating": 7.9,
       "numVotes": 1505710,
-      "hasPizzaScaleGuide": false,
-      "guideStatus": "needs-source-checked-guide"
+      "hasPizzaScaleGuide": true,
+      "guideStatus": "existing"
     },
     {
       "rank": 32,
@@ -389,8 +389,8 @@
       "genres": "Crime,Drama",
       "averageRating": 9,
       "numVotes": 1500993,
-      "hasPizzaScaleGuide": false,
-      "guideStatus": "needs-source-checked-guide"
+      "hasPizzaScaleGuide": true,
+      "guideStatus": "existing"
     },
     {
       "rank": 33,
@@ -401,8 +401,8 @@
       "genres": "Adventure,Comedy,Sci-Fi",
       "averageRating": 8.5,
       "numVotes": 1461575,
-      "hasPizzaScaleGuide": false,
-      "guideStatus": "needs-source-checked-guide"
+      "hasPizzaScaleGuide": true,
+      "guideStatus": "existing"
     },
     {
       "rank": 34,
@@ -413,8 +413,8 @@
       "genres": "Action,Adventure,Sci-Fi",
       "averageRating": 8.4,
       "numVotes": 1459224,
-      "hasPizzaScaleGuide": false,
-      "guideStatus": "needs-source-checked-guide"
+      "hasPizzaScaleGuide": true,
+      "guideStatus": "existing"
     },
     {
       "rank": 35,
@@ -425,8 +425,8 @@
       "genres": "Mystery,Thriller",
       "averageRating": 8.4,
       "numVotes": 1442233,
-      "hasPizzaScaleGuide": false,
-      "guideStatus": "needs-source-checked-guide"
+      "hasPizzaScaleGuide": true,
+      "guideStatus": "existing"
     },
     {
       "rank": 36,
@@ -437,8 +437,8 @@
       "genres": "Drama,Romance",
       "averageRating": 8,
       "numVotes": 1400657,
-      "hasPizzaScaleGuide": false,
-      "guideStatus": "needs-source-checked-guide"
+      "hasPizzaScaleGuide": true,
+      "guideStatus": "existing"
     },
     {
       "rank": 37,
