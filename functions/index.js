@@ -240,6 +240,7 @@ export const getMovieScaleSummary = onCall(
       db.collection("movieGuides").doc(imdbId).get(),
     ]);
     let familyReview = null;
+    let familyFitSignals = null;
 
     if (request.auth && familyId) {
       const familySnapshot = await db.collection("families").doc(familyId).get();
@@ -248,8 +249,18 @@ export const getMovieScaleSummary = onCall(
         Array.isArray(family.memberUserIds) && family.memberUserIds.includes(request.auth.uid);
 
       if (isFamilyMember) {
-        const reviewSnapshot = await db.collection("reviews").doc(`${familyId}_${imdbId}`).get();
+        const [reviewSnapshot, membersSnapshot, movieReviewsSnapshot] = await Promise.all([
+          db.collection("reviews").doc(`${familyId}_${imdbId}`).get(),
+          db.collection("familyMembers").where("familyId", "==", familyId).get(),
+          db.collection("reviews").where("movieId", "==", imdbId).limit(75).get(),
+        ]);
         familyReview = reviewSnapshot.exists ? summarizeFamilyReview(reviewSnapshot.data()) : null;
+        familyFitSignals = buildFamilyFitSignals({
+          familyId,
+          familyMembers: membersSnapshot.docs.map((memberDoc) => memberDoc.data()),
+          reviews: movieReviewsSnapshot.docs.map((reviewDoc) => reviewDoc.data()),
+          familyReview,
+        });
       }
     }
 
@@ -258,6 +269,7 @@ export const getMovieScaleSummary = onCall(
       movie: movieSnapshot.exists ? summarizeMovie(movieSnapshot.data()) : null,
       guide: guideSnapshot.exists ? summarizeMovieGuide(guideSnapshot.data()) : null,
       familyReview,
+      familyFitSignals,
     };
   },
 );
@@ -662,11 +674,19 @@ function summarizeMovieGuide(guide = {}) {
     status: guide.status || "",
     summary: guide.summary || "",
     bestAgeRange: guide.bestAgeRange || "",
+    familyNightFit: numberOrNull(guide.familyNightFit),
     parentAppeal: numberOrNull(guide.parentAppeal),
     kidAppeal: numberOrNull(guide.kidAppeal),
     teenAppeal: numberOrNull(guide.teenAppeal),
     concernLevels: guide.concernLevels || {},
+    toneTags: Array.isArray(guide.toneTags) ? guide.toneTags.slice(0, 8) : [],
+    goodFor: Array.isArray(guide.goodFor) ? guide.goodFor.slice(0, 5) : [],
+    mayNotFit: Array.isArray(guide.mayNotFit) ? guide.mayNotFit.slice(0, 5) : [],
     watchOutFor: Array.isArray(guide.watchOutFor) ? guide.watchOutFor.slice(0, 5) : [],
+    conversationTopics: Array.isArray(guide.conversationTopics)
+      ? guide.conversationTopics.slice(0, 5)
+      : [],
+    matchSignals: Array.isArray(guide.matchSignals) ? guide.matchSignals.slice(0, 8) : [],
   };
 }
 
@@ -678,6 +698,139 @@ function summarizeFamilyReview(review = {}) {
     visibility: review.visibility || "aggregate",
     ratedAt: review.createdAt || review.updatedAt || null,
   };
+}
+
+function buildFamilyFitSignals({ familyId, familyMembers = [], reviews = [], familyReview }) {
+  const currentShape = buildFamilyShapeFromMembers(familyMembers);
+  const weightedSimilarReviews = reviews
+    .filter((review) => review.familyId !== familyId)
+    .map((review) => ({
+      score: numberOrNull(review.pizzaScore),
+      similarity: calculateFamilySimilarity(
+        currentShape,
+        buildFamilyShapeFromReviewSnapshot(review.familySnapshotAtReview),
+      ),
+    }))
+    .filter(({ score, similarity }) => Number.isFinite(score) && similarity >= 0.2);
+  const totalSimilarity = weightedSimilarReviews.reduce(
+    (total, review) => total + review.similarity,
+    0,
+  );
+  const similarFamilyPizzaScore =
+    totalSimilarity > 0
+      ? Number(
+          (
+            weightedSimilarReviews.reduce(
+              (total, review) => total + review.score * review.similarity,
+              0,
+            ) / totalSimilarity
+          ).toFixed(2),
+        )
+      : null;
+
+  return {
+    ownFamilyPizzaScore: numberOrNull(familyReview?.pizzaScore),
+    similarFamilyPizzaScore,
+    similarFamilyReviewCount: weightedSimilarReviews.length,
+  };
+}
+
+function buildFamilyShapeFromMembers(members = []) {
+  const normalizedMembers = members.map((member) => {
+    const age = getAgeFromBirthDate(member.birthDate) ?? numberOrNull(member.age);
+    const role = member.role || (Number.isFinite(age) && age >= 18 ? "adult" : "child");
+
+    return {
+      age,
+      role,
+      gender: String(member.gender || "").toLowerCase(),
+    };
+  });
+
+  return summarizeFamilyShape(normalizedMembers);
+}
+
+function buildFamilyShapeFromReviewSnapshot(snapshot = {}) {
+  return summarizeFamilyShape(
+    (snapshot.members || []).map((member) => ({
+      age: numberOrNull(member.age),
+      role: member.role || "",
+      gender: String(member.gender || "").toLowerCase(),
+    })),
+  );
+}
+
+function summarizeFamilyShape(members = []) {
+  const childAndTeenAges = members
+    .filter((member) => ["child", "teen"].includes(member.role))
+    .map((member) => member.age)
+    .filter(Number.isFinite);
+  const genderCounts = members.reduce((counts, member) => {
+    if (!member.gender) return counts;
+    return {
+      ...counts,
+      [member.gender]: (counts[member.gender] || 0) + 1,
+    };
+  }, {});
+
+  return {
+    memberCount: members.length,
+    adultCount: members.filter((member) => member.role === "adult").length,
+    childCount: members.filter((member) => member.role === "child").length,
+    teenCount: members.filter((member) => member.role === "teen").length,
+    youngestAge: childAndTeenAges.length ? Math.min(...childAndTeenAges) : null,
+    oldestAge: childAndTeenAges.length ? Math.max(...childAndTeenAges) : null,
+    genderCounts,
+  };
+}
+
+function calculateFamilySimilarity(currentShape, reviewedShape) {
+  if (!currentShape.memberCount || !reviewedShape.memberCount) return 0;
+
+  const roleDiff =
+    Math.abs(currentShape.adultCount - reviewedShape.adultCount) * 0.12 +
+    Math.abs(currentShape.childCount - reviewedShape.childCount) * 0.16 +
+    Math.abs(currentShape.teenCount - reviewedShape.teenCount) * 0.16;
+  const youngestDiff =
+    Number.isFinite(currentShape.youngestAge) && Number.isFinite(reviewedShape.youngestAge)
+      ? Math.min(0.35, Math.abs(currentShape.youngestAge - reviewedShape.youngestAge) * 0.04)
+      : 0.12;
+  const oldestDiff =
+    Number.isFinite(currentShape.oldestAge) && Number.isFinite(reviewedShape.oldestAge)
+      ? Math.min(0.25, Math.abs(currentShape.oldestAge - reviewedShape.oldestAge) * 0.025)
+      : 0.08;
+  const genderDiff = calculateGenderShapeDifference(
+    currentShape.genderCounts,
+    reviewedShape.genderCounts,
+  );
+
+  return Math.max(0, 1 - roleDiff - youngestDiff - oldestDiff - genderDiff);
+}
+
+function calculateGenderShapeDifference(currentCounts = {}, reviewedCounts = {}) {
+  const keys = new Set([...Object.keys(currentCounts), ...Object.keys(reviewedCounts)]);
+  let diff = 0;
+
+  keys.forEach((key) => {
+    diff += Math.abs((currentCounts[key] || 0) - (reviewedCounts[key] || 0)) * 0.04;
+  });
+
+  return Math.min(0.2, diff);
+}
+
+function getAgeFromBirthDate(birthDate, referenceDate = new Date()) {
+  if (!birthDate) return null;
+
+  const [yearValue, monthValue, dayValue] = String(birthDate).split("-").map(Number);
+
+  if (!yearValue || !monthValue || !dayValue) return null;
+
+  let age = referenceDate.getFullYear() - yearValue;
+  const hasHadBirthdayThisYear =
+    referenceDate.getMonth() + 1 > monthValue ||
+    (referenceDate.getMonth() + 1 === monthValue && referenceDate.getDate() >= dayValue);
+
+  return hasHadBirthdayThisYear ? age : age - 1;
 }
 
 function numberOrNull(value) {

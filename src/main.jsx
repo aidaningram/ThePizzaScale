@@ -71,6 +71,15 @@ const toleranceOptions = [
   { value: "high", label: "Flexible" },
 ];
 
+const toleranceCeilings = {
+  low: 1,
+  moderate: 2.35,
+  high: 4,
+};
+
+const familyFitDescription =
+  "Personalized for your family using your preferences, family dynamic, and prior movie preferences. It will get smarter as your family and similar families rate more movies.";
+
 const guideConcernLabels = {
   scare: "Scary moments",
   violence: "Violence",
@@ -409,6 +418,263 @@ function buildFamilySnapshotForReview(familyProfile, user) {
     oldestAge: numericAges.length ? Math.max(...numericAges) : null,
     members,
   };
+}
+
+function calculatePersonalizedFamilyFit({ guide, familyProfile, familyMovieReview, movie }) {
+  if (!guide || !familyProfile?.members?.length) return null;
+
+  const familyShape = getFamilyShape(familyProfile);
+  const preferences = {
+    ...defaultFamilyPreferences,
+    ...(familyProfile.preferences || {}),
+  };
+  const startingScore = calculateFamilyFitStartingScore(guide, familyShape, preferences);
+  const adjustments = [
+    getAgeRangeFitAdjustment(guide.bestAgeRange, familyShape),
+    getConcernFitAdjustment(guide.concernLevels, preferences),
+    getRuntimeFitAdjustment(movie?.runtime, preferences),
+    getEnergyFitAdjustment(guide, preferences),
+    getTasteSignalAdjustment(guide, familyProfile),
+  ];
+  const preferenceScore = clampGuideScore(
+    startingScore + adjustments.reduce((total, adjustment) => total + adjustment, 0),
+  );
+  const similarFamilyScore = getSimilarFamilyScore(movie, guide);
+  const ownFamilyScore = getOwnFamilyScore(familyMovieReview, movie);
+
+  let blendedScore = preferenceScore;
+
+  if (Number.isFinite(similarFamilyScore)) {
+    blendedScore = weightedAverage([
+      [blendedScore, 0.82],
+      [similarFamilyScore, 0.18],
+    ]);
+  }
+
+  if (Number.isFinite(ownFamilyScore)) {
+    blendedScore = weightedAverage([
+      [blendedScore, 0.55],
+      [ownFamilyScore, 0.45],
+    ]);
+  }
+
+  return Number(clampGuideScore(blendedScore).toFixed(1));
+}
+
+function getFamilyShape(familyProfile) {
+  const members = (familyProfile?.members || []).map((member) => {
+    const age = Number(getAgeFromBirthDate(member.birthDate) || member.age);
+    const role = member.role || (Number.isFinite(age) && age >= 18 ? "adult" : "child");
+
+    return {
+      ...member,
+      age: Number.isFinite(age) ? age : null,
+      role,
+    };
+  });
+  const childrenAndTeens = members.filter((member) => ["child", "teen"].includes(member.role));
+  const adults = members.filter((member) => member.role === "adult");
+  const kids = members.filter((member) => member.role === "child");
+  const teens = members.filter((member) => member.role === "teen");
+  const ages = childrenAndTeens.map((member) => member.age).filter(Number.isFinite);
+
+  return {
+    members,
+    adults,
+    kids,
+    teens,
+    childAndTeenCount: childrenAndTeens.length,
+    youngestViewerAge: ages.length ? Math.min(...ages) : null,
+    oldestViewerAge: ages.length ? Math.max(...ages) : null,
+  };
+}
+
+function calculateFamilyFitStartingScore(guide, familyShape, preferences) {
+  const appealScores = [
+    [guide.familyNightFit, 1],
+    [guide.parentAppeal, familyShape.adults.length || preferences.wantsParentAppeal ? 0.9 : 0.35],
+    [guide.kidAppeal, Math.max(0.35, familyShape.kids.length)],
+    [guide.teenAppeal, Math.max(0.35, familyShape.teens.length)],
+  ];
+
+  return weightedAverage(appealScores) || guide.familyNightFit || 5;
+}
+
+function getAgeRangeFitAdjustment(bestAgeRange, familyShape) {
+  if (!bestAgeRange || familyShape.youngestViewerAge == null) return 0;
+
+  const range = parseGuideAgeRange(bestAgeRange);
+  if (!range) return 0;
+
+  let adjustment = 0;
+
+  if (Number.isFinite(range.min) && familyShape.youngestViewerAge < range.min) {
+    adjustment -= Math.min(1.4, (range.min - familyShape.youngestViewerAge) * 0.28);
+  }
+
+  if (Number.isFinite(range.max) && familyShape.oldestViewerAge > range.max + 2) {
+    adjustment -= Math.min(0.7, (familyShape.oldestViewerAge - range.max - 2) * 0.14);
+  }
+
+  if (
+    Number.isFinite(range.min) &&
+    familyShape.youngestViewerAge >= range.min &&
+    (!Number.isFinite(range.max) || familyShape.oldestViewerAge <= range.max + 2)
+  ) {
+    adjustment += 0.25;
+  }
+
+  return adjustment;
+}
+
+function parseGuideAgeRange(bestAgeRange) {
+  const text = String(bestAgeRange).toLowerCase();
+  const rangeMatch = text.match(/(\d{1,2})\s*[-–]\s*(\d{1,2})/);
+  if (rangeMatch) {
+    return { min: Number(rangeMatch[1]), max: Number(rangeMatch[2]) };
+  }
+
+  const plusMatch = text.match(/(\d{1,2})\s*\+/);
+  if (plusMatch) {
+    return { min: Number(plusMatch[1]), max: null };
+  }
+
+  const firstAge = text.match(/(\d{1,2})/);
+  return firstAge ? { min: Number(firstAge[1]), max: null } : null;
+}
+
+function getConcernFitAdjustment(concernLevels = {}, preferences = {}) {
+  const concernPreferences = {
+    scare: preferences.scareTolerance,
+    violence: preferences.violenceTolerance,
+    language: preferences.languageTolerance,
+    romanceNudity: preferences.romanceNudityTolerance,
+    substances: preferences.substancesTolerance || preferences.languageTolerance || "moderate",
+  };
+
+  return Object.entries(concernPreferences).reduce((total, [concernKey, tolerance]) => {
+    const concernLevel = Number(concernLevels?.[concernKey]);
+    if (!Number.isFinite(concernLevel)) return total;
+
+    const ceiling = toleranceCeilings[tolerance] ?? toleranceCeilings.moderate;
+    const excess = Math.max(0, concernLevel - ceiling);
+    const comfort = Math.max(0, ceiling - concernLevel);
+
+    return total - excess * 0.42 + Math.min(0.18, comfort * 0.05);
+  }, 0);
+}
+
+function getRuntimeFitAdjustment(runtime, preferences = {}) {
+  const minutes = Number(String(runtime || "").match(/\d+/)?.[0]);
+  if (!Number.isFinite(minutes)) return 0;
+
+  if (preferences.preferredRuntime === "short") {
+    if (minutes > 120) return -0.9;
+    if (minutes > 105) return -0.45;
+  }
+
+  if (preferences.preferredRuntime === "long" && minutes < 85) {
+    return -0.15;
+  }
+
+  return 0;
+}
+
+function getEnergyFitAdjustment(guide, preferences = {}) {
+  const preferredEnergy = preferences.preferredEnergy || "balanced";
+  if (preferredEnergy === "balanced") return 0;
+
+  const signals = [
+    ...(guide.toneTags || []),
+    ...(guide.goodFor || []),
+    ...(guide.mayNotFit || []),
+    ...(guide.matchSignals || []),
+  ]
+    .join(" ")
+    .toLowerCase();
+
+  const highEnergy = /action|intense|fast|chaotic|thrill|superhero|adventure|loud/.test(signals);
+  const gentleEnergy = /gentle|calm|quiet|cozy|low-stress|comfort|slow/.test(signals);
+
+  if (preferredEnergy === "gentle") {
+    return highEnergy ? -0.45 : gentleEnergy ? 0.25 : 0;
+  }
+
+  if (preferredEnergy === "high-energy") {
+    return gentleEnergy && !highEnergy ? -0.25 : highEnergy ? 0.2 : 0;
+  }
+
+  return 0;
+}
+
+function getTasteSignalAdjustment(guide, familyProfile) {
+  const tasteProfile = familyProfile?.tasteProfile || familyProfile?.preferenceSignals || {};
+  const likedSignals = normalizeStringList([
+    ...(tasteProfile.likedGenres || []),
+    ...(tasteProfile.likedToneTags || []),
+    ...(tasteProfile.likedSignals || []),
+  ]).map((signal) => signal.toLowerCase());
+  const avoidedSignals = normalizeStringList([
+    ...(tasteProfile.dislikedGenres || []),
+    ...(tasteProfile.dislikedToneTags || []),
+    ...(tasteProfile.avoidedSignals || []),
+  ]).map((signal) => signal.toLowerCase());
+  const guideSignals = normalizeStringList([
+    ...(guide.toneTags || []),
+    ...(guide.goodFor || []),
+    ...(guide.matchSignals || []),
+  ])
+    .join(" ")
+    .toLowerCase();
+  const guideWarnings = normalizeStringList([
+    ...(guide.mayNotFit || []),
+    ...(guide.watchOutFor || []),
+  ])
+    .join(" ")
+    .toLowerCase();
+  const likedMatches = likedSignals.filter((signal) => guideSignals.includes(signal)).length;
+  const avoidedMatches = avoidedSignals.filter(
+    (signal) => guideSignals.includes(signal) || guideWarnings.includes(signal),
+  ).length;
+
+  return Math.min(0.6, likedMatches * 0.15) - Math.min(0.9, avoidedMatches * 0.22);
+}
+
+function getSimilarFamilyScore(movie, guide) {
+  const signals = movie?.familyFitSignals || guide?.familyFitSignals || {};
+  const score =
+    signals.similarFamilyPizzaScore ??
+    signals.similarFamilyFit ??
+    movie?.similarFamilyPizzaScore ??
+    guide?.similarFamilyPizzaScore;
+
+  return normalizeGuideScore(score);
+}
+
+function getOwnFamilyScore(familyMovieReview, movie) {
+  return normalizeGuideScore(
+    familyMovieReview?.pizzaScore ??
+      movie?.familyFitSignals?.ownFamilyPizzaScore ??
+      movie?.ownFamilyPizzaScore,
+  );
+}
+
+function weightedAverage(weightedValues) {
+  const validValues = weightedValues.filter(
+    ([value, weight]) => Number.isFinite(Number(value)) && Number(weight) > 0,
+  );
+  const totalWeight = validValues.reduce((total, [, weight]) => total + Number(weight), 0);
+
+  if (!totalWeight) return null;
+
+  return (
+    validValues.reduce((total, [value, weight]) => total + Number(value) * Number(weight), 0) /
+    totalWeight
+  );
+}
+
+function clampGuideScore(value) {
+  return Math.max(1, Math.min(8, Number(value)));
 }
 
 function getBroadChildAgeRanges(familySnapshot) {
@@ -901,6 +1167,50 @@ function App() {
       isCurrent = false;
     };
   }, [familyProfile?.id, selectedMovie]);
+
+  useEffect(() => {
+    let isCurrent = true;
+
+    async function loadFamilyFitSignals() {
+      if (!user || !familyProfile?.id || !selectedMovie?.id) return;
+
+      try {
+        const getMovieScaleSummary = httpsCallable(functions, "getMovieScaleSummary");
+        const result = await getMovieScaleSummary({
+          imdbId: selectedMovie.id,
+          familyId: familyProfile.id,
+        });
+        const summary = result.data || {};
+
+        if (!isCurrent) return;
+
+        setSelectedMovie((currentMovie) => {
+          if (currentMovie.id !== selectedMovie.id) return currentMovie;
+
+          const movieWithSignals = {
+            ...currentMovie,
+            familyFitSignals: summary.familyFitSignals || null,
+          };
+
+          return summary.guide && !currentMovie.familyGuide
+            ? mergeMovieGuide(movieWithSignals, summary.guide)
+            : movieWithSignals;
+        });
+
+        if (summary.familyReview) {
+          setFamilyMovieReview((currentReview) => currentReview || summary.familyReview);
+        }
+      } catch {
+        // Family Fit can still be calculated from the guide and saved preferences.
+      }
+    }
+
+    loadFamilyFitSignals();
+
+    return () => {
+      isCurrent = false;
+    };
+  }, [familyProfile?.id, selectedMovie?.id, user]);
 
   async function handleGoogleSignIn({ promptForFamily = true } = {}) {
     setAuthMessage("");
@@ -2524,6 +2834,9 @@ function MovieStatsPage({
         <PizzaGuidePanel
           guide={selectedMovie.familyGuide}
           movieTitle={selectedMovie.title}
+          movie={selectedMovie}
+          familyProfile={familyProfile}
+          familyMovieReview={familyMovieReview}
           canShowFamilyFit={Boolean(familyProfile?.id && familyProfile?.members?.length)}
           onOpenConcern={onOpenConcern}
         />
@@ -3011,6 +3324,9 @@ function getConcernDetailItems(guide, concernKey) {
 function PizzaGuidePanel({
   guide,
   movieTitle,
+  movie,
+  familyProfile,
+  familyMovieReview,
   canShowFamilyFit = false,
   onOpenConcern = () => {},
 }) {
@@ -3036,6 +3352,12 @@ function PizzaGuidePanel({
   const concernEntries = Object.entries(guide.concernLevels || {}).filter(([, value]) =>
     Number.isFinite(value),
   );
+  const familyFitScore = calculatePersonalizedFamilyFit({
+    guide,
+    familyProfile,
+    familyMovieReview,
+    movie,
+  });
 
   return (
     <section className="pizza-guide-panel">
@@ -3050,10 +3372,11 @@ function PizzaGuidePanel({
       {guide.summary && <p className="guide-summary">{guide.summary}</p>}
       <div className="guide-score-grid">
         <GuideScore
-          label="Family night fit"
-          value={guide.familyNightFit}
+          label="Family Fit"
+          value={familyFitScore}
           isLocked={!canShowFamilyFit}
-          lockedText="Join or create a family to calculate this."
+          lockedText="Join or create a family to calculate your personalized fit."
+          description={canShowFamilyFit ? familyFitDescription : ""}
         />
         <GuideScore label="Parent appeal" value={guide.parentAppeal} />
         <GuideScore label="Kid appeal" value={guide.kidAppeal} />
@@ -3089,7 +3412,7 @@ function PizzaGuidePanel({
   );
 }
 
-function GuideScore({ label, value, isLocked = false, lockedText = "" }) {
+function GuideScore({ label, value, isLocked = false, lockedText = "", description = "" }) {
   const hasValue = Number.isFinite(value) && !isLocked;
 
   return (
@@ -3097,6 +3420,7 @@ function GuideScore({ label, value, isLocked = false, lockedText = "" }) {
       <span>{label}</span>
       {hasValue ? <PizzaFill value={value} /> : <div className="guide-score-placeholder" />}
       <strong>{hasValue ? `${Number(value).toFixed(1)} / 8` : "Not ready yet"}</strong>
+      {description && <small>{description}</small>}
       {isLocked && <small>{lockedText}</small>}
     </div>
   );
