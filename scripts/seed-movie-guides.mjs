@@ -3,7 +3,7 @@ import { createRequire } from "node:module";
 import { homeAppealMovieGuides } from "../data/home-appeal-categories.js";
 import { popularExpansionGuides } from "../data/popular-expansion-guides.js";
 
-const require = createRequire(import.meta.url);
+const require = createRequire(new URL("../functions/package.json", import.meta.url));
 const seedPath = new URL("../data/movie-guides.seed.json", import.meta.url);
 const rawSeed = await readFile(seedPath, "utf8");
 const guides = [...JSON.parse(rawSeed), ...homeAppealMovieGuides, ...popularExpansionGuides];
@@ -25,8 +25,8 @@ if (!normalizedGuides.length) {
   process.exit(0);
 }
 
-const { initializeApp, getApps, applicationDefault } = require("../functions/node_modules/firebase-admin/app");
-const { FieldValue, getFirestore } = require("../functions/node_modules/firebase-admin/firestore");
+const { initializeApp, getApps, applicationDefault } = require("firebase-admin/app");
+const { FieldValue, getFirestore } = require("firebase-admin/firestore");
 
 if (!getApps().length) {
   initializeApp({ credential: applicationDefault() });
