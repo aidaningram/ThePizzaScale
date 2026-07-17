@@ -8,6 +8,7 @@
     "check": "node scripts/smoke-check.mjs && vite build",
     "build": "vite build",
     "preview": "vite preview --host 127.0.0.1",
+    "guides:popular:backlog": "node scripts/build-popular-guide-backlog.mjs",
     "seed:guides:check": "node scripts/seed-movie-guides.mjs",
     "seed:guides": "node scripts/seed-movie-guides.mjs --write",
     "migrate:pizza-movie-night:check": "cd functions && npm run migrate:pizza-movie-night:check",
