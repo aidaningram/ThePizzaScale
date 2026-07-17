@@ -78,7 +78,7 @@ const toleranceCeilings = {
 };
 
 const familyFitDescription =
-  "Personalized for your family using your preferences, family dynamic, and prior movie preferences. It will get smarter as your family and similar families rate more movies.";
+  "Personalized for your family using your preferences, family dynamic, and prior movie preferences. It will get smarter as your family rates more movies.";
 
 const guideConcernLabels = {
   scare: "Scary moments",
@@ -3254,8 +3254,8 @@ function ConcernDetailPage({ selectedMovie, concernKey, onBack }) {
         Back to movie
       </button>
       <section className="detail-panel concern-detail-panel">
-        <div className="movie-detail compact">
-          <PosterTile movie={selectedMovie} compact />
+        <div className="concern-detail-hero">
+          <PosterTile movie={selectedMovie} />
           <div className="movie-copy">
             <p className="eyebrow">{selectedMovie.title}</p>
             <h2>{concernLabel}</h2>

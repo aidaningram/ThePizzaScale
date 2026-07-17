@@ -2023,6 +2023,33 @@ textarea::placeholder {
 .concern-detail-panel {
   display: grid;
   gap: 18px;
+  overflow: hidden;
+}
+
+.concern-detail-hero {
+  display: grid;
+  grid-template-columns: minmax(150px, 220px) minmax(0, 1fr);
+  gap: 22px;
+  align-items: center;
+}
+
+.concern-detail-hero > .poster-tile {
+  width: 100%;
+  aspect-ratio: 2 / 3;
+}
+
+.concern-detail-hero .movie-copy,
+.concern-detail-hero .plot,
+.concern-detail-hero h2 {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.concern-detail-hero h2,
+.concern-detail-card > strong,
+.concern-detail-list span {
+  overflow-wrap: anywhere;
+  word-break: normal;
 }
 
 .concern-detail-card {
@@ -2056,6 +2083,7 @@ textarea::placeholder {
   padding: 11px 12px;
   font-weight: 900;
   line-height: 1.35;
+  min-width: 0;
 }
 
 .preference-checkbox {
@@ -2715,8 +2743,44 @@ textarea {
     max-width: 196px;
   }
 
+  .concern-detail-panel {
+    padding: 16px;
+  }
+
+  .concern-detail-hero {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .concern-detail-hero > .poster-tile {
+    width: min(210px, 72vw);
+    justify-self: center;
+  }
+
+  .concern-detail-hero .movie-copy {
+    display: grid;
+    gap: 10px;
+  }
+
+  .concern-detail-card {
+    padding: 14px;
+  }
+
+  .concern-detail-card > strong {
+    font-size: 1.28rem;
+  }
+
+  .concern-detail-list span {
+    font-size: 0.98rem;
+  }
+
   .movie-copy h2 {
     font-size: 2.35rem;
+  }
+
+  .concern-detail-hero h2 {
+    font-size: clamp(2.25rem, 14vw, 3.15rem);
+    line-height: 0.98;
   }
 }
 
