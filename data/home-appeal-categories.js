@@ -1,3 +1,5 @@
+import { extraHomeAppealCategories } from "./extra-home-categories.js";
+
 function movie({
   id,
   title,
@@ -3514,6 +3516,7 @@ export const homeAppealCategories = [
       }),
     ],
   },
+  ...extraHomeAppealCategories,
 ];
 
 export const homeAppealMovieGuides = homeAppealCategories.flatMap((category) =>
