@@ -31,6 +31,7 @@ import {
   getDoc,
   getDocs,
   limit,
+  onSnapshot,
   query as firestoreQuery,
   serverTimestamp,
   setDoc,
@@ -461,6 +462,269 @@ function calculatePersonalizedFamilyFit({ guide, familyProfile, familyMovieRevie
   return Number(clampGuideScore(blendedScore).toFixed(1));
 }
 
+const familyPreferenceKeys = [
+  "scareTolerance",
+  "violenceTolerance",
+  "languageTolerance",
+  "romanceNudityTolerance",
+  "preferredEnergy",
+  "preferredRuntime",
+  "wantsParentAppeal",
+];
+
+function hasCompleteFamilyPreferences(familyProfile) {
+  const preferences = familyProfile?.preferences || {};
+
+  return Boolean(
+    familyProfile?.id &&
+      familyProfile?.members?.length &&
+      familyPreferenceKeys.every((key) =>
+        key === "wantsParentAppeal" ? typeof preferences[key] === "boolean" : Boolean(preferences[key]),
+      ),
+  );
+}
+
+function buildGuidedMoviePool({ featuredCatalog = [], appealCatalog = [], guideCatalog = [] }) {
+  const movieMap = new Map();
+  const addMovie = (movie) => {
+    if (!movie?.id && !movie?.imdbId) return;
+
+    const movieId = movie.id || movie.imdbId;
+    const guide = movie.familyGuide || seededMovieGuideMap.get(movieId);
+    const existingMovie = movieMap.get(movieId) || {};
+
+    movieMap.set(movieId, {
+      ...existingMovie,
+      ...movie,
+      id: movieId,
+      imdbId: movie.imdbId || movieId,
+      familyGuide: movie.familyGuide || (guide ? normalizeMovieGuide(guide) : existingMovie.familyGuide),
+    });
+  };
+  const addGuide = (guide) => {
+    if (!guide?.id && !guide?.imdbId) return;
+
+    const movieId = guide.id || guide.imdbId;
+    const existingMovie = movieMap.get(movieId) || {};
+    movieMap.set(movieId, {
+      ...createMovieFromGuide(guide),
+      ...existingMovie,
+      id: movieId,
+      imdbId: guide.imdbId || existingMovie.imdbId || movieId,
+      familyGuide: existingMovie.familyGuide || normalizeMovieGuide(guide),
+    });
+  };
+
+  seededMovieGuides.forEach(addGuide);
+  homeAppealMovieGuides.forEach(addGuide);
+  guideCatalog.forEach(addGuide);
+  featuredCatalog.forEach(addMovie);
+  appealCatalog.flatMap((category) => category.movies || []).forEach(addMovie);
+
+  return Array.from(movieMap.values()).filter((movie) => movie.familyGuide);
+}
+
+function createMovieFromGuide(guide) {
+  const movieId = guide.id || guide.imdbId;
+
+  return {
+    id: movieId,
+    imdbId: guide.imdbId || movieId,
+    title: guide.title || "Untitled movie",
+    year: guide.year || "",
+    rated: guide.rated || "NR",
+    runtime: guide.runtime || "Runtime TBD",
+    genre: guide.genre || "Guide available",
+    posterUrl: guide.posterUrl || "",
+    posterTheme: "marmalade",
+    plot: guide.summary || "This movie has a Pizza Scale Guide.",
+    pizzaScore: null,
+    familyMatch: null,
+    reviewCount: 0,
+    ageFit: guide.bestAgeRange || "Guide available",
+    familyGuide: normalizeMovieGuide(guide),
+  };
+}
+
+function buildFamilyTasteProfileFromReviews(familyReviews = [], guidedMovies = []) {
+  const guidedMovieMap = new Map(guidedMovies.map((movie) => [movie.id, movie]));
+  const weightedSignals = {
+    likedGenres: new Map(),
+    dislikedGenres: new Map(),
+    likedToneTags: new Map(),
+    dislikedToneTags: new Map(),
+    likedSignals: new Map(),
+    avoidedSignals: new Map(),
+  };
+
+  familyReviews.forEach((review) => {
+    const score = Number(review.pizzaScore);
+    if (!Number.isFinite(score)) return;
+
+    const movie = guidedMovieMap.get(review.movieId) || guidedMovieMap.get(review.imdbId);
+    const guide = movie?.familyGuide;
+    const isLiked = score >= 6.5;
+    const isDisliked = score <= 4;
+
+    if (!isLiked && !isDisliked) return;
+
+    const weight = isLiked ? Math.max(0.5, score - 6) : Math.max(0.5, 4.5 - score);
+    const genreBucket = isLiked ? weightedSignals.likedGenres : weightedSignals.dislikedGenres;
+    const toneBucket = isLiked ? weightedSignals.likedToneTags : weightedSignals.dislikedToneTags;
+    const signalBucket = isLiked ? weightedSignals.likedSignals : weightedSignals.avoidedSignals;
+
+    splitGenreList(review.movieGenre || movie?.genre).forEach((genre) =>
+      addWeightedSignal(genreBucket, genre, weight),
+    );
+    normalizeStringList(guide?.toneTags).forEach((tag) => addWeightedSignal(toneBucket, tag, weight));
+    normalizeStringList(guide?.matchSignals).forEach((signal) =>
+      addWeightedSignal(signalBucket, signal, weight),
+    );
+  });
+
+  return Object.fromEntries(
+    Object.entries(weightedSignals).map(([key, value]) => [key, getTopWeightedSignals(value)]),
+  );
+}
+
+function addWeightedSignal(signalMap, signal, weight = 1) {
+  const normalizedSignal = String(signal || "").trim();
+  if (!normalizedSignal) return;
+
+  signalMap.set(normalizedSignal, (signalMap.get(normalizedSignal) || 0) + weight);
+}
+
+function getTopWeightedSignals(signalMap) {
+  return Array.from(signalMap.entries())
+    .sort((first, second) => second[1] - first[1])
+    .slice(0, 8)
+    .map(([signal]) => signal);
+}
+
+function splitGenreList(value) {
+  return String(value || "")
+    .split(",")
+    .map((genre) => genre.trim())
+    .filter(Boolean);
+}
+
+function rankGuidedRecommendations({ movies = [], familyProfile, familyReviews = [] }) {
+  if (!hasCompleteFamilyPreferences(familyProfile)) return [];
+
+  const reviewMap = new Map(
+    familyReviews.flatMap((review) => [
+      [review.movieId, review],
+      [review.imdbId, review],
+    ]),
+  );
+  const tasteProfile = buildFamilyTasteProfileFromReviews(familyReviews, movies);
+  const familyProfileWithTaste = {
+    ...familyProfile,
+    tasteProfile,
+  };
+
+  return movies
+    .map((movie) => {
+      const familyMovieReview = reviewMap.get(movie.id) || reviewMap.get(movie.imdbId);
+      const familyFitScore = calculatePersonalizedFamilyFit({
+        guide: movie.familyGuide,
+        familyProfile: familyProfileWithTaste,
+        familyMovieReview,
+        movie,
+      });
+
+      if (!Number.isFinite(familyFitScore)) return null;
+
+      const rankingScore = familyFitScore + getRecommendationTasteBoost(movie, tasteProfile);
+
+      return {
+        ...movie,
+        familyFitScore,
+        recommendationScore: Number(rankingScore.toFixed(2)),
+      };
+    })
+    .filter(Boolean)
+    .sort((first, second) => {
+      if (second.recommendationScore !== first.recommendationScore) {
+        return second.recommendationScore - first.recommendationScore;
+      }
+
+      return String(first.title).localeCompare(String(second.title));
+    });
+}
+
+function getRecommendationTasteBoost(movie, tasteProfile = {}) {
+  const likedGenres = normalizeStringList(tasteProfile.likedGenres).map((signal) =>
+    signal.toLowerCase(),
+  );
+  const dislikedGenres = normalizeStringList(tasteProfile.dislikedGenres).map((signal) =>
+    signal.toLowerCase(),
+  );
+  const likedStyles = normalizeStringList([
+    ...(tasteProfile.likedToneTags || []),
+    ...(tasteProfile.likedSignals || []),
+  ]).map((signal) => signal.toLowerCase());
+  const avoidedStyles = normalizeStringList([
+    ...(tasteProfile.dislikedToneTags || []),
+    ...(tasteProfile.avoidedSignals || []),
+  ]).map((signal) => signal.toLowerCase());
+  const movieGenres = splitGenreList(movie.genre).map((genre) => genre.toLowerCase());
+  const guideSignals = normalizeStringList([
+    ...(movie.familyGuide?.toneTags || []),
+    ...(movie.familyGuide?.matchSignals || []),
+    ...(movie.familyGuide?.goodFor || []),
+  ])
+    .join(" ")
+    .toLowerCase();
+  const guideWarnings = normalizeStringList([
+    ...(movie.familyGuide?.mayNotFit || []),
+    ...(movie.familyGuide?.watchOutFor || []),
+  ])
+    .join(" ")
+    .toLowerCase();
+  const genreBoost = movieGenres.filter((genre) => likedGenres.includes(genre)).length * 0.28;
+  const styleBoost =
+    likedStyles.filter((signal) => signal.length > 2 && guideSignals.includes(signal)).length *
+    0.18;
+  const genrePenalty = movieGenres.filter((genre) => dislikedGenres.includes(genre)).length * 0.32;
+  const stylePenalty =
+    avoidedStyles.filter(
+      (signal) =>
+        signal.length > 2 && (guideSignals.includes(signal) || guideWarnings.includes(signal)),
+    ).length * 0.2;
+
+  return Math.min(1.2, genreBoost + styleBoost) - Math.min(1.1, genrePenalty + stylePenalty);
+}
+
+function filterRecommendedMovies(movies, filters) {
+  return movies.filter((movie) => {
+    const genres = splitGenreList(movie.genre);
+    const runtimeMinutes = getRuntimeMinutes(movie.runtime);
+
+    if (filters.genre !== "all" && !genres.includes(filters.genre)) return false;
+    if (filters.rating !== "all" && movie.rated !== filters.rating) return false;
+    if (filters.duration === "short" && (!Number.isFinite(runtimeMinutes) || runtimeMinutes >= 95)) {
+      return false;
+    }
+    if (
+      filters.duration === "medium" &&
+      (!Number.isFinite(runtimeMinutes) || runtimeMinutes < 95 || runtimeMinutes > 120)
+    ) {
+      return false;
+    }
+    if (filters.duration === "long" && (!Number.isFinite(runtimeMinutes) || runtimeMinutes <= 120)) {
+      return false;
+    }
+
+    return true;
+  });
+}
+
+function getRuntimeMinutes(runtime) {
+  const minutes = Number(String(runtime || "").match(/\d+/)?.[0]);
+  return Number.isFinite(minutes) ? minutes : null;
+}
+
 function getFamilyShape(familyProfile) {
   const members = (familyProfile?.members || []).map((member) => {
     const age = Number(getAgeFromBirthDate(member.birthDate) || member.age);
@@ -790,6 +1054,7 @@ function App() {
   const [query, setQuery] = useState("");
   const [featuredCatalog, setFeaturedCatalog] = useState(featuredMovies);
   const [appealCatalog, setAppealCatalog] = useState(homeAppealMovieCatalog);
+  const [guideCatalog, setGuideCatalog] = useState([]);
   const [movieResults, setMovieResults] = useState(featuredMovies);
   const [selectedMovie, setSelectedMovie] = useState(featuredMovies[0]);
   const [deepLinkHandled, setDeepLinkHandled] = useState(false);
@@ -805,6 +1070,7 @@ function App() {
   const [familyLoadStatus, setFamilyLoadStatus] = useState("idle");
   const [publicReviews, setPublicReviews] = useState([]);
   const [familyMovieReview, setFamilyMovieReview] = useState(null);
+  const [familyReviews, setFamilyReviews] = useState([]);
   const [reviewMessage, setReviewMessage] = useState("");
   const [reviewSaveStatus, setReviewSaveStatus] = useState("idle");
   const [selectedConcernKey, setSelectedConcernKey] = useState("scare");
@@ -925,6 +1191,27 @@ function App() {
       isCurrent = false;
     };
   }, [user]);
+
+  useEffect(() => {
+    const unsubscribe = onSnapshot(
+      firestoreQuery(collection(db, "movieGuides"), limit(500)),
+      (guideSnapshot) => {
+        setGuideCatalog(
+          guideSnapshot.docs.map((guideDoc) => ({
+            id: guideDoc.id,
+            ...guideDoc.data(),
+          })),
+        );
+      },
+      () => {
+        setGuideCatalog([]);
+      },
+    );
+
+    return () => {
+      unsubscribe();
+    };
+  }, []);
 
   useEffect(() => {
     let isCurrent = true;
@@ -1130,6 +1417,36 @@ function App() {
       isCurrent = false;
     };
   }, [selectedMovie]);
+
+  useEffect(() => {
+    if (!familyProfile?.id) {
+      setFamilyReviews([]);
+      return undefined;
+    }
+
+    const unsubscribe = onSnapshot(
+      firestoreQuery(
+        collection(db, "reviews"),
+        where("familyId", "==", familyProfile.id),
+        limit(200),
+      ),
+      (reviewSnapshot) => {
+        setFamilyReviews(
+          reviewSnapshot.docs.map((reviewDoc) => ({
+            id: reviewDoc.id,
+            ...reviewDoc.data(),
+          })),
+        );
+      },
+      () => {
+        setFamilyReviews([]);
+      },
+    );
+
+    return () => {
+      unsubscribe();
+    };
+  }, [familyProfile?.id]);
 
   useEffect(() => {
     let isCurrent = true;
@@ -1498,6 +1815,13 @@ function App() {
         id: reviewId,
         ...reviewPayload,
       });
+      setFamilyReviews((reviews) => [
+        {
+          id: reviewId,
+          ...reviewPayload,
+        },
+        ...reviews.filter((savedReview) => savedReview.id !== reviewId),
+      ]);
 
       if (reviewVisibility === "public") {
         setPublicReviews((reviews) => [
@@ -1777,8 +2101,12 @@ function App() {
         <HomePage
           movieResults={featuredCatalog}
           appealCategories={appealCatalog}
+          guideCatalog={guideCatalog}
+          familyProfile={familyProfile}
+          familyReviews={familyReviews}
           selectedMovie={selectedMovie}
           onOpenMovie={(movie) => openMovieStats(movie, "home")}
+          onSeeRecommendations={() => setPage("recommendations")}
         />
       )}
 
@@ -1871,7 +2199,21 @@ function App() {
       )}
 
       {page === "recommendations" && (
-        <RecommendationsPage user={user} onSignIn={() => openSignIn("login")} />
+        <RecommendationsPage
+          user={user}
+          familyProfile={familyProfile}
+          familyReviews={familyReviews}
+          featuredCatalog={featuredCatalog}
+          appealCatalog={appealCatalog}
+          guideCatalog={guideCatalog}
+          selectedMovie={selectedMovie}
+          onOpenMovie={(movie) => openMovieStats(movie, "recommendations")}
+          onSignIn={() => openSignIn("login")}
+          onOpenSettings={() => {
+            setSettingsInitialSection("family");
+            setPage("settings");
+          }}
+        />
       )}
 
       {page === "about" && <AboutPage onSearch={() => setPage("search")} />}
@@ -2548,11 +2890,45 @@ function getEmailAuthErrorMessage(error, mode) {
   }
 }
 
-function RecommendationsPage({ user, onSignIn }) {
+function RecommendationsPage({
+  user,
+  familyProfile,
+  familyReviews,
+  featuredCatalog,
+  appealCatalog,
+  guideCatalog,
+  selectedMovie,
+  onOpenMovie,
+  onSignIn,
+  onOpenSettings,
+}) {
+  const [filters, setFilters] = useState({
+    genre: "all",
+    rating: "all",
+    duration: "all",
+  });
+  const guidedMovies = buildGuidedMoviePool({
+    featuredCatalog,
+    appealCatalog,
+    guideCatalog,
+  });
+  const rankedMovies = rankGuidedRecommendations({
+    movies: guidedMovies,
+    familyProfile,
+    familyReviews,
+  });
+  const filteredMovies = filterRecommendedMovies(rankedMovies, filters);
+  const genreOptions = Array.from(
+    new Set(rankedMovies.flatMap((movie) => splitGenreList(movie.genre))),
+  ).sort();
+  const ratingOptions = Array.from(
+    new Set(rankedMovies.map((movie) => movie.rated).filter(Boolean)),
+  ).sort();
+
   return (
     <section className="recommendations-page">
       <div className="recommendations-card">
-        <p className="eyebrow">Tailored recommendations</p>
+        <p className="eyebrow">Recommendations</p>
         <h2>Movies picked for your family</h2>
         {!user ? (
           <div className="recommendation-empty-state">
@@ -2566,15 +2942,98 @@ function RecommendationsPage({ user, onSignIn }) {
               Sign in
             </button>
           </div>
-        ) : (
+        ) : !hasCompleteFamilyPreferences(familyProfile) ? (
           <div className="recommendation-empty-state">
-            <strong>Guide-powered recommendations are being prepared</strong>
+            <strong>Finish your family preferences</strong>
             <p>
-              Family ratings will make recommendations smarter over time, but Pizza Scale Guides
-              and your household preferences will also help recommend movies before the site has
-              thousands of reviews.
+              Recommendations use your family profile and preferences to sort movies with Pizza
+              Scale Guides.
             </p>
+            <button className="secondary-button" type="button" onClick={onOpenSettings}>
+              Open family settings
+            </button>
           </div>
+        ) : (
+          <>
+            <p className="recommendations-intro">
+              Ranked by Family Fit, with extra weight for genres and styles your family has rated
+              highly.
+            </p>
+            <div className="recommendation-filters" aria-label="Recommendation filters">
+              <label>
+                Genre
+                <select
+                  value={filters.genre}
+                  onChange={(event) => setFilters({ ...filters, genre: event.target.value })}
+                >
+                  <option value="all">All genres</option>
+                  {genreOptions.map((genre) => (
+                    <option value={genre} key={genre}>
+                      {genre}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Age rating
+                <select
+                  value={filters.rating}
+                  onChange={(event) => setFilters({ ...filters, rating: event.target.value })}
+                >
+                  <option value="all">All ratings</option>
+                  {ratingOptions.map((rating) => (
+                    <option value={rating} key={rating}>
+                      {rating}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Duration
+                <select
+                  value={filters.duration}
+                  onChange={(event) => setFilters({ ...filters, duration: event.target.value })}
+                >
+                  <option value="all">Any length</option>
+                  <option value="short">Under 95 min</option>
+                  <option value="medium">95-120 min</option>
+                  <option value="long">Over 120 min</option>
+                </select>
+              </label>
+            </div>
+            {filteredMovies.length ? (
+              <div className="recommendation-results-grid">
+                {filteredMovies.map((movie) => (
+                  <button
+                    className={`recommendation-result-card ${
+                      selectedMovie?.id === movie.id ? "active" : ""
+                    }`}
+                    type="button"
+                    key={movie.id}
+                    onClick={() => onOpenMovie(movie)}
+                  >
+                    <PosterTile movie={movie} />
+                    <span>
+                      <strong>{movie.title}</strong>
+                      <small>
+                        {movie.year} · {movie.rated || "NR"} · {movie.runtime || "Runtime TBD"}
+                      </small>
+                      <small>{splitGenreList(movie.genre).slice(0, 3).join(", ")}</small>
+                      <span className="recommendation-card-score">
+                        <PizzaFill value={movie.familyFitScore} />
+                        <b>{Number(movie.familyFitScore).toFixed(1)} / 8 Family Fit</b>
+                      </span>
+                    </span>
+                  </button>
+                ))}
+              </div>
+            ) : (
+              <div className="recommendation-empty-state">
+                <strong>No guided movies match those filters</strong>
+                <p>Try widening the filters to see more Pizza Scale Guide recommendations.</p>
+              </div>
+            )}
+          </>
         )}
       </div>
     </section>
@@ -2742,10 +3201,37 @@ function SearchPage({
 function HomePage({
   movieResults,
   appealCategories,
+  guideCatalog,
+  familyProfile,
+  familyReviews,
   selectedMovie,
   onOpenMovie,
+  onSeeRecommendations,
 }) {
+  const guidedMovies = buildGuidedMoviePool({
+    featuredCatalog: movieResults,
+    appealCatalog: appealCategories,
+    guideCatalog,
+  });
+  const recommendationMovies = rankGuidedRecommendations({
+    movies: guidedMovies,
+    familyProfile,
+    familyReviews,
+  }).slice(0, 10);
   const movieCategories = [
+    ...(recommendationMovies.length
+      ? [
+          {
+            id: "recommendations",
+            title: "Recommendations",
+            description: "Movies with high Family Fit for your household.",
+            movies: recommendationMovies,
+            actionLabel: "See more",
+            onAction: onSeeRecommendations,
+            showFamilyFit: true,
+          },
+        ]
+      : []),
     {
       id: "movies-to-try",
       title: "Movies to Try",
@@ -3494,6 +3980,11 @@ function MovieCategoryRow({ category, selectedMovie, onSelectMovie }) {
           </div>
           <p>{category.description}</p>
         </div>
+        {category.actionLabel && category.onAction && (
+          <button className="category-action-button" type="button" onClick={category.onAction}>
+            {category.actionLabel}
+          </button>
+        )}
       </div>
       <div className="movie-rail" tabIndex={0} aria-label={`${category.title} movies`}>
         {category.movies.map((movie) => (
@@ -3510,9 +4001,11 @@ function MovieCategoryRow({ category, selectedMovie, onSelectMovie }) {
                 {movie.year} · {movie.rated || "NR"}
               </small>
               <small>
-                {movie.reviewCount > 0
-                  ? `${Number(movie.pizzaScore).toFixed(1)} / 8 slices`
-                  : "No ratings yet"}
+                {category.showFamilyFit && Number.isFinite(movie.familyFitScore)
+                  ? `${Number(movie.familyFitScore).toFixed(1)} / 8 Family Fit`
+                  : movie.reviewCount > 0
+                    ? `${Number(movie.pizzaScore).toFixed(1)} / 8 slices`
+                    : "No ratings yet"}
               </small>
             </span>
           </button>

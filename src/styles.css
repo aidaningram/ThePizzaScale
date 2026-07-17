@@ -699,6 +699,110 @@ p {
   font-size: clamp(2rem, 4vw, 3.65rem);
 }
 
+.recommendations-intro {
+  max-width: 720px;
+  color: var(--plum-soft);
+  font-weight: 800;
+  line-height: 1.45;
+  margin-bottom: 0;
+}
+
+.recommendation-filters {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  padding: 14px;
+  border: 2px solid var(--line);
+  border-radius: 18px;
+  background: var(--dough-card);
+}
+
+.recommendation-filters label {
+  display: grid;
+  gap: 6px;
+  color: var(--plum-ink);
+  font-family: "Baloo 2", "Nunito", system-ui, sans-serif;
+  font-weight: 900;
+}
+
+.recommendation-filters select {
+  min-width: 0;
+  min-height: 44px;
+  border: 2px solid var(--line);
+  border-radius: 14px;
+  background: var(--white);
+  color: var(--plum-ink);
+  padding: 0 12px;
+  font: inherit;
+}
+
+.recommendation-results-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.recommendation-result-card {
+  min-width: 0;
+  border: 2px solid var(--line);
+  border-radius: 18px;
+  background: var(--white);
+  color: var(--plum-ink);
+  padding: 12px;
+  text-align: left;
+  display: grid;
+  grid-template-columns: 112px minmax(0, 1fr);
+  gap: 14px;
+  align-items: start;
+}
+
+.recommendation-result-card.active {
+  border-color: var(--cheese-gold);
+  background: #fff3cd;
+  box-shadow: inset 0 0 0 2px rgba(255, 201, 77, 0.28);
+}
+
+.recommendation-result-card .poster-tile {
+  border-radius: 14px;
+  box-shadow: none;
+}
+
+.recommendation-result-card > span {
+  min-width: 0;
+  display: grid;
+  gap: 7px;
+  align-content: start;
+}
+
+.recommendation-result-card strong {
+  font-family: "Baloo 2", "Nunito", system-ui, sans-serif;
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.recommendation-result-card small {
+  color: var(--plum-soft);
+  line-height: 1.25;
+}
+
+.recommendation-card-score {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 8px;
+  align-items: center;
+  color: var(--plum-ink);
+  font-family: "Baloo 2", "Nunito", system-ui, sans-serif;
+}
+
+.recommendation-card-score .pizza-fill {
+  width: 44px;
+}
+
+.recommendation-card-score b {
+  min-width: 0;
+  line-height: 1.05;
+}
+
 .about-card {
   width: min(100%, 940px);
   border: 2px solid var(--line);
@@ -1372,6 +1476,20 @@ input[type="date"]::-webkit-calendar-picker-indicator {
 .category-heading p {
   margin-bottom: 0;
   line-height: 1.35;
+}
+
+.category-action-button {
+  min-height: 42px;
+  flex: 0 0 auto;
+  border: 2px solid var(--line);
+  border-radius: 999px;
+  background: var(--white);
+  color: var(--plum-ink);
+  padding: 0 18px;
+  font-family: "Baloo 2", "Nunito", system-ui, sans-serif;
+  font-size: 1rem;
+  font-weight: 900;
+  box-shadow: 0 8px 16px rgba(83, 45, 18, 0.08);
 }
 
 .movie-rail {
@@ -2495,6 +2613,7 @@ textarea {
   .guide-score-grid,
   .preference-grid,
   .settings-layout,
+  .recommendation-results-grid,
   .search-results-grid {
     grid-template-columns: 1fr;
   }
@@ -2510,6 +2629,10 @@ textarea {
   }
 
   .search-result-card {
+    grid-template-columns: 96px minmax(0, 1fr);
+  }
+
+  .recommendation-result-card {
     grid-template-columns: 96px minmax(0, 1fr);
   }
 
@@ -2619,6 +2742,15 @@ textarea {
     padding: 16px;
   }
 
+  .category-heading {
+    align-items: start;
+  }
+
+  .category-action-button {
+    min-height: 38px;
+    padding-inline: 14px;
+  }
+
   .movie-rail {
     grid-auto-columns: minmax(148px, 68vw);
     gap: 14px;
@@ -2630,6 +2762,7 @@ textarea {
   .movie-detail,
   .movie-list,
   .about-steps,
+  .recommendation-filters,
   .visibility-group,
   .slice-input,
   .dialog-actions,
