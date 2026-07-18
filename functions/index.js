@@ -288,6 +288,7 @@ export const createFamily = onCall(
     const leadBirthDate = String(request.data?.leadBirthDate || "").trim().slice(0, 10);
     const leadGender = String(request.data?.leadGender || "").trim().slice(0, 40);
     const rawMembers = Array.isArray(request.data?.members) ? request.data.members : [];
+    const preferences = cleanFamilyPreferences(request.data?.preferences);
 
     if (!familyName || !leadName || !leadBirthDate || !leadGender) {
       throw new HttpsError(
@@ -307,6 +308,7 @@ export const createFamily = onCall(
       inviteCode,
       familyCode: inviteCode,
       publicAgeDisplayMode: "ranges",
+      ...(preferences ? { preferences } : {}),
       createdAt: FieldValue.serverTimestamp(),
     };
     const cleanedMembers = [
@@ -363,6 +365,7 @@ export const createFamily = onCall(
       inviteCode,
       familyCode: inviteCode,
       publicAgeDisplayMode: "ranges",
+      ...(preferences ? { preferences } : {}),
       members: savedMembers,
     };
   },
@@ -602,6 +605,35 @@ function cleanFamilyMemberInput(member) {
     permission: normalizeMemberPermission(role, member?.permission),
     isLeadAdult: false,
   };
+}
+
+function cleanFamilyPreferences(preferences) {
+  if (!preferences || typeof preferences !== "object") return null;
+
+  const cleanPreferences = {
+    scareTolerance: cleanTolerance(preferences.scareTolerance),
+    violenceTolerance: cleanTolerance(preferences.violenceTolerance),
+    languageTolerance: cleanTolerance(preferences.languageTolerance),
+    romanceNudityTolerance: cleanTolerance(preferences.romanceNudityTolerance),
+    preferredEnergy: ["gentle", "balanced", "high-energy"].includes(preferences.preferredEnergy)
+      ? preferences.preferredEnergy
+      : "",
+    preferredRuntime: ["short", "flexible", "long"].includes(preferences.preferredRuntime)
+      ? preferences.preferredRuntime
+      : "",
+    wantsParentAppeal:
+      typeof preferences.wantsParentAppeal === "boolean" ? preferences.wantsParentAppeal : null,
+  };
+
+  const hasAllPreferences = Object.values(cleanPreferences).every(
+    (value) => value !== "" && value !== null,
+  );
+
+  return hasAllPreferences ? cleanPreferences : null;
+}
+
+function cleanTolerance(value) {
+  return ["low", "moderate", "high"].includes(value) ? value : "";
 }
 
 function normalizeMemberPermission(role, permission) {

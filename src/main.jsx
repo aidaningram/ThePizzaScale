@@ -4239,11 +4239,72 @@ function FamilyPromptPage({ onSkip, onCreateFamily }) {
 function FamilySetupPage({ user, userProfile, onSaved, onBack }) {
   const [familyName, setFamilyName] = useState("");
   const [members, setMembers] = useState([{ ...blankMember }]);
+  const [setupStep, setSetupStep] = useState(0);
+  const [preferenceAnswers, setPreferenceAnswers] = useState({});
   const [saveMessage, setSaveMessage] = useState("");
   const [createStatus, setCreateStatus] = useState("idle");
   const leadFirstName = userProfile?.firstName || user?.displayName || "";
   const leadBirthDate = userProfile?.birthDate || "";
   const leadGender = userProfile?.gender || "";
+  const preferenceSteps = [
+    {
+      key: "scareTolerance",
+      title: "Scary moments",
+      description: "How sensitive is your family to suspense, peril, or frightening scenes?",
+      options: toleranceOptions,
+    },
+    {
+      key: "violenceTolerance",
+      title: "Violence",
+      description: "How much action violence or fighting is usually okay for movie night?",
+      options: toleranceOptions,
+    },
+    {
+      key: "languageTolerance",
+      title: "Language",
+      description: "How flexible should recommendations be around swearing or rude language?",
+      options: toleranceOptions,
+    },
+    {
+      key: "romanceNudityTolerance",
+      title: "Romance/nudity",
+      description: "How cautious should The Pizza Scale be with romance, suggestive content, or nudity?",
+      options: toleranceOptions,
+    },
+    {
+      key: "preferredEnergy",
+      title: "Movie energy",
+      description: "What kind of pacing usually works best for your household?",
+      options: [
+        { value: "gentle", label: "Gentle and calm" },
+        { value: "balanced", label: "Balanced" },
+        { value: "high-energy", label: "High energy" },
+      ],
+    },
+    {
+      key: "preferredRuntime",
+      title: "Runtime",
+      description: "How long do movies usually need to be to work well for your family?",
+      options: [
+        { value: "short", label: "Usually under 95 minutes" },
+        { value: "flexible", label: "Flexible" },
+        { value: "long", label: "Long movies are okay" },
+      ],
+    },
+    {
+      key: "wantsParentAppeal",
+      title: "Adult appeal",
+      description: "Should recommendations prioritize movies adults can enjoy too?",
+      options: [
+        { value: "true", label: "Yes, prioritize parent appeal" },
+        { value: "false", label: "No, kid appeal can lead" },
+      ],
+    },
+  ];
+  const totalSetupSteps = preferenceSteps.length + 2;
+  const currentPreferenceStep = preferenceSteps[setupStep - 1];
+  const isMemberStep = setupStep === 0;
+  const isReviewStep = setupStep === totalSetupSteps - 1;
 
   function updateMember(index, key, value) {
     setMembers((currentMembers) =>
@@ -4261,7 +4322,46 @@ function FamilySetupPage({ user, userProfile, onSaved, onBack }) {
     );
   }
 
-  async function saveFamily() {
+  function updatePreferenceAnswer(key, value) {
+    setPreferenceAnswers((answers) => ({
+      ...answers,
+      [key]: key === "wantsParentAppeal" ? value === "true" : value,
+    }));
+  }
+
+  function getPreferencePayload() {
+    if (!familyPreferenceKeys.every((key) => Object.prototype.hasOwnProperty.call(preferenceAnswers, key))) {
+      return null;
+    }
+
+    return {
+      ...preferenceAnswers,
+      wantsParentAppeal: Boolean(preferenceAnswers.wantsParentAppeal),
+    };
+  }
+
+  function goToNextStep() {
+    setSaveMessage("");
+
+    if (isMemberStep && !familyName.trim()) {
+      setSaveMessage("Family display name is required.");
+      return;
+    }
+
+    if (currentPreferenceStep && !Object.prototype.hasOwnProperty.call(preferenceAnswers, currentPreferenceStep.key)) {
+      setSaveMessage("Choose an answer or use Fill out later.");
+      return;
+    }
+
+    setSetupStep((step) => Math.min(step + 1, totalSetupSteps - 1));
+  }
+
+  function goToPreviousStep() {
+    setSaveMessage("");
+    setSetupStep((step) => Math.max(step - 1, 0));
+  }
+
+  async function saveFamily({ skipPreferences = false } = {}) {
     if (createStatus === "saving") return;
 
     setSaveMessage("");
@@ -4292,6 +4392,7 @@ function FamilySetupPage({ user, userProfile, onSaved, onBack }) {
         leadBirthDate,
         leadGender,
         members,
+        ...(skipPreferences ? {} : { preferences: getPreferencePayload() }),
       });
 
       onSaved(result.data);
@@ -4304,113 +4405,191 @@ function FamilySetupPage({ user, userProfile, onSaved, onBack }) {
   return (
     <section className="family-page">
       <div className="family-card">
-        <p className="eyebrow">Family group</p>
-        <h2>Name your household</h2>
-        <div className="settings-panel family-guidance-panel">
-          <strong>Two ways to add people</strong>
-          <p>
-            Add every person who affects movie night here, including kids who will not have
-            accounts. Later, share the family code or invite link with anyone who should sign in.
-            If their account first name matches a profile you created, they can link to that
-            profile and keep the birthday, gender, role, and permissions you already set.
-          </p>
-        </div>
-        {saveMessage && <p className="form-error">{saveMessage}</p>}
-        <div className="family-grid">
-          <label className="field-label">
-            Family display name
-            <input
-              value={familyName}
-              onChange={(event) => setFamilyName(event.target.value)}
-              placeholder="The Ingram Family"
-            />
-          </label>
-        </div>
-
-        <div className="section-heading family-members-heading">
-          <Users size={20} />
-          <h2>Family members</h2>
-        </div>
-
-        <div className="family-member-list">
-          {members.map((member, index) => (
-            <div className="family-member-row" key={index}>
-              <label className="field-label">
-                First name
-                <input
-                  value={member.name}
-                  onChange={(event) => updateMember(index, "name", event.target.value)}
-                />
-              </label>
-              <label className="field-label">
-                Birthday
-                <input
-                  value={member.birthDate}
-                  onChange={(event) => updateMember(index, "birthDate", event.target.value)}
-                  type="date"
-                />
-              </label>
-              <label className="field-label">
-                Gender
-                <select
-                  value={member.gender}
-                  onChange={(event) => updateMember(index, "gender", event.target.value)}
-                >
-                  <option value="">Prefer not to say</option>
-                  <option value="female">Female</option>
-                  <option value="male">Male</option>
-                  <option value="nonbinary">Nonbinary</option>
-                  <option value="self-described">Self-described</option>
-                </select>
-              </label>
-              <label className="field-label">
-                Role
-                <select
-                  value={member.role}
-                  onChange={(event) => updateMember(index, "role", event.target.value)}
-                >
-                  <option value="child">Child</option>
-                  <option value="teen">Teen</option>
-                  <option value="adult">Parent/adult</option>
-                </select>
-              </label>
-              <label className="field-label">
-                Permission
-                <select
-                  value={member.permission}
-                  onChange={(event) => updateMember(index, "permission", event.target.value)}
-                >
-                  <option value="guided">Guided browsing</option>
-                  <option value="suggest">Can suggest movies</option>
-                  {member.role === "adult" && <option value="rate">Can add ratings</option>}
-                  <option value="manage">Can help manage family</option>
-                </select>
-              </label>
-            </div>
-          ))}
-        </div>
-
-        <button
-          className="secondary-button add-member-button"
-          type="button"
-          onClick={() => setMembers([...members, { ...blankMember }])}
-        >
-          <Plus size={18} />
-          Add family member
-        </button>
-
-        <div className="button-row">
-          <button className="secondary-button" type="button" onClick={onBack}>
-            Back
-          </button>
+        <div className="onboarding-topline">
+          <div>
+            <p className="eyebrow">Family setup</p>
+            <h2>
+              {isMemberStep
+                ? "Add your family"
+                : isReviewStep
+                  ? "Ready to create your family"
+                  : currentPreferenceStep.title}
+            </h2>
+          </div>
           <button
-            className="primary-button"
+            className="text-button"
             type="button"
-            onClick={saveFamily}
+            onClick={() => saveFamily({ skipPreferences: true })}
             disabled={createStatus === "saving"}
           >
-            {createStatus === "saving" ? "Creating..." : "Create family"}
+            Fill out later
           </button>
+        </div>
+        <div className="onboarding-progress" aria-label="Family setup progress">
+          <span style={{ width: `${((setupStep + 1) / totalSetupSteps) * 100}%` }} />
+        </div>
+        {saveMessage && <p className="form-error">{saveMessage}</p>}
+
+        {isMemberStep && (
+          <>
+            <div className="settings-panel family-guidance-panel">
+              <strong>Two ways to add people</strong>
+              <p>
+                Add every person who affects movie night here, including kids who will not have
+                accounts. After the family is created, you can share the family code or invite link
+                with anyone who should sign in. If their account first name matches a profile you
+                created, they can link to that profile and keep the birthday, gender, role, and
+                permissions you already set.
+              </p>
+            </div>
+            <div className="family-grid">
+              <label className="field-label">
+                Family display name
+                <input
+                  value={familyName}
+                  onChange={(event) => setFamilyName(event.target.value)}
+                  placeholder="The Ingram Family"
+                />
+              </label>
+            </div>
+
+            <div className="section-heading family-members-heading">
+              <Users size={20} />
+              <h2>Family members</h2>
+            </div>
+
+            <div className="family-member-list">
+              {members.map((member, index) => (
+                <div className="family-member-row" key={index}>
+                  <label className="field-label">
+                    First name
+                    <input
+                      value={member.name}
+                      onChange={(event) => updateMember(index, "name", event.target.value)}
+                    />
+                  </label>
+                  <label className="field-label">
+                    Birthday
+                    <input
+                      value={member.birthDate}
+                      onChange={(event) => updateMember(index, "birthDate", event.target.value)}
+                      type="date"
+                    />
+                  </label>
+                  <label className="field-label">
+                    Gender
+                    <select
+                      value={member.gender}
+                      onChange={(event) => updateMember(index, "gender", event.target.value)}
+                    >
+                      <option value="">Prefer not to say</option>
+                      <option value="female">Female</option>
+                      <option value="male">Male</option>
+                      <option value="nonbinary">Nonbinary</option>
+                      <option value="self-described">Self-described</option>
+                    </select>
+                  </label>
+                  <label className="field-label">
+                    Role
+                    <select
+                      value={member.role}
+                      onChange={(event) => updateMember(index, "role", event.target.value)}
+                    >
+                      <option value="child">Child</option>
+                      <option value="teen">Teen</option>
+                      <option value="adult">Parent/adult</option>
+                    </select>
+                  </label>
+                  <label className="field-label">
+                    Permission
+                    <select
+                      value={member.permission}
+                      onChange={(event) => updateMember(index, "permission", event.target.value)}
+                    >
+                      <option value="guided">Guided browsing</option>
+                      <option value="suggest">Can suggest movies</option>
+                      {member.role === "adult" && <option value="rate">Can add ratings</option>}
+                      <option value="manage">Can help manage family</option>
+                    </select>
+                  </label>
+                </div>
+              ))}
+            </div>
+
+            <button
+              className="secondary-button add-member-button"
+              type="button"
+              onClick={() => setMembers([...members, { ...blankMember }])}
+            >
+              <Plus size={18} />
+              Add family member
+            </button>
+          </>
+        )}
+
+        {currentPreferenceStep && (
+          <div className="onboarding-question-card">
+            <p>{currentPreferenceStep.description}</p>
+            <label className="field-label">
+              Choose one
+              <select
+                value={
+                  currentPreferenceStep.key === "wantsParentAppeal"
+                    ? String(preferenceAnswers[currentPreferenceStep.key] ?? "")
+                    : preferenceAnswers[currentPreferenceStep.key] || ""
+                }
+                onChange={(event) =>
+                  updatePreferenceAnswer(currentPreferenceStep.key, event.target.value)
+                }
+              >
+                <option value="">Choose one</option>
+                {currentPreferenceStep.options.map((option) => (
+                  <option value={option.value} key={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
+        )}
+
+        {isReviewStep && (
+          <div className="settings-panel onboarding-review-panel">
+            <strong>Family setup summary</strong>
+            <p>
+              Your family members and preference answers are ready. You can update all of this
+              later from Family settings.
+            </p>
+            <div className="onboarding-summary-list">
+              <span>{familyName || "Family name not set"}</span>
+              <span>{members.filter((member) => member.name.trim()).length + 1} people included</span>
+              <span>Preferences completed</span>
+            </div>
+          </div>
+        )}
+
+        <div className="button-row">
+          <button
+            className="secondary-button"
+            type="button"
+            onClick={setupStep === 0 ? onBack : goToPreviousStep}
+          >
+            {setupStep === 0 ? "Back" : "Previous"}
+          </button>
+          {isReviewStep ? (
+            <button
+              className="primary-button"
+              type="button"
+              onClick={() => saveFamily()}
+              disabled={createStatus === "saving"}
+            >
+              {createStatus === "saving" ? "Creating..." : "Create family"}
+            </button>
+          ) : (
+            <button className="primary-button" type="button" onClick={goToNextStep}>
+              Next
+            </button>
+          )}
         </div>
       </div>
     </section>
