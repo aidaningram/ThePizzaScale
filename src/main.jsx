@@ -26,6 +26,7 @@ import {
 } from "firebase/auth";
 import {
   addDoc,
+  arrayRemove,
   collection,
   doc,
   getDoc,
@@ -37,6 +38,7 @@ import {
   setDoc,
   updateDoc,
   where,
+  writeBatch,
 } from "firebase/firestore";
 import { httpsCallable } from "firebase/functions";
 import { getDownloadURL, ref, uploadString } from "firebase/storage";
@@ -1064,6 +1066,7 @@ function App() {
   const [authMessage, setAuthMessage] = useState("");
   const [authMode, setAuthMode] = useState("login");
   const [confirmingSignOut, setConfirmingSignOut] = useState(false);
+  const [familyRemovalNotice, setFamilyRemovalNotice] = useState(null);
   const [profilePhotos, setProfilePhotos] = useState(() => readStoredProfilePhotos());
   const [userProfile, setUserProfile] = useState(null);
   const [familyProfile, setFamilyProfile] = useState(null);
@@ -1117,6 +1120,41 @@ function App() {
 
     return () => {
       isCurrent = false;
+    };
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) {
+      setFamilyRemovalNotice(null);
+      return undefined;
+    }
+
+    const unsubscribe = onSnapshot(
+      firestoreQuery(
+        collection(db, "userNotifications"),
+        where("recipientUserId", "==", user.uid),
+        where("type", "==", "family-member-removed"),
+        where("read", "==", false),
+        limit(1),
+      ),
+      (notificationSnapshot) => {
+        const notificationDoc = notificationSnapshot.docs[0];
+        setFamilyRemovalNotice(
+          notificationDoc
+            ? {
+                id: notificationDoc.id,
+                ...notificationDoc.data(),
+              }
+            : null,
+        );
+      },
+      () => {
+        setFamilyRemovalNotice(null);
+      },
+    );
+
+    return () => {
+      unsubscribe();
     };
   }, [user]);
 
@@ -1913,6 +1951,96 @@ function App() {
     });
   }
 
+  async function handleRemoveFamilyMember(member) {
+    if (!user || !canManageFamilyProfile(familyProfile, user)) {
+      throw new Error("Only a family leader or co-leader can remove family members.");
+    }
+
+    if (!member?.id) {
+      setFamilyProfile({
+        ...familyProfile,
+        members: (familyProfile.members || []).filter(
+          (familyMember) => familyMember !== member,
+        ),
+      });
+      return;
+    }
+
+    if (member.isLeadAdult || member.userId === familyProfile.leadAdultUserId) {
+      throw new Error("The family leader cannot be removed from family settings.");
+    }
+
+    const batch = writeBatch(db);
+    const familyRef = doc(db, "families", familyProfile.id);
+    const memberRef = doc(db, "familyMembers", member.id);
+    const linkedUserId = member.userId || "";
+
+    batch.delete(memberRef);
+
+    if (linkedUserId) {
+      const notificationRef = doc(collection(db, "userNotifications"));
+
+      batch.set(notificationRef, {
+        type: "family-member-removed",
+        recipientUserId: linkedUserId,
+        familyId: familyProfile.id,
+        familyName: familyProfile.displayName || "your family",
+        removedByUserId: user.uid,
+        removedByName: userProfile?.firstName || user.displayName || "A family manager",
+        read: false,
+        createdAt: serverTimestamp(),
+      });
+      batch.update(familyRef, {
+        memberUserIds: arrayRemove(linkedUserId),
+        ratingAdultUserIds: arrayRemove(linkedUserId),
+        coLeaderUserIds: arrayRemove(linkedUserId),
+        updatedAt: serverTimestamp(),
+      });
+    } else {
+      batch.update(familyRef, {
+        updatedAt: serverTimestamp(),
+      });
+    }
+
+    await batch.commit();
+
+    setFamilyProfile((currentFamily) => {
+      if (!currentFamily) return currentFamily;
+
+      return {
+        ...currentFamily,
+        memberUserIds: linkedUserId
+          ? (currentFamily.memberUserIds || []).filter((userId) => userId !== linkedUserId)
+          : currentFamily.memberUserIds,
+        ratingAdultUserIds: linkedUserId
+          ? (currentFamily.ratingAdultUserIds || []).filter((userId) => userId !== linkedUserId)
+          : currentFamily.ratingAdultUserIds,
+        coLeaderUserIds: linkedUserId
+          ? (currentFamily.coLeaderUserIds || []).filter((userId) => userId !== linkedUserId)
+          : currentFamily.coLeaderUserIds,
+        members: (currentFamily.members || []).filter(
+          (familyMember) => familyMember.id !== member.id,
+        ),
+      };
+    });
+  }
+
+  async function dismissFamilyRemovalNotice() {
+    if (!familyRemovalNotice?.id) return;
+
+    const noticeId = familyRemovalNotice.id;
+    setFamilyRemovalNotice(null);
+
+    try {
+      await updateDoc(doc(db, "userNotifications", noticeId), {
+        read: true,
+        readAt: serverTimestamp(),
+      });
+    } catch {
+      // The notice can safely reappear if marking it read fails.
+    }
+  }
+
   async function handleDeleteFamily() {
     if (!user || !canDeleteFamilyProfile(familyProfile, user)) {
       throw new Error("Only the person who created this family can delete it.");
@@ -2228,6 +2356,7 @@ function App() {
           initialJoinCode={pendingJoinCode}
           onUpdateAccount={handleUpdateAccount}
           onUpdateFamily={handleUpdateFamily}
+          onRemoveFamilyMember={handleRemoveFamilyMember}
           onDeleteFamily={handleDeleteFamily}
           onCreateInviteCode={handleCreateInviteCode}
           onJoinFamily={handleJoinFamily}
@@ -2245,6 +2374,13 @@ function App() {
         <SignOutConfirmDialog
           onCancel={() => setConfirmingSignOut(false)}
           onConfirm={handleSignOut}
+        />
+      )}
+
+      {familyRemovalNotice && (
+        <FamilyRemovalNoticeDialog
+          notice={familyRemovalNotice}
+          onClose={dismissFamilyRemovalNotice}
         />
       )}
     </main>
@@ -2562,6 +2698,32 @@ function SignOutConfirmDialog({ onCancel, onConfirm }) {
           </button>
           <button className="primary-button" type="button" onClick={onConfirm}>
             Sign out
+          </button>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function FamilyRemovalNoticeDialog({ notice, onClose }) {
+  return (
+    <div className="dialog-backdrop" role="presentation" onMouseDown={onClose}>
+      <section
+        className="confirm-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="family-removal-notice-title"
+        onMouseDown={(event) => event.stopPropagation()}
+      >
+        <p className="eyebrow">Family update</p>
+        <h2 id="family-removal-notice-title">You were removed</h2>
+        <p>
+          You have been removed from {notice.familyName || "a family group"} on The Pizza Scale.
+          You can create or join another family from Family settings.
+        </p>
+        <div className="dialog-actions single">
+          <button className="primary-button" type="button" onClick={onClose}>
+            Got it
           </button>
         </div>
       </section>
@@ -4605,6 +4767,7 @@ function SettingsPage({
   initialJoinCode = "",
   onUpdateAccount,
   onUpdateFamily,
+  onRemoveFamilyMember,
   onDeleteFamily,
   onCreateInviteCode,
   onJoinFamily,
@@ -4643,6 +4806,9 @@ function SettingsPage({
   const [inviteMessage, setInviteMessage] = useState("");
   const [inviteStatus, setInviteStatus] = useState("idle");
   const [inviteCopyStatus, setInviteCopyStatus] = useState("idle");
+  const [pendingMemberRemoval, setPendingMemberRemoval] = useState(null);
+  const [memberRemovalStatus, setMemberRemovalStatus] = useState("idle");
+  const [memberRemovalMessage, setMemberRemovalMessage] = useState("");
   const currentMember = familyProfile?.members?.find(
     (member) =>
       member.userId === user?.uid ||
@@ -4692,6 +4858,9 @@ function SettingsPage({
     setInviteMessage("");
     setInviteStatus("idle");
     setInviteCopyStatus("idle");
+    setPendingMemberRemoval(null);
+    setMemberRemovalStatus("idle");
+    setMemberRemovalMessage("");
   }, [familyProfile]);
 
   useEffect(() => {
@@ -4732,6 +4901,37 @@ function SettingsPage({
         isLeadAdult: false,
       },
     ]);
+  }
+
+  function requestRemoveEditableMember(member, index) {
+    if (!member.id) {
+      setEditableMembers((members) => members.filter((_, memberIndex) => memberIndex !== index));
+      return;
+    }
+
+    setPendingMemberRemoval({ member, index });
+    setMemberRemovalStatus("idle");
+    setMemberRemovalMessage("");
+  }
+
+  async function confirmRemoveEditableMember() {
+    if (!pendingMemberRemoval?.member) return;
+
+    setMemberRemovalStatus("saving");
+    setMemberRemovalMessage("");
+
+    try {
+      await onRemoveFamilyMember(pendingMemberRemoval.member);
+      setEditableMembers((members) =>
+        members.filter((member) => member.id !== pendingMemberRemoval.member.id),
+      );
+      setPendingMemberRemoval(null);
+      setMemberRemovalStatus("ready");
+      setMemberRemovalMessage("Family member removed.");
+    } catch (error) {
+      setMemberRemovalStatus("error");
+      setMemberRemovalMessage(error.message || "That family member could not be removed.");
+    }
   }
 
   function updateFamilyPreference(key, value) {
@@ -5293,9 +5493,24 @@ function SettingsPage({
                               </>
                             )}
                           </div>
+                          {canManageFamily && !member.isLeadAdult && (
+                            <button
+                              className="member-remove-button"
+                              type="button"
+                              onClick={() => requestRemoveEditableMember(member, index)}
+                              disabled={memberRemovalStatus === "saving"}
+                            >
+                              Remove member
+                            </button>
+                          )}
                         </div>
                       ))}
                     </div>
+                    {memberRemovalMessage && (
+                      <p className={`form-status ${memberRemovalStatus}`}>
+                        {memberRemovalMessage}
+                      </p>
+                    )}
                     {canManageFamily && (
                       <button
                         className="secondary-button add-member-button"
@@ -5537,7 +5752,68 @@ function SettingsPage({
           }}
         />
       )}
+      {pendingMemberRemoval && (
+        <RemoveMemberConfirmDialog
+          member={pendingMemberRemoval.member}
+          status={memberRemovalStatus}
+          onCancel={() => {
+            setPendingMemberRemoval(null);
+            setMemberRemovalStatus("idle");
+            setMemberRemovalMessage("");
+          }}
+          onConfirm={confirmRemoveEditableMember}
+        />
+      )}
     </section>
+  );
+}
+
+function RemoveMemberConfirmDialog({ member, status, onCancel, onConfirm }) {
+  const memberName = member.firstNameOrNickname || "this family member";
+  const isLinkedAccount = Boolean(member.userId);
+
+  return (
+    <div className="dialog-backdrop" role="presentation" onMouseDown={onCancel}>
+      <section
+        className="confirm-dialog"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="remove-member-title"
+        onMouseDown={(event) => event.stopPropagation()}
+      >
+        <p className="eyebrow">Family member</p>
+        <h2 id="remove-member-title">Remove {memberName}?</h2>
+        {isLinkedAccount ? (
+          <p>
+            This will remove {memberName}&apos;s account from this family and they will be told
+            next time they open The Pizza Scale.
+          </p>
+        ) : (
+          <p>
+            This profile is only used for family data. Removing it will permanently wipe that
+            profile from this family.
+          </p>
+        )}
+        <div className="dialog-actions">
+          <button
+            className="secondary-button"
+            type="button"
+            onClick={onCancel}
+            disabled={status === "saving"}
+          >
+            Cancel
+          </button>
+          <button
+            className="danger-button"
+            type="button"
+            onClick={onConfirm}
+            disabled={status === "saving"}
+          >
+            {status === "saving" ? "Removing..." : "Remove member"}
+          </button>
+        </div>
+      </section>
+    </div>
   );
 }
 

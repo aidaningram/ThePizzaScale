@@ -111,6 +111,20 @@ service cloud.firestore {
       allow delete: if false;
     }
 
+    match /userNotifications/{notificationId} {
+      allow read: if isSignedIn() && resource.data.recipientUserId == request.auth.uid;
+      allow create: if isSignedIn()
+        && request.resource.data.recipientUserId is string
+        && request.resource.data.type == "family-member-removed"
+        && canManageFamily(request.resource.data.familyId);
+      allow update: if isSignedIn()
+        && resource.data.recipientUserId == request.auth.uid
+        && request.resource.data.recipientUserId == resource.data.recipientUserId
+        && request.resource.data.type == resource.data.type
+        && request.resource.data.familyId == resource.data.familyId;
+      allow delete: if false;
+    }
+
     match /reviews/{reviewId} {
       allow read: if isFamilyMember(resource.data.familyId);
       allow create: if canRateFamily(request.resource.data.familyId)

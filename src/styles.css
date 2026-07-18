@@ -273,6 +273,10 @@ p {
   margin-top: 4px;
 }
 
+.dialog-actions.single {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .crop-dialog .dialog-actions {
   position: sticky;
   bottom: -22px;
@@ -1476,6 +1480,24 @@ input[type="date"]::-webkit-calendar-picker-indicator {
   gap: 10px;
   align-items: end;
   min-width: 0;
+}
+
+.member-remove-button {
+  grid-column: 1 / -1;
+  width: fit-content;
+  justify-self: end;
+  min-height: 34px;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--sauce-red);
+  padding: 0;
+  font-family: "Baloo 2", "Nunito", system-ui, sans-serif;
+  font-weight: 900;
+}
+
+.member-remove-button:disabled {
+  color: var(--plum-soft);
+  cursor: wait;
 }
 
 .hero-band {
